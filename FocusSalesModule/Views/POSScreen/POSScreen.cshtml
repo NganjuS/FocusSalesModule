@@ -437,6 +437,19 @@
                     return this.subtotal + this.tax;
                 },
 
+                calculateGross(qty, rate, discountPct, fixedDiscountAmt) {
+                    // Formula: (Qty*Rate) - ((Qty*Rate)* (Disc %)) - Disc Amt
+                    const base = qty * rate;
+                    const percentageDiscount = base * (discountPct / 100);
+                    const totalDiscount = percentageDiscount + fixedDiscountAmt;
+                    const gross = base - percentageDiscount - fixedDiscountAmt;
+
+                    return {
+                        gross: gross,
+                        totalDiscount: totalDiscount
+                    };
+                },
+
                 scanRMA() {
                     if (!this.rmaSearch.trim()) {
                         this.showAlertMessage('Please enter an RMA number');
@@ -459,11 +472,17 @@
                                 existingItem.rmas.push(this.rmaSearch.trim());
                                 existingItem.qty += 1;
 
-                                // Recalculate gross: (qty * rate) - (discountAmt * qty)
-                                const subtotalBeforeDiscount = existingItem.qty * existingItem.rate;
-                                const discountPerUnit = rmaData.discountAmt;
-                                existingItem.discountAmt = discountPerUnit * existingItem.qty;
-                                existingItem.gross = subtotalBeforeDiscount - existingItem.discountAmt;
+                                // Recalculate gross based on new qty
+                                // Formula: (Qty*Rate) - ((Qty*Rate)* (Disc %)) - Disc Amt
+                                const result = this.calculateGross(
+                                    existingItem.qty,
+                                    existingItem.rate,
+                                    existingItem.discountPct,
+                                    existingItem.fixedDiscountAmt
+                                );
+
+                                existingItem.discountAmt = result.totalDiscount;
+                                existingItem.gross = result.gross;
 
                                 this.showAlertMessage('RMA added to existing item, quantity updated');
                                 this.rmaSearch = '';
@@ -471,9 +490,14 @@
                         } else {
                             // New item - default qty is 1
                             const qty = 1;
-                            const subtotalBeforeDiscount = qty * rmaData.rate;
-                            const discountAmt = rmaData.discountAmt;
-                            const gross = subtotalBeforeDiscount - discountAmt;
+
+                            // Calculate gross: (Qty*Rate) - ((Qty*Rate)* (Disc %)) - Disc Amt
+                            const result = this.calculateGross(
+                                qty,
+                                rmaData.rate,
+                                rmaData.discountPct,
+                                rmaData.discountAmt
+                            );
 
                             this.items.push({
                                 itemCode: rmaData.itemCode,
@@ -482,9 +506,10 @@
                                 unit: rmaData.unit,
                                 qty: qty,
                                 rate: rmaData.rate,
-                                discountAmt: discountAmt,
+                                discountAmt: result.totalDiscount,
                                 discountPct: rmaData.discountPct,
-                                gross: gross
+                                fixedDiscountAmt: rmaData.discountAmt,  // Store original fixed discount
+                                gross: result.gross
                             });
 
                             this.showAlertMessage('Item added successfully');
