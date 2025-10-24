@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace FocusSalesModule.Controllers
+{
+    public class POSScreenController : Controller
+    {
+        // GET: POSScreen
+        public ActionResult POSScreen()
+        {
+            return View();
+        }
+    }
+}
