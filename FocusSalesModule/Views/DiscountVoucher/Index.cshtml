@@ -1,0 +1,563 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discount Voucher Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .header-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-section h1 {
+            color: #0073AA;
+            margin: 0;
+            display: inline-block;
+        }
+
+        .btn-add-voucher {
+            float: right;
+            background-color: #0073AA;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-add-voucher:hover {
+            background-color: #005a87;
+        }
+
+        .table-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .table thead th {
+            background-color: #0073AA;
+            color: white;
+            font-weight: 600;
+            border: none;
+            padding: 12px 8px;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .badge-valid {
+            background-color: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .badge-invalid {
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .badge-warning {
+            background-color: #ffc107;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1060;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 0;
+            border-radius: 8px;
+            width: 600px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            background-color: #0073AA;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .modal-close {
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            line-height: 20px;
+            background: none;
+            border: none;
+        }
+
+        .modal-close:hover {
+            opacity: 0.8;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0073AA;
+            box-shadow: 0 0 0 0.2rem rgba(0, 115, 170, 0.25);
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-save {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-save:hover {
+            background-color: #218838;
+        }
+
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-cancel:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-edit {
+            background-color: #ffc107;
+            color: #000;
+            padding: 4px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-edit:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1070;
+            min-width: 300px;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div x-data="voucherManager()">
+        <!-- Header -->
+        <div class="header-section">
+            <h1><i class="bi bi-ticket-perforated me-2"></i>Discount Voucher Management</h1>
+            <button class="btn-add-voucher" @click="openAddModal()">
+                <i class="bi bi-plus-circle me-2"></i>Add New Voucher
+            </button>
+        </div>
+
+        <!-- Alert Messages -->
+        <div x-show="showAlert" x-transition class="alert" :class="alertType === 'success' ? 'alert-success' : 'alert-danger'">
+            <i class="bi" :class="alertType === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle'"></i>
+            <span x-text="alertMessage"></span>
+        </div>
+
+        <!-- Vouchers Table -->
+        <div class="table-container">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 12%;">Item Code</th>
+                        <th style="width: 15%;">Discount Code</th>
+                        <th style="width: 10%;">Value</th>
+                        <th style="width: 12%;">Usage</th>
+                        <th style="width: 12%;">Start Date</th>
+                        <th style="width: 12%;">Expiry Date</th>
+                        <th style="width: 10%;">Status</th>
+                        <th style="width: 12%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="(voucher, index) in vouchers" :key="voucher.Id">
+                        <tr>
+                            <td x-text="index + 1"></td>
+                            <td x-text="voucher.ItemCode"></td>
+                            <td><strong x-text="voucher.DiscountCode"></strong></td>
+                            <td x-text="formatCurrency(voucher.VoucherValue)"></td>
+                            <td>
+                                <span x-text="voucher.CurrentUsageCount + ' / ' + voucher.MaxUsageCount"></span>
+                            </td>
+                            <td x-text="voucher.StartDate"></td>
+                            <td x-text="voucher.ExpiryDate"></td>
+                            <td>
+                                <span class="badge-valid" x-show="voucher.IsValid">Valid</span>
+                                <span class="badge-invalid" x-show="!voucher.IsValid" x-text="voucher.Status"></span>
+                            </td>
+                            <td>
+                                <button class="btn-edit" @click="openEditModal(voucher)">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                                <button class="btn-delete" @click="deleteVoucher(voucher.Id)">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="vouchers.length === 0">
+                        <td colspan="9" class="no-data">
+                            <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                            <p>No vouchers found. Click "Add New Voucher" to create one.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Add/Edit Voucher Modal -->
+        <div class="modal" :class="{ 'show': showModal }">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 x-text="isEditMode ? 'Edit Voucher' : 'Add New Voucher'"></h3>
+                    <button class="modal-close" @click="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Item Code <span style="color: red;">*</span></label>
+                        <input type="text" x-model="currentVoucher.ItemCode" placeholder="Enter item code" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Discount Code <span style="color: red;">*</span></label>
+                        <input type="text" x-model="currentVoucher.DiscountCode" placeholder="Enter unique discount code" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Voucher Value <span style="color: red;">*</span></label>
+                        <input type="number" x-model.number="currentVoucher.VoucherValue" placeholder="Enter voucher value" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Times it can be Used <span style="color: red;">*</span></label>
+                        <input type="number" x-model.number="currentVoucher.MaxUsageCount" placeholder="Enter max usage count" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Date <span style="color: red;">*</span></label>
+                        <input type="date" x-model="currentVoucher.StartDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Expiry Date <span style="color: red;">*</span></label>
+                        <input type="date" x-model="currentVoucher.ExpiryDate" required>
+                    </div>
+                    <div x-show="errorMessage" class="error-message" x-text="errorMessage"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-cancel" @click="closeModal()">Cancel</button>
+                    <button class="btn-save" @click="saveVoucher()">
+                        <i class="bi bi-save me-2"></i>Save Voucher
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js"></script>
+
+    <script>
+        function voucherManager() {
+            return {
+                vouchers: [],
+                showModal: false,
+                showAlert: false,
+                alertMessage: '',
+                alertType: 'success',
+                isEditMode: false,
+                errorMessage: '',
+                currentVoucher: {
+                    Id: 0,
+                    ItemCode: '',
+                    DiscountCode: '',
+                    VoucherValue: 0,
+                    MaxUsageCount: 1,
+                    StartDate: '',
+                    ExpiryDate: ''
+                },
+
+                init() {
+                    this.loadVouchers();
+                },
+
+                async loadVouchers() {
+                    try {
+                        const response = await fetch('/DiscountVoucher/GetVouchers');
+                        const result = await response.json();
+
+                        if (result.success) {
+                            this.vouchers = result.data;
+                        } else {
+                            this.showAlertMessage('Failed to load vouchers', 'danger');
+                        }
+                    } catch (error) {
+                        console.error('Error loading vouchers:', error);
+                        this.showAlertMessage('Error loading vouchers', 'danger');
+                    }
+                },
+
+                openAddModal() {
+                    this.isEditMode = false;
+                    this.currentVoucher = {
+                        Id: 0,
+                        ItemCode: '',
+                        DiscountCode: '',
+                        VoucherValue: 0,
+                        MaxUsageCount: 1,
+                        StartDate: '',
+                        ExpiryDate: ''
+                    };
+                    this.errorMessage = '';
+                    this.showModal = true;
+                },
+
+                openEditModal(voucher) {
+                    this.isEditMode = true;
+                    this.currentVoucher = {
+                        Id: voucher.Id,
+                        ItemCode: voucher.ItemCode,
+                        DiscountCode: voucher.DiscountCode,
+                        VoucherValue: voucher.VoucherValue,
+                        MaxUsageCount: voucher.MaxUsageCount,
+                        StartDate: voucher.StartDate,
+                        ExpiryDate: voucher.ExpiryDate
+                    };
+                    this.errorMessage = '';
+                    this.showModal = true;
+                },
+
+                closeModal() {
+                    this.showModal = false;
+                    this.errorMessage = '';
+                },
+
+                async saveVoucher() {
+                    // Validation
+                    if (!this.currentVoucher.ItemCode || !this.currentVoucher.DiscountCode) {
+                        this.errorMessage = 'Please fill in all required fields';
+                        return;
+                    }
+
+                    if (this.currentVoucher.VoucherValue <= 0) {
+                        this.errorMessage = 'Voucher value must be greater than 0';
+                        return;
+                    }
+
+                    if (this.currentVoucher.MaxUsageCount <= 0) {
+                        this.errorMessage = 'Usage count must be at least 1';
+                        return;
+                    }
+
+                    if (!this.currentVoucher.StartDate || !this.currentVoucher.ExpiryDate) {
+                        this.errorMessage = 'Please select start and expiry dates';
+                        return;
+                    }
+
+                    if (new Date(this.currentVoucher.StartDate) > new Date(this.currentVoucher.ExpiryDate)) {
+                        this.errorMessage = 'Expiry date must be after start date';
+                        return;
+                    }
+
+                    try {
+                        const url = this.isEditMode ? '/DiscountVoucher/UpdateVoucher' : '/DiscountVoucher/CreateVoucher';
+                        const method = this.isEditMode ? 'PUT' : 'POST';
+
+                        const response = await fetch(url, {
+                            method: method,
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(this.currentVoucher)
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            this.showAlertMessage(result.message, 'success');
+                            this.closeModal();
+                            await this.loadVouchers();
+                        } else {
+                            this.errorMessage = result.message;
+                        }
+                    } catch (error) {
+                        console.error('Error saving voucher:', error);
+                        this.errorMessage = 'Error saving voucher';
+                    }
+                },
+
+                async deleteVoucher(id) {
+                    if (!confirm('Are you sure you want to delete this voucher?')) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/DiscountVoucher/DeleteVoucher?id=${id}`, {
+                            method: 'DELETE'
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            this.showAlertMessage(result.message, 'success');
+                            await this.loadVouchers();
+                        } else {
+                            this.showAlertMessage(result.message, 'danger');
+                        }
+                    } catch (error) {
+                        console.error('Error deleting voucher:', error);
+                        this.showAlertMessage('Error deleting voucher', 'danger');
+                    }
+                },
+
+                showAlertMessage(message, type = 'success') {
+                    this.alertMessage = message;
+                    this.alertType = type;
+                    this.showAlert = true;
+
+                    setTimeout(() => {
+                        this.showAlert = false;
+                    }, 3000);
+                },
+
+                formatCurrency(amount) {
+                    return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
