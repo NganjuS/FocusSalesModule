@@ -224,6 +224,224 @@
         .rma-list li:last-child {
             border-bottom: none;
         }
+
+        /* Bill Settlement Modal */
+        .settlement-modal .modal-content {
+            width: 800px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .payment-tabs {
+            display: flex;
+            border-bottom: 2px solid #0073AA;
+            margin-bottom: 20px;
+        }
+
+        .payment-tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .payment-tab:hover {
+            color: #0073AA;
+        }
+
+        .payment-tab.active {
+            color: #0073AA;
+            border-bottom: 3px solid #0073AA;
+            margin-bottom: -2px;
+        }
+
+        .payment-content {
+            display: none;
+        }
+
+        .payment-content.active {
+            display: block;
+        }
+
+        .payment-summary {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .payment-summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 16px;
+        }
+
+        .payment-summary-row.total {
+            font-weight: bold;
+            font-size: 20px;
+            color: #0073AA;
+            border-top: 2px solid #0073AA;
+            padding-top: 12px;
+            margin-top: 8px;
+        }
+
+        .payment-summary-row.outstanding {
+            font-weight: bold;
+            font-size: 18px;
+            color: #dc3545;
+        }
+
+        .payment-summary-row.change {
+            font-weight: bold;
+            font-size: 18px;
+            color: #28a745;
+        }
+
+        .payment-form-group {
+            margin-bottom: 15px;
+        }
+
+        .payment-form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .payment-form-group input,
+        .payment-form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .payment-form-group input:focus,
+        .payment-form-group select:focus {
+            outline: none;
+            border-color: #0073AA;
+            box-shadow: 0 0 0 0.2rem rgba(0, 115, 170, 0.25);
+        }
+
+        .bank-payments-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .bank-payments-table th,
+        .bank-payments-table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+
+        .bank-payments-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .btn-add-payment {
+            background-color: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-add-payment:hover {
+            background-color: #218838;
+        }
+
+        .btn-remove-payment {
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-remove-payment:hover {
+            background-color: #c82333;
+        }
+
+        .settlement-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .settlement-actions button {
+            padding: 12px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-complete-settlement {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-complete-settlement:hover {
+            background-color: #218838;
+        }
+
+        .btn-complete-settlement:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .btn-cancel-settlement {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel-settlement:hover {
+            background-color: #5a6268;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .quick-cash-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quick-cash-btn {
+            padding: 12px;
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .quick-cash-btn:hover {
+            background-color: #dee2e6;
+        }
     </style>
 </head>
 <body>
@@ -360,6 +578,183 @@
                 </ul>
             </div>
         </div>
+
+        <!-- Bill Settlement Modal -->
+        <div class="modal settlement-modal" :class="{ 'show': showSettlementModal }">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="modal-close" @@click="cancelSettlement()">&times;</span>
+                    <h3>Bill Settlement</h3>
+                </div>
+
+                <!-- Payment Summary -->
+                <div class="payment-summary">
+                    <div class="payment-summary-row">
+                        <span>Subtotal:</span>
+                        <span x-text="formatCurrency(subtotal)"></span>
+                    </div>
+                    <div class="payment-summary-row">
+                        <span>Tax (16%):</span>
+                        <span x-text="formatCurrency(tax)"></span>
+                    </div>
+                    <div class="payment-summary-row">
+                        <span>Total Discount:</span>
+                        <span x-text="formatCurrency(totalDiscount)"></span>
+                    </div>
+                    <div class="payment-summary-row total">
+                        <span>TOTAL DUE:</span>
+                        <span x-text="formatCurrency(grandTotal)"></span>
+                    </div>
+                    <div class="payment-summary-row outstanding" x-show="outstandingAmount > 0">
+                        <span>Outstanding:</span>
+                        <span x-text="formatCurrency(outstandingAmount)"></span>
+                    </div>
+                    <div class="payment-summary-row change" x-show="changeAmount > 0">
+                        <span>Change:</span>
+                        <span x-text="formatCurrency(changeAmount)"></span>
+                    </div>
+                </div>
+
+                <!-- Payment Tabs -->
+                <div class="payment-tabs">
+                    <button class="payment-tab" :class="{ 'active': activePaymentTab === 'cash' }" @@click="activePaymentTab = 'cash'">Cash</button>
+                    <button class="payment-tab" :class="{ 'active': activePaymentTab === 'bank' }" @@click="activePaymentTab = 'bank'">Bank Payments</button>
+                    <button class="payment-tab" :class="{ 'active': activePaymentTab === 'voucher' }" @@click="activePaymentTab = 'voucher'">Discount Voucher</button>
+                    <button class="payment-tab" :class="{ 'active': activePaymentTab === 'credit' }" @@click="activePaymentTab = 'credit'">Credit Note</button>
+                    <button class="payment-tab" :class="{ 'active': activePaymentTab === 'mobile' }" @@click="activePaymentTab = 'mobile'">Mobile Money</button>
+                </div>
+
+                <!-- Cash Payment -->
+                <div class="payment-content" :class="{ 'active': activePaymentTab === 'cash' }">
+                    <div class="payment-form-group">
+                        <label>Cash Amount Received</label>
+                        <input type="number" x-model.number="cashAmount" @@input="calculatePayments()" placeholder="Enter amount" step="0.01">
+                    </div>
+                    <div class="quick-cash-buttons">
+                        <button class="quick-cash-btn" @@click="cashAmount = grandTotal; calculatePayments()">Exact Amount</button>
+                        <button class="quick-cash-btn" @@click="cashAmount = Math.ceil(grandTotal / 100) * 100; calculatePayments()">Round Up 100</button>
+                        <button class="quick-cash-btn" @@click="cashAmount = Math.ceil(grandTotal / 500) * 500; calculatePayments()">Round Up 500</button>
+                        <button class="quick-cash-btn" @@click="cashAmount = Math.ceil(grandTotal / 1000) * 1000; calculatePayments()">Round Up 1000</button>
+                        <button class="quick-cash-btn" @@click="cashAmount = 5000; calculatePayments()">5,000</button>
+                        <button class="quick-cash-btn" @@click="cashAmount = 10000; calculatePayments()">10,000</button>
+                    </div>
+                </div>
+
+                <!-- Bank Payments -->
+                <div class="payment-content" :class="{ 'active': activePaymentTab === 'bank' }">
+                    <div class="payment-form-group">
+                        <label>Bank/Payment Method</label>
+                        <select x-model="newBankPayment.method">
+                            <option value="">Select payment method</option>
+                            <option value="Card">Credit/Debit Card</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Cheque">Cheque</option>
+                        </select>
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Reference Number</label>
+                        <input type="text" x-model="newBankPayment.reference" placeholder="Enter reference number">
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Amount</label>
+                        <input type="number" x-model.number="newBankPayment.amount" placeholder="Enter amount" step="0.01">
+                    </div>
+                    <button class="btn-add-payment" @@click="addBankPayment()">Add Payment</button>
+
+                    <table class="bank-payments-table" x-show="bankPayments.length > 0">
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Reference</th>
+                                <th>Amount</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="(payment, index) in bankPayments" :key="index">
+                                <tr>
+                                    <td x-text="payment.method"></td>
+                                    <td x-text="payment.reference"></td>
+                                    <td x-text="formatCurrency(payment.amount)"></td>
+                                    <td>
+                                        <button class="btn-remove-payment" @@click="removeBankPayment(index)">Remove</button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Discount Voucher -->
+                <div class="payment-content" :class="{ 'active': activePaymentTab === 'voucher' }">
+                    <div class="payment-form-group">
+                        <label>Voucher Code</label>
+                        <input type="text" x-model="voucherCode" placeholder="Enter voucher code">
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Voucher Amount</label>
+                        <input type="number" x-model.number="voucherAmount" @@input="calculatePayments()" placeholder="Enter voucher amount" step="0.01">
+                    </div>
+                    <button class="btn-add-payment" @@click="applyVoucher()">Apply Voucher</button>
+                    <div x-show="voucherApplied" style="margin-top: 10px; color: #28a745; font-weight: 600;">
+                        Voucher applied: <span x-text="formatCurrency(voucherAmount)"></span>
+                    </div>
+                </div>
+
+                <!-- Credit Note -->
+                <div class="payment-content" :class="{ 'active': activePaymentTab === 'credit' }">
+                    <div class="payment-form-group">
+                        <label>Credit Note Number</label>
+                        <input type="text" x-model="creditNoteNumber" placeholder="Enter credit note number">
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Credit Note Amount</label>
+                        <input type="number" x-model.number="creditNoteAmount" @@input="calculatePayments()" placeholder="Enter credit note amount" step="0.01">
+                    </div>
+                    <button class="btn-add-payment" @@click="applyCreditNote()">Apply Credit Note</button>
+                    <div x-show="creditNoteApplied" style="margin-top: 10px; color: #28a745; font-weight: 600;">
+                        Credit Note applied: <span x-text="formatCurrency(creditNoteAmount)"></span>
+                    </div>
+                </div>
+
+                <!-- Mobile Money -->
+                <div class="payment-content" :class="{ 'active': activePaymentTab === 'mobile' }">
+                    <div class="payment-form-group">
+                        <label>Mobile Money Provider</label>
+                        <select x-model="mobileMoneyProvider">
+                            <option value="">Select provider</option>
+                            <option value="M-Pesa">M-Pesa</option>
+                            <option value="Airtel Money">Airtel Money</option>
+                            <option value="T-Kash">T-Kash</option>
+                        </select>
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Phone Number</label>
+                        <input type="text" x-model="mobileMoneyPhone" placeholder="Enter phone number">
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Transaction ID</label>
+                        <input type="text" x-model="mobileMoneyTransactionId" placeholder="Enter transaction ID">
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Amount</label>
+                        <input type="number" x-model.number="mobileMoneyAmount" @@input="calculatePayments()" placeholder="Enter amount" step="0.01">
+                    </div>
+                    <button class="btn-add-payment" @@click="applyMobileMoney()">Apply Mobile Money</button>
+                    <div x-show="mobileMoneyApplied" style="margin-top: 10px; color: #28a745; font-weight: 600;">
+                        Mobile Money applied: <span x-text="formatCurrency(mobileMoneyAmount)"></span>
+                    </div>
+                </div>
+
+                <!-- Settlement Actions -->
+                <div class="settlement-actions">
+                    <button class="btn-cancel-settlement" @@click="cancelSettlement()">Cancel</button>
+                    <button class="btn-complete-settlement" :disabled="!canCompleteSettlement" @@click="completeSettlement()">Complete Settlement</button>
+                </div>
+
+                <div x-show="settlementError" class="error-message" style="margin-top: 10px;" x-text="settlementError"></div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
@@ -376,6 +771,36 @@
                 showRMAModal: false,
                 selectedItemCode: '',
                 selectedItemRMAs: [],
+
+                // Settlement Modal
+                showSettlementModal: false,
+                activePaymentTab: 'cash',
+
+                // Cash payment
+                cashAmount: 0,
+
+                // Bank payments
+                bankPayments: [],
+                newBankPayment: { method: '', reference: '', amount: 0 },
+
+                // Voucher
+                voucherCode: '',
+                voucherAmount: 0,
+                voucherApplied: false,
+
+                // Credit Note
+                creditNoteNumber: '',
+                creditNoteAmount: 0,
+                creditNoteApplied: false,
+
+                // Mobile Money
+                mobileMoneyProvider: '',
+                mobileMoneyPhone: '',
+                mobileMoneyTransactionId: '',
+                mobileMoneyAmount: 0,
+                mobileMoneyApplied: false,
+
+                settlementError: '',
 
                 // Mock data for RMA lookup (replace with actual API call)
                 rmaDatabase: {
@@ -435,6 +860,32 @@
 
                 get grandTotal() {
                     return this.subtotal + this.tax;
+                },
+
+                get totalPayments() {
+                    let total = 0;
+                    // Add all payment types except cash (cash can overpay for change)
+                    total += this.bankPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+                    if (this.voucherApplied) total += this.voucherAmount || 0;
+                    if (this.creditNoteApplied) total += this.creditNoteAmount || 0;
+                    if (this.mobileMoneyApplied) total += this.mobileMoneyAmount || 0;
+                    return total;
+                },
+
+                get outstandingAmount() {
+                    const remaining = this.grandTotal - this.totalPayments - (this.cashAmount || 0);
+                    return remaining > 0 ? remaining : 0;
+                },
+
+                get changeAmount() {
+                    const overpayment = (this.cashAmount || 0) + this.totalPayments - this.grandTotal;
+                    return overpayment > 0 ? overpayment : 0;
+                },
+
+                get canCompleteSettlement() {
+                    // Can complete if total payments >= grand total OR if cash is provided and covers the outstanding
+                    const totalPaid = this.totalPayments + (this.cashAmount || 0);
+                    return totalPaid >= this.grandTotal;
                 },
 
                 calculateGross(qty, rate, discountPct, fixedDiscountAmt) {
@@ -544,18 +995,184 @@
                         return;
                     }
 
-                    // Replace with actual API call to save transaction
+                    // Open settlement modal
+                    this.resetSettlement();
+                    this.showSettlementModal = true;
+                },
+
+                resetSettlement() {
+                    this.cashAmount = 0;
+                    this.bankPayments = [];
+                    this.newBankPayment = { method: '', reference: '', amount: 0 };
+                    this.voucherCode = '';
+                    this.voucherAmount = 0;
+                    this.voucherApplied = false;
+                    this.creditNoteNumber = '';
+                    this.creditNoteAmount = 0;
+                    this.creditNoteApplied = false;
+                    this.mobileMoneyProvider = '';
+                    this.mobileMoneyPhone = '';
+                    this.mobileMoneyTransactionId = '';
+                    this.mobileMoneyAmount = 0;
+                    this.mobileMoneyApplied = false;
+                    this.settlementError = '';
+                    this.activePaymentTab = 'cash';
+                },
+
+                calculatePayments() {
+                    // Recalculate to update computed properties
+                    this.settlementError = '';
+                },
+
+                addBankPayment() {
+                    if (!this.newBankPayment.method) {
+                        this.settlementError = 'Please select a payment method';
+                        return;
+                    }
+                    if (!this.newBankPayment.reference) {
+                        this.settlementError = 'Please enter a reference number';
+                        return;
+                    }
+                    if (!this.newBankPayment.amount || this.newBankPayment.amount <= 0) {
+                        this.settlementError = 'Please enter a valid amount';
+                        return;
+                    }
+
+                    // Check if total exceeds grand total
+                    const newTotal = this.totalPayments + this.newBankPayment.amount;
+                    if (newTotal > this.grandTotal) {
+                        this.settlementError = 'Total bank payments cannot exceed the bill amount';
+                        return;
+                    }
+
+                    this.bankPayments.push({
+                        method: this.newBankPayment.method,
+                        reference: this.newBankPayment.reference,
+                        amount: this.newBankPayment.amount
+                    });
+
+                    this.newBankPayment = { method: '', reference: '', amount: 0 };
+                    this.settlementError = '';
+                },
+
+                removeBankPayment(index) {
+                    this.bankPayments.splice(index, 1);
+                },
+
+                applyVoucher() {
+                    if (!this.voucherCode) {
+                        this.settlementError = 'Please enter a voucher code';
+                        return;
+                    }
+                    if (!this.voucherAmount || this.voucherAmount <= 0) {
+                        this.settlementError = 'Please enter a valid voucher amount';
+                        return;
+                    }
+
+                    // Check if total exceeds grand total
+                    const newTotal = this.totalPayments + this.voucherAmount;
+                    if (newTotal > this.grandTotal) {
+                        this.settlementError = 'Total payments cannot exceed the bill amount';
+                        return;
+                    }
+
+                    this.voucherApplied = true;
+                    this.settlementError = '';
+                },
+
+                applyCreditNote() {
+                    if (!this.creditNoteNumber) {
+                        this.settlementError = 'Please enter a credit note number';
+                        return;
+                    }
+                    if (!this.creditNoteAmount || this.creditNoteAmount <= 0) {
+                        this.settlementError = 'Please enter a valid credit note amount';
+                        return;
+                    }
+
+                    // Check if total exceeds grand total
+                    const newTotal = this.totalPayments + this.creditNoteAmount;
+                    if (newTotal > this.grandTotal) {
+                        this.settlementError = 'Total payments cannot exceed the bill amount';
+                        return;
+                    }
+
+                    this.creditNoteApplied = true;
+                    this.settlementError = '';
+                },
+
+                applyMobileMoney() {
+                    if (!this.mobileMoneyProvider) {
+                        this.settlementError = 'Please select a mobile money provider';
+                        return;
+                    }
+                    if (!this.mobileMoneyPhone) {
+                        this.settlementError = 'Please enter a phone number';
+                        return;
+                    }
+                    if (!this.mobileMoneyTransactionId) {
+                        this.settlementError = 'Please enter a transaction ID';
+                        return;
+                    }
+                    if (!this.mobileMoneyAmount || this.mobileMoneyAmount <= 0) {
+                        this.settlementError = 'Please enter a valid amount';
+                        return;
+                    }
+
+                    // Check if total exceeds grand total
+                    const newTotal = this.totalPayments + this.mobileMoneyAmount;
+                    if (newTotal > this.grandTotal) {
+                        this.settlementError = 'Total payments cannot exceed the bill amount';
+                        return;
+                    }
+
+                    this.mobileMoneyApplied = true;
+                    this.settlementError = '';
+                },
+
+                completeSettlement() {
+                    if (!this.canCompleteSettlement) {
+                        this.settlementError = 'Payment amount is insufficient';
+                        return;
+                    }
+
+                    // Prepare transaction data with payment details
                     const transactionData = {
                         items: this.items,
                         subtotal: this.subtotal,
                         tax: this.tax,
                         totalDiscount: this.totalDiscount,
                         grandTotal: this.grandTotal,
+                        payments: {
+                            cash: this.cashAmount || 0,
+                            bankPayments: this.bankPayments,
+                            voucher: this.voucherApplied ? { code: this.voucherCode, amount: this.voucherAmount } : null,
+                            creditNote: this.creditNoteApplied ? { number: this.creditNoteNumber, amount: this.creditNoteAmount } : null,
+                            mobileMoney: this.mobileMoneyApplied ? {
+                                provider: this.mobileMoneyProvider,
+                                phone: this.mobileMoneyPhone,
+                                transactionId: this.mobileMoneyTransactionId,
+                                amount: this.mobileMoneyAmount
+                            } : null
+                        },
+                        totalPaid: this.totalPayments + (this.cashAmount || 0),
+                        change: this.changeAmount,
                         timestamp: new Date().toISOString()
                     };
 
-                    console.log('Saving transaction:', transactionData);
+                    console.log('Saving transaction with settlement:', transactionData);
+
+                    // Close modal and show success
+                    this.showSettlementModal = false;
                     this.showAlertMessage('Transaction saved successfully!');
+
+                    // Optionally clear items after successful save
+                    // this.items = [];
+                },
+
+                cancelSettlement() {
+                    this.showSettlementModal = false;
+                    this.resetSettlement();
                 },
 
                 reprintTransaction() {
