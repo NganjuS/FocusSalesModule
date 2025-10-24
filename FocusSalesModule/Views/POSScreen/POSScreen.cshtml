@@ -157,14 +157,16 @@
                     <table class="table table-bordered table-hover">
                         <thead>
                             <tr>
-                                <th style="width: 5%;">#</th>
-                                <th style="width: 12%;">Item Code</th>
-                                <th style="width: 12%;">RMA</th>
-                                <th style="width: 35%;">Item</th>
-                                <th style="width: 10%;">Unit</th>
-                                <th style="width: 10%;">Qty</th>
-                                <th style="width: 10%;">Rate</th>
-                                <th style="width: 12%;">Gross</th>
+                                <th style="width: 4%;">#</th>
+                                <th style="width: 10%;">Item Code</th>
+                                <th style="width: 10%;">RMA</th>
+                                <th style="width: 25%;">Item</th>
+                                <th style="width: 8%;">Unit</th>
+                                <th style="width: 8%;">Qty</th>
+                                <th style="width: 9%;">Rate</th>
+                                <th style="width: 9%;">Disc Amt</th>
+                                <th style="width: 8%;">Disc %</th>
+                                <th style="width: 9%;">Gross</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -177,11 +179,13 @@
                                     <td x-text="item.unit"></td>
                                     <td x-text="item.qty"></td>
                                     <td x-text="formatCurrency(item.rate)"></td>
+                                    <td x-text="formatCurrency(item.discountAmt)"></td>
+                                    <td x-text="item.discountPct + '%'"></td>
                                     <td x-text="formatCurrency(item.gross)"></td>
                                 </tr>
                             </template>
                             <tr x-show="items.length === 0">
-                                <td colspan="8" class="text-center text-muted">No items added. Scan an RMA to add items.</td>
+                                <td colspan="10" class="text-center text-muted">No items added. Scan an RMA to add items.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -269,35 +273,45 @@
                         itemName: 'Product Sample Name Here',
                         unit: 'PCS',
                         qty: 5,
-                        rate: 250.00
+                        rate: 250.00,
+                        discountPct: 10,
+                        discountAmt: 125.00
                     },
                     'RMA2024002': {
                         itemCode: 'ITM002',
                         itemName: 'Another Product Item',
                         unit: 'KG',
                         qty: 10,
-                        rate: 150.00
+                        rate: 150.00,
+                        discountPct: 5,
+                        discountAmt: 75.00
                     },
                     'RMA2024003': {
                         itemCode: 'ITM003',
                         itemName: 'Sample Item Description',
                         unit: 'BOX',
                         qty: 2,
-                        rate: 500.00
+                        rate: 500.00,
+                        discountPct: 15,
+                        discountAmt: 150.00
                     },
                     'RMA2024004': {
                         itemCode: 'ITM004',
                         itemName: 'Electronics Component',
                         unit: 'PCS',
                         qty: 15,
-                        rate: 75.00
+                        rate: 75.00,
+                        discountPct: 0,
+                        discountAmt: 0.00
                     },
                     'RMA2024005': {
                         itemCode: 'ITM005',
                         itemName: 'Office Supplies Bundle',
                         unit: 'SET',
                         qty: 3,
-                        rate: 450.00
+                        rate: 450.00,
+                        discountPct: 20,
+                        discountAmt: 270.00
                     }
                 },
 
@@ -323,7 +337,8 @@
                     const rmaData = this.rmaDatabase[this.rmaSearch.trim()];
 
                     if (rmaData) {
-                        const gross = rmaData.qty * rmaData.rate;
+                        const subtotalBeforeDiscount = rmaData.qty * rmaData.rate;
+                        const gross = subtotalBeforeDiscount - rmaData.discountAmt;
 
                         // Check if item already exists
                         const existingItem = this.items.find(item => item.rma === this.rmaSearch.trim());
@@ -338,6 +353,8 @@
                                 unit: rmaData.unit,
                                 qty: rmaData.qty,
                                 rate: rmaData.rate,
+                                discountAmt: rmaData.discountAmt,
+                                discountPct: rmaData.discountPct,
                                 gross: gross
                             });
 
