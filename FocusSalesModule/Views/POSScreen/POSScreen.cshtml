@@ -689,15 +689,20 @@
                 <div class="payment-content" :class="{ 'active': activePaymentTab === 'voucher' }">
                     <div class="payment-form-group">
                         <label>Voucher Code</label>
-                        <input type="text" x-model="voucherCode" placeholder="Enter voucher code">
+                        <input type="text" x-model="voucherCode" placeholder="Enter voucher code" :disabled="voucherApplied">
                     </div>
-                    <div class="payment-form-group">
-                        <label>Voucher Amount</label>
-                        <input type="number" x-model.number="voucherAmount" @@input="calculatePayments()" placeholder="Enter voucher amount" step="0.01">
-                    </div>
-                    <button class="btn-add-payment" @@click="applyVoucher()">Apply Voucher</button>
-                    <div x-show="voucherApplied" style="margin-top: 10px; color: #28a745; font-weight: 600;">
-                        Voucher applied: <span x-text="formatCurrency(voucherAmount)"></span>
+                    <button class="btn-add-payment" @@click="applyVoucher()" :disabled="voucherApplied">
+                        <i class="bi bi-check-circle me-2"></i>Validate & Apply Voucher
+                    </button>
+                    <div x-show="voucherApplied" style="margin-top: 15px; padding: 15px; background-color: #d4edda; border-radius: 4px; border: 1px solid #c3e6cb;">
+                        <div style="color: #155724; font-weight: 600; margin-bottom: 5px;">
+                            <i class="bi bi-check-circle-fill me-2"></i>Voucher Applied Successfully!
+                        </div>
+                        <div style="color: #155724;">
+                            <strong>Code:</strong> <span x-text="voucherCode"></span><br>
+                            <strong>Discount Amount:</strong> <span x-text="formatCurrency(voucherAmount)"></span><br>
+                            <strong>Applied to Item:</strong> <span x-text="voucherItemCode"></span>
+                        </div>
                     </div>
                 </div>
 
@@ -787,6 +792,7 @@
                 voucherCode: '',
                 voucherAmount: 0,
                 voucherApplied: false,
+                voucherItemCode: '', // Track which item the voucher is for
 
                 // Credit Note
                 creditNoteNumber: '',
@@ -1007,6 +1013,7 @@
                     this.voucherCode = '';
                     this.voucherAmount = 0;
                     this.voucherApplied = false;
+                    this.voucherItemCode = '';
                     this.creditNoteNumber = '';
                     this.creditNoteAmount = 0;
                     this.creditNoteApplied = false;
@@ -1059,15 +1066,53 @@
                     this.bankPayments.splice(index, 1);
                 },
 
-                applyVoucher() {
+                async applyVoucher() {
                     if (!this.voucherCode) {
                         this.settlementError = 'Please enter a voucher code';
                         return;
                     }
-                    if (!this.voucherAmount || this.voucherAmount <= 0) {
-                        this.settlementError = 'Please enter a valid voucher amount';
+
+                    // Get all unique item codes from transaction
+                    const itemCodes = [...new Set(this.items.map(item => item.itemCode))];
+
+                    if (itemCodes.length === 0) {
+                        this.settlementError = 'No items in transaction';
                         return;
                     }
+
+                    // Validate voucher against each item code
+                    let validVoucher = null;
+                    let validItemCode = null;
+
+                    for (const itemCode of itemCodes) {
+                        try {
+                            const response = await fetch(`/DiscountVoucher/ValidateVoucher?code=${encodeURIComponent(this.voucherCode)}&itemCode=${encodeURIComponent(itemCode)}`);
+                            const result = await response.json();
+
+                            if (result.success) {
+                                validVoucher = result.data;
+                                validItemCode = itemCode;
+                                break;
+                            }
+                        } catch (error) {
+                            console.error('Error validating voucher:', error);
+                        }
+                    }
+
+                    if (!validVoucher) {
+                        this.settlementError = 'Invalid voucher code or voucher not applicable to items in cart';
+                        return;
+                    }
+
+                    // Check if this item already has a voucher applied
+                    if (this.voucherApplied && this.voucherItemCode === validItemCode) {
+                        this.settlementError = 'This item already has a voucher applied';
+                        return;
+                    }
+
+                    // Set voucher amount from validated voucher
+                    this.voucherAmount = validVoucher.VoucherValue;
+                    this.voucherItemCode = validItemCode;
 
                     // Check if total exceeds grand total
                     const newTotal = this.totalPayments + this.voucherAmount;
@@ -1078,6 +1123,7 @@
 
                     this.voucherApplied = true;
                     this.settlementError = '';
+                    this.showAlertMessage(`Voucher applied successfully! Discount: ${this.formatCurrency(this.voucherAmount)}`);
                 },
 
                 applyCreditNote() {
@@ -1130,10 +1176,36 @@
                     this.settlementError = '';
                 },
 
-                completeSettlement() {
+                async completeSettlement() {
                     if (!this.canCompleteSettlement) {
                         this.settlementError = 'Payment amount is insufficient';
                         return;
+                    }
+
+                    // If voucher was used, record its usage
+                    if (this.voucherApplied && this.voucherCode) {
+                        try {
+                            const response = await fetch('/DiscountVoucher/UseVoucher', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    Code: this.voucherCode,
+                                    ItemCode: this.voucherItemCode
+                                })
+                            });
+
+                            const result = await response.json();
+                            if (!result.success) {
+                                this.settlementError = 'Failed to record voucher usage: ' + result.message;
+                                return;
+                            }
+                        } catch (error) {
+                            console.error('Error recording voucher usage:', error);
+                            this.settlementError = 'Error recording voucher usage';
+                            return;
+                        }
                     }
 
                     // Prepare transaction data with payment details
@@ -1146,7 +1218,11 @@
                         payments: {
                             cash: this.cashAmount || 0,
                             bankPayments: this.bankPayments,
-                            voucher: this.voucherApplied ? { code: this.voucherCode, amount: this.voucherAmount } : null,
+                            voucher: this.voucherApplied ? {
+                                code: this.voucherCode,
+                                amount: this.voucherAmount,
+                                itemCode: this.voucherItemCode
+                            } : null,
                             creditNote: this.creditNoteApplied ? { number: this.creditNoteNumber, amount: this.creditNoteAmount } : null,
                             mobileMoney: this.mobileMoneyApplied ? {
                                 provider: this.mobileMoneyProvider,
