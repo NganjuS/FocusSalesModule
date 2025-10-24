@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+using System.Web.Mvc;
 using FocusSalesModule.Models;
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ namespace FocusSalesModule.Controllers
         private static int _nextId = 1;
 
         // GET: DiscountVoucher
-        public IActionResult Index()
+        public ActionResult Index()
         {
             return View();
         }
@@ -37,12 +37,12 @@ namespace FocusSalesModule.Controllers
                 IsValid = v.IsValid()
             }).ToList();
 
-            return Json(new { success = true, data = vouchers });
+            return Json(new { success = true, data = vouchers }, JsonRequestBehavior.AllowGet);
         }
 
         // POST: API endpoint to create new voucher
         [HttpPost]
-        public JsonResult CreateVoucher([FromBody] DiscountVoucher voucher)
+        public JsonResult CreateVoucher(DiscountVoucher voucher)
         {
             if (!ModelState.IsValid)
             {
@@ -65,9 +65,9 @@ namespace FocusSalesModule.Controllers
             return Json(new { success = true, message = "Voucher created successfully", data = voucher });
         }
 
-        // PUT: API endpoint to update voucher
-        [HttpPut]
-        public JsonResult UpdateVoucher([FromBody] DiscountVoucher voucher)
+        // POST: API endpoint to update voucher (using POST instead of PUT for .NET Framework)
+        [HttpPost]
+        public JsonResult UpdateVoucher(DiscountVoucher voucher)
         {
             var existing = _vouchers.FirstOrDefault(v => v.Id == voucher.Id);
             if (existing == null)
@@ -86,8 +86,8 @@ namespace FocusSalesModule.Controllers
             return Json(new { success = true, message = "Voucher updated successfully" });
         }
 
-        // DELETE: API endpoint to delete voucher
-        [HttpDelete]
+        // POST: API endpoint to delete voucher (using POST instead of DELETE for .NET Framework)
+        [HttpPost]
         public JsonResult DeleteVoucher(int id)
         {
             var voucher = _vouchers.FirstOrDefault(v => v.Id == id);
@@ -108,17 +108,17 @@ namespace FocusSalesModule.Controllers
 
             if (voucher == null)
             {
-                return Json(new { success = false, message = "Voucher not found" });
+                return Json(new { success = false, message = "Voucher not found" }, JsonRequestBehavior.AllowGet);
             }
 
             if (voucher.ItemCode != itemCode)
             {
-                return Json(new { success = false, message = "Voucher is not valid for this item" });
+                return Json(new { success = false, message = "Voucher is not valid for this item" }, JsonRequestBehavior.AllowGet);
             }
 
             if (!voucher.IsValid())
             {
-                return Json(new { success = false, message = voucher.GetStatusMessage() });
+                return Json(new { success = false, message = voucher.GetStatusMessage() }, JsonRequestBehavior.AllowGet);
             }
 
             return Json(new
@@ -132,12 +132,12 @@ namespace FocusSalesModule.Controllers
                     voucher.ItemCode,
                     RemainingUses = voucher.MaxUsageCount - voucher.CurrentUsageCount
                 }
-            });
+            }, JsonRequestBehavior.AllowGet);
         }
 
         // POST: API endpoint to use voucher (increment usage count)
         [HttpPost]
-        public JsonResult UseVoucher([FromBody] VoucherUsageRequest request)
+        public JsonResult UseVoucher(VoucherUsageRequest request)
         {
             var voucher = _vouchers.FirstOrDefault(v => v.DiscountCode == request.Code);
 
