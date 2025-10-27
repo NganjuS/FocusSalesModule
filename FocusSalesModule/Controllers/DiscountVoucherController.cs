@@ -13,8 +13,9 @@ namespace FocusSalesModule.Controllers
         private static int _nextId = 1;
 
         // GET: DiscountVoucher
-        public ActionResult Index()
+        public ActionResult Index(int compid)
         {
+            ViewBag.compid = compid;
             return View();
         }
 

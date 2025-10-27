@@ -9,8 +9,9 @@ namespace FocusSalesModule.Controllers
     public class POSScreenController : Controller
     {
         // GET: POSScreen
-        public ActionResult POSScreen()
+        public ActionResult Index(int compid=72)
         {
+            ViewBag.compid = compid;
             return View();
         }
     }
