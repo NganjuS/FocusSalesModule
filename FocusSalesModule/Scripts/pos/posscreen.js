@@ -215,8 +215,10 @@ function posSystem() {
         },
 
         showRMAs(itemCode) {
+
             const item = this.items.find(i => i.itemCode === itemCode);
             if (item) {
+
                 this.selectedItemCode = itemCode;
                 this.selectedItemRMAs = item.rmas;
                 this.showRMAModal = true;
