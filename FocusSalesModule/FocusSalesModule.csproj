@@ -16,7 +16,7 @@
     <AssemblyName>FocusSalesModule</AssemblyName>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
-    <UseIISExpress>true</UseIISExpress>
+    <UseIISExpress>false</UseIISExpress>
     <Use64BitIISExpress />
     <IISExpressSSLPort>44376</IISExpressSSLPort>
     <IISExpressAnonymousAuthentication />
@@ -187,6 +187,7 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Controllers\DiscountVoucherController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\POSScreenController.cs" />
     <Compile Include="Controllers\RmaItemAPIController.cs" />
@@ -196,6 +197,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Logs\Logger.cs" />
+    <Compile Include="Models\DiscountVoucher.cs" />
     <Compile Include="Models\HashData.cs" />
     <Compile Include="Models\HashDataFocus.cs" />
     <Compile Include="Models\Product.cs" />
@@ -256,6 +258,7 @@
     <Content Include="Scripts\jquery-3.7.0.slim.js" />
     <Content Include="Scripts\jquery-3.7.0.slim.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\pos\posscreen.js" />
     <Content Include="Scripts\searchitem.js" />
     <Content Include="Scripts\select2.min.js" />
     <Content Include="Scripts\sweetalert2.all.min.js" />
@@ -274,7 +277,8 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
-    <Content Include="Views\POSScreen\POSScreen.cshtml" />
+    <Content Include="Views\POSScreen\Index.cshtml" />
+    <Content Include="Views\DiscountVoucher\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -369,7 +373,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>19068</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>https://localhost:44376/</IISUrl>
+          <IISUrl>http://localhost/focussalesmodule</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>
