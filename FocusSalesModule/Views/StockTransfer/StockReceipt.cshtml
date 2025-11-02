@@ -278,7 +278,7 @@
         <!-- Page Header -->
         <div class="page-header">
             <h1><i class="bi bi-box-arrow-in-left me-2"></i>Stock Receipt</h1>
-            <button class="btn-receive-stock" @click="receiveStock()" :disabled="!stockTransfer || stockTransfer.isReceived">
+            <button class="btn-receive-stock" @@click="receiveStock()" :disabled="!stockTransfer || stockTransfer.isReceived">
                 <i class="bi bi-check-circle me-2"></i>Receive Stock
             </button>
         </div>
@@ -294,9 +294,9 @@
                 <div class="search-box">
                     <div class="form-group">
                         <label>Stock Issue No <span style="color: red;">*</span></label>
-                        <input type="text" x-model="searchIssueNo" placeholder="Enter Stock Issue No" @keyup.enter="searchStockIssue()">
+                        <input type="text" x-model="searchIssueNo" placeholder="Enter Stock Issue No" @@keyup.enter="searchStockIssue()">
                     </div>
-                    <button class="btn-search" @click="searchStockIssue()">
+                    <button class="btn-search" @@click="searchStockIssue()">
                         <i class="bi bi-search"></i>Search
                     </button>
                 </div>

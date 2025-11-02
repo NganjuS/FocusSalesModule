@@ -14,5 +14,10 @@ namespace FocusSalesModule.Controllers
             ViewBag.compid = compid;
             return View();
         }
+        public ActionResult PrintCashSale(string docNo, int compid = 72)
+        {
+            ViewBag.compid = compid;
+            return View();
+        }
     }
 }

@@ -1,8 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
+
 using FocusSalesModule.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web.Mvc;
 
 namespace FocusSalesModule.Controllers
 {
@@ -77,14 +78,16 @@ namespace FocusSalesModule.Controllers
         }
 
         // GET: StockTransfer/StockIssue
-        public IActionResult StockIssue()
+        public ActionResult StockIssue(int compid = 72)
         {
+            ViewBag.compid = compid;
             return View();
         }
 
         // GET: StockTransfer/StockReceipt
-        public IActionResult StockReceipt()
+        public ActionResult StockReceipt(int compid=72)
         {
+            ViewBag.compid = compid;
             return View();
         }
 
@@ -191,104 +194,104 @@ namespace FocusSalesModule.Controllers
             return Json(new { success = true, data = transferData });
         }
 
-        // POST: API endpoint to create a stock transfer
-        [HttpPost]
-        public JsonResult CreateStockTransfer([FromBody] StockTransfer transfer)
-        {
-            try
-            {
-                // Validation
-                if (transfer.FromOutletId == 0 || transfer.ToOutletId == 0)
-                {
-                    return Json(new { success = false, message = "Please select both From and To outlets" });
-                }
+        //// POST: API endpoint to create a stock transfer
+        //[HttpPost]
+        //public JsonResult CreateStockTransfer([FromBody] StockTransfer transfer)
+        //{
+        //    try
+        //    {
+        //        // Validation
+        //        if (transfer.FromOutletId == 0 || transfer.ToOutletId == 0)
+        //        {
+        //            return Json(new { success = false, message = "Please select both From and To outlets" });
+        //        }
 
-                if (transfer.FromOutletId == transfer.ToOutletId)
-                {
-                    return Json(new { success = false, message = "From and To outlets cannot be the same" });
-                }
+        //        if (transfer.FromOutletId == transfer.ToOutletId)
+        //        {
+        //            return Json(new { success = false, message = "From and To outlets cannot be the same" });
+        //        }
 
-                if (transfer.Items == null || !transfer.Items.Any())
-                {
-                    return Json(new { success = false, message = "Please add at least one item" });
-                }
+        //        if (transfer.Items == null || !transfer.Items.Any())
+        //        {
+        //            return Json(new { success = false, message = "Please add at least one item" });
+        //        }
 
-                // Validate quantities
-                foreach (var item in transfer.Items)
-                {
-                    if (item.Quantity <= 0)
-                    {
-                        return Json(new { success = false, message = "Quantity must be greater than 0" });
-                    }
-                }
+        //        // Validate quantities
+        //        foreach (var item in transfer.Items)
+        //        {
+        //            if (item.Quantity <= 0)
+        //            {
+        //                return Json(new { success = false, message = "Quantity must be greater than 0" });
+        //            }
+        //        }
 
-                // Generate stock issue number
-                transfer.Id = _nextTransferId++;
-                transfer.StockIssueNo = $"SI{DateTime.Now:yyyyMMdd}{transfer.Id:D4}";
-                transfer.TransferDate = DateTime.Now;
-                transfer.Status = "Issued";
-                transfer.IsReceived = false;
+        //        // Generate stock issue number
+        //        transfer.Id = _nextTransferId++;
+        //        transfer.StockIssueNo = $"SI{DateTime.Now:yyyyMMdd}{transfer.Id:D4}";
+        //        transfer.TransferDate = DateTime.Now;
+        //        transfer.Status = "Issued";
+        //        transfer.IsReceived = false;
 
-                // Get outlet names
-                var fromOutlet = _outlets.FirstOrDefault(o => o.Id == transfer.FromOutletId);
-                var toOutlet = _outlets.FirstOrDefault(o => o.Id == transfer.ToOutletId);
-                transfer.FromOutletName = fromOutlet?.Name;
-                transfer.ToOutletName = toOutlet?.Name;
+        //        // Get outlet names
+        //        var fromOutlet = _outlets.FirstOrDefault(o => o.Id == transfer.FromOutletId);
+        //        var toOutlet = _outlets.FirstOrDefault(o => o.Id == transfer.ToOutletId);
+        //        transfer.FromOutletName = fromOutlet?.Name;
+        //        transfer.ToOutletName = toOutlet?.Name;
 
-                // Assign item IDs and populate product details
-                foreach (var item in transfer.Items)
-                {
-                    item.Id = _nextItemId++;
-                    item.StockTransferId = transfer.Id;
+        //        // Assign item IDs and populate product details
+        //        foreach (var item in transfer.Items)
+        //        {
+        //            item.Id = _nextItemId++;
+        //            item.StockTransferId = transfer.Id;
 
-                    var product = _products.FirstOrDefault(p => p.Id == item.ProductId);
-                    if (product != null)
-                    {
-                        item.ProductName = product.Name;
-                        item.ProductCode = product.Code;
-                        item.Unit = product.BaseUnit;
-                    }
-                }
+        //            var product = _products.FirstOrDefault(p => p.Id == item.ProductId);
+        //            if (product != null)
+        //            {
+        //                item.ProductName = product.Name;
+        //                item.ProductCode = product.Code;
+        //                item.Unit = product.BaseUnit;
+        //            }
+        //        }
 
-                _stockTransfers.Add(transfer);
+        //        _stockTransfers.Add(transfer);
 
-                return Json(new { success = true, message = "Stock transfer created successfully", stockIssueNo = transfer.StockIssueNo });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error: {ex.Message}" });
-            }
-        }
+        //        return Json(new { success = true, message = "Stock transfer created successfully", stockIssueNo = transfer.StockIssueNo });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = $"Error: {ex.Message}" });
+        //    }
+        //}
 
         // POST: API endpoint to receive a stock transfer
-        [HttpPost]
-        public JsonResult ReceiveStockTransfer([FromBody] ReceiveStockTransferRequest request)
-        {
-            try
-            {
-                var transfer = _stockTransfers.FirstOrDefault(t => t.Id == request.TransferId);
+        //[HttpPost]
+        //public JsonResult ReceiveStockTransfer([FromBody] ReceiveStockTransferRequest request)
+        //{
+        //    try
+        //    {
+        //        var transfer = _stockTransfers.FirstOrDefault(t => t.Id == request.TransferId);
 
-                if (transfer == null)
-                {
-                    return Json(new { success = false, message = "Stock transfer not found" });
-                }
+        //        if (transfer == null)
+        //        {
+        //            return Json(new { success = false, message = "Stock transfer not found" });
+        //        }
 
-                if (transfer.IsReceived)
-                {
-                    return Json(new { success = false, message = "This stock transfer has already been received" });
-                }
+        //        if (transfer.IsReceived)
+        //        {
+        //            return Json(new { success = false, message = "This stock transfer has already been received" });
+        //        }
 
-                transfer.IsReceived = true;
-                transfer.ReceivedDate = DateTime.Now;
-                transfer.Status = "Received";
+        //        transfer.IsReceived = true;
+        //        transfer.ReceivedDate = DateTime.Now;
+        //        transfer.Status = "Received";
 
-                return Json(new { success = true, message = "Stock transfer received successfully" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error: {ex.Message}" });
-            }
-        }
+        //        return Json(new { success = true, message = "Stock transfer received successfully" });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = $"Error: {ex.Message}" });
+        //    }
+        //}
 
         // Helper class for receive request
         public class ReceiveStockTransferRequest

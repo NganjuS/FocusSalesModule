@@ -1,63 +1,14 @@
-var requestsProcessed = [];
-var requestId = 0;
-function isRequestProcessed(iRequestId) {
-    for (let i = 0; i < requestsProcessed.length; i++) {
-        if (requestsProcessed[i] == iRequestId) {
-            return true;
-        }
-    } return false;
-}
-function focusSessionUpdater(callbackFunc) {
-    ++requestId;
-    Focus8WAPI.getGlobalValue(callbackFunc, "", requestId);
-}
-function setSession(response) {
-
-    if (isRequestProcessed(response.iRequestId)) {
-        return;
-    }
-    requestsProcessed.push(response.iRequestId);
-    let sessionid = response.data.SessionId;
-
-    const alpineComponent = document.getElementById('main-container')._x_dataStack[0];
-    alpineComponent.validateDocument(sessionid);
-
-}
-function setUserDetails(response) {
-
-    if (isRequestProcessed(response.iRequestId)) {
-        return;
-    }
-    requestsProcessed.push(response.iRequestId);
-    response.data
-
-    const alpineComponent = document.getElementById('main-container')._x_dataStack[0];
-    alpineComponent.setUserOutlet(response.data);
-
-}
 function posSystem() {
     return {
-        init() {
-
-            this.compid = this.$refs.compid.value;
-            this.initSetUserOutlet();
-        },
-        compid : 0,
         items: [],
         rmaSearch: '',
-        cashierName: '',
-        activeOutlet: '',
         showAlert: false,
         alertMessage: '',
+        taxRate: 0.16,
         showRMAModal: false,
-        selectedItemId: '',
+        selectedItemCode: '',
         selectedItemRMAs: [],
-        emptyObject() {
-            return {
 
-                Id: 0, Code: "", Name: "", RmaNo : "",Unit : "", Stock : 0,Price : 0, RmaNoList : []
-            }
-        },
         // Settlement Modal
         showSettlementModal: false,
         activePaymentTab: 'cash',
@@ -67,8 +18,6 @@ function posSystem() {
 
         // Bank payments
         bankPayments: [],
-        moniePayments: [],
-        newMoniePayment: { reference: '', amount: 0 },
         newBankPayment: { method: '', reference: '', amount: 0 },
 
         // Voucher
@@ -85,24 +34,66 @@ function posSystem() {
         // Mobile Money
         mobileMoneyProvider: '',
         mobileMoneyPhone: '',
-        monieMoneyTransactionId: '',
-        monieAmount: 0,
-        monieApplied: false,
+        mobileMoneyTransactionId: '',
+        mobileMoneyAmount: 0,
+        mobileMoneyApplied: false,
 
         settlementError: '',
 
-   
+        // Mock data for RMA lookup (replace with actual API call)
+        rmaDatabase: {
+            'RMA2024001': {
+                itemCode: 'ITM001',
+                itemName: 'Product Sample Name Here',
+                unit: 'PCS',
+                rate: 250.00,
+                discountPct: 10,
+                discountAmt: 125.00
+            },
+            'RMA2024002': {
+                itemCode: 'ITM002',
+                itemName: 'Another Product Item',
+                unit: 'KG',
+                rate: 150.00,
+                discountPct: 5,
+                discountAmt: 75.00
+            },
+            'RMA2024003': {
+                itemCode: 'ITM003',
+                itemName: 'Sample Item Description',
+                unit: 'BOX',
+                rate: 500.00,
+                discountPct: 15,
+                discountAmt: 150.00
+            },
+            'RMA2024004': {
+                itemCode: 'ITM004',
+                itemName: 'Electronics Component',
+                unit: 'PCS',
+                rate: 75.00,
+                discountPct: 0,
+                discountAmt: 0.00
+            },
+            'RMA2024005': {
+                itemCode: 'ITM001',
+                itemName: 'Product Sample Name Here',
+                unit: 'PCS',
+                rate: 250.00,
+                discountPct: 10,
+                discountAmt: 125.00
+            }
+        },
+
         get subtotal() {
-            return this.items.reduce((sum, item) => sum + item.Gross, 0);
+            return this.items.reduce((sum, item) => sum + item.gross, 0);
         },
 
         get totalDiscount() {
-            return this.items.reduce((sum, item) => sum + item.DiscountAmt, 0);
+            return this.items.reduce((sum, item) => sum + item.discountAmt, 0);
         },
 
         get tax() {
-
-            return this.items.reduce((sum, item) => sum + item.TaxAmt, 0);
+            return this.subtotal * this.taxRate;
         },
 
         get grandTotal() {
@@ -128,157 +119,107 @@ function posSystem() {
             const overpayment = (this.cashAmount || 0) + this.totalPayments - this.grandTotal;
             return overpayment > 0 ? overpayment : 0;
         },
-        initSetUserOutlet() {
 
-            Focus8WAPI.awakeSession();
-            focusSessionUpdater("setUserDetails");
-        },
-        setUserOutlet(respData) {
-            this.cashierName = respData.UserName;
-            this.activeOutlet = "Test";
-        },
         get canCompleteSettlement() {
             // Can complete if total payments >= grand total OR if cash is provided and covers the outstanding
             const totalPaid = this.totalPayments + (this.cashAmount || 0);
             return totalPaid >= this.grandTotal;
         },
-        calculateGross(qty, Price, DiscountPct, fixedDiscountAmt) {
-            // Formula: (Qty*SellingRate) - ((Qty*SellingRate)* (Disc %)) - Disc Amt
-            const base = qty * Price;
-            const percentageDiscount = base * (DiscountPct / 100);
+
+        calculateGross(qty, rate, discountPct, fixedDiscountAmt) {
+            // Formula: (Qty*Rate) - ((Qty*Rate)* (Disc %)) - Disc Amt
+            const base = qty * rate;
+            const percentageDiscount = base * (discountPct / 100);
             const totalDiscount = percentageDiscount + fixedDiscountAmt;
             const gross = base - percentageDiscount - fixedDiscountAmt;
 
             return {
-                Gross: gross,
-                TotalDiscount: totalDiscount
+                gross: gross,
+                totalDiscount: totalDiscount
             };
         },
 
-        async scanRMA() {
-            Focus8WAPI.awakeSession();
+        scanRMA() {
+
             if (!this.rmaSearch.trim()) {
                 this.showAlertMessage('Please enter an RMA number');
                 return;
             }
-            
-            let outletid = 42;
-            let url = `/focussalesmodule/api/sales/rmaitems/?compid=${this.compid}&outletid=${outletid}&rmano=${this.rmaSearch.trim()}`;
-            fetch(url).then(async response => {
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(errorText);
-                }
-                return response.json();
-            }).then(dataObj => {
-                if (dataObj.result == 1) {
-                    console.log(dataObj);
-                    this.setItemInPOS(dataObj.data);
-                }
-                else {
-                    this.showAlertMessage(dataObj.message);
-                }
 
+            // Look up RMA in database (replace with actual API call)
+            const rmaData = this.rmaDatabase[this.rmaSearch.trim()];
 
-            }).catch(error => {
-                console.log(error);
-                //
-            });
-                      
-        },
-        setItemInPOS(rmaData) {
-            
             if (rmaData) {
-                // Check if item (by Id) already exists
-                const existingItem = this.items.find(item => item.Id === rmaData.Id);
+                // Check if item (by itemCode) already exists
+                const existingItem = this.items.find(item => item.itemCode === rmaData.itemCode);
 
                 if (existingItem) {
                     // Check if this specific RMA is already added
-                    if (existingItem.RmaNoList.includes(this.rmaSearch.trim())) {
-
+                    if (existingItem.rmas.includes(this.rmaSearch.trim())) {
                         this.showAlertMessage('This RMA is already added to the transaction');
-
                     } else {
                         // Add RMA to the existing item and increment quantity by 1
-                        existingItem.RmaNoList.push(this.rmaSearch.trim());
-                        existingItem.Qty += 1;
+                        existingItem.rmas.push(this.rmaSearch.trim());
+                        existingItem.qty += 1;
 
                         // Recalculate gross based on new qty
-                        // Formula: (Qty*SellingRate) - ((Qty*SellingRate)* (Disc %)) - Disc Amt
+                        // Formula: (Qty*Rate) - ((Qty*Rate)* (Disc %)) - Disc Amt
                         const result = this.calculateGross(
-                            existingItem.Qty,
-                            existingItem.Price,
-                            existingItem.DiscountPct,
-                            existingItem.FixedDiscountAmt
+                            existingItem.qty,
+                            existingItem.rate,
+                            existingItem.discountPct,
+                            existingItem.fixedDiscountAmt
                         );
 
-                        existingItem.DiscountAmt = result.TotalDiscount;
-                        existingItem.Gross = result.Gross;
-
-                        
-
-                        if (existingItem.TaxRate > 0) {
-                            let taxrate = existingItem.TaxRate / 100;
-                            existingItem.TaxAmt = existingItem.IsPriceExcl ? existingItem.Gross * taxrate : (existingItem.Gross / (taxrate + 1)) * taxrate;
-                        }
-                        else {
-                            existingItem.TaxAmt = 0;
-                        }
-                       
+                        existingItem.discountAmt = result.totalDiscount;
+                        existingItem.gross = result.gross;
 
                         this.showAlertMessage('RMA added to existing item, quantity updated');
                         this.rmaSearch = '';
                     }
-                }
-                else {
+                } else {
                     // New item - default qty is 1
                     const qty = 1;
 
-                    // Calculate gross: (Qty*SellingRate) - ((Qty*SellingRate)* (Disc %)) - Disc Amt
+                    // Calculate gross: (Qty*Rate) - ((Qty*Rate)* (Disc %)) - Disc Amt
                     const result = this.calculateGross(
                         qty,
-                        rmaData.Price,
-                        rmaData.FixedDiscountAmt,
-                        rmaData.DiscountPct
+                        rmaData.rate,
+                        rmaData.discountPct,
+                        rmaData.discountAmt
                     );
-                    rmaData.DiscountAmt = result.TotalDiscount;
-                    rmaData.Gross = result.Gross;
-                    rmaData.RmaNoList = [];
-                    rmaData.RmaNoList.push(rmaData.RmaNo);
 
-                    if (rmaData.TaxRate > 0) {
-                        let taxrate = rmaData.TaxRate / 100;
-                        rmaData.TaxAmt = rmaData.IsPriceExcl ? rmaData.Gross * taxrate : (rmaData.Gross / (taxrate + 1)) * taxrate;
-                    }
-                    else {
-                        rmaData.TaxAmt = 0;
-                    }
-
-
-                    this.items.push(rmaData);
-
-
-
+                    this.items.push({
+                        itemCode: rmaData.itemCode,
+                        rmas: [this.rmaSearch.trim()],
+                        itemName: rmaData.itemName,
+                        unit: rmaData.unit,
+                        qty: qty,
+                        rate: rmaData.rate,
+                        discountAmt: result.totalDiscount,
+                        discountPct: rmaData.discountPct,
+                        fixedDiscountAmt: rmaData.discountAmt,  // Store original fixed discount
+                        gross: result.gross
+                    });
 
                     this.showAlertMessage('Item added successfully');
                     this.rmaSearch = '';
                 }
-            }
-            else {
-
+            } else {
                 this.showAlertMessage('RMA not found in system');
             }
         },
+
         removeItem(index) {
             this.items.splice(index, 1);
             this.showAlertMessage('Item removed from transaction');
         },
 
-        showRMAs(Id){
-            const item = this.items.find(i => i.Id === Id);
+        showRMAs(itemCode) {
+            const item = this.items.find(i => i.itemCode === itemCode);
             if (item) {
-                this.selectedItemId = Id;
-                this.selectedItemRMAs = item.RmaNoList;
+                this.selectedItemCode = itemCode;
+                this.selectedItemRMAs = item.rmas;
                 this.showRMAModal = true;
             }
         },
@@ -297,39 +238,7 @@ function posSystem() {
             this.resetSettlement();
             this.showSettlementModal = true;
         },
-     
-        validateDocument(sessionid) {
 
-            this.postSale(sessionid);
-        },
-        postSale(sessionid) {
-
-
-            let url = `/focussalesmodule/api/sales/addsale?compid=${this.compid}&sessionid=${sessionid}`;
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(this.transactionData)
-            }).then(async response => {
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(errorText);
-                }
-                return response.json();
-            }).then(dataObj => {
-
-                this.showAlertMessage(dataObj.message);
-
-                this.items = [];
-                this.transactionData = {};
-
-            }).catch(error => {
-                console.log(error);
-                //
-            });
-        },
         resetSettlement() {
             this.cashAmount = 0;
             this.bankPayments = [];
@@ -385,38 +294,9 @@ function posSystem() {
             this.newBankPayment = { method: '', reference: '', amount: 0 };
             this.settlementError = '';
         },
-        addMonie() {
-
-            if (!this.newMoniePayment.reference) {
-                this.settlementError = 'Please enter a reference number';
-                return;
-            }
-            if (!this.newMoniePayment.amount || this.newMoniePayment.amount <= 0) {
-                this.settlementError = 'Please enter a valid amount';
-                return;
-            }
-
-            // Check if total exceeds grand total
-            const newTotal = this.totalPayments + this.newMoniePayment.amount;
-            if (newTotal > this.grandTotal) {
-                this.settlementError = 'Total bank payments cannot exceed the bill amount';
-                return;
-            }
-
-            this.moniePayments.push({
-                reference: this.newMoniePayment.reference,
-                amount: this.newMoniePayment.amount
-            });
-
-            this.newMoniePayment = { reference: '', amount: 0 };
-            this.settlementError = '';
-        },
 
         removeBankPayment(index) {
             this.bankPayments.splice(index, 1);
-        },
-        removeMoniePayment(index) {
-            this.moniePayments.splice(index, 1);
         },
 
         async applyVoucher() {
@@ -426,9 +306,9 @@ function posSystem() {
             }
 
             // Get all unique item codes from transaction
-            const ItemCodes = [...new Set(this.items.map(item => item.ItemCode))];
+            const itemCodes = [...new Set(this.items.map(item => item.itemCode))];
 
-            if (ItemCodes.length === 0) {
+            if (itemCodes.length === 0) {
                 this.settlementError = 'No items in transaction';
                 return;
             }
@@ -437,14 +317,14 @@ function posSystem() {
             let validVoucher = null;
             let validItemCode = null;
 
-            for (const ItemCode of ItemCodes) {
+            for (const itemCode of itemCodes) {
                 try {
-                    const response = await fetch(`/DiscountVoucher/ValidateVoucher?code=${encodeURIComponent(this.voucherCode)}&ItemCode=${encodeURIComponent(ItemCode)}`);
+                    const response = await fetch(`/DiscountVoucher/ValidateVoucher?code=${encodeURIComponent(this.voucherCode)}&itemCode=${encodeURIComponent(itemCode)}`);
                     const result = await response.json();
 
                     if (result.success) {
                         validVoucher = result.data;
-                        validItemCode = ItemCode;
+                        validItemCode = itemCode;
                         break;
                     }
                 } catch (error) {
@@ -528,46 +408,72 @@ function posSystem() {
             this.mobileMoneyApplied = true;
             this.settlementError = '';
         },
-        transactionData: {},
+
         async completeSettlement() {
             if (!this.canCompleteSettlement) {
                 this.settlementError = 'Payment amount is insufficient';
                 return;
             }
 
-            
+            // If voucher was used, record its usage
+            if (this.voucherApplied && this.voucherCode) {
+                try {
+                    const response = await fetch('/DiscountVoucher/UseVoucher', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            Code: this.voucherCode,
+                            ItemCode: this.voucherItemCode
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (!result.success) {
+                        this.settlementError = 'Failed to record voucher usage: ' + result.message;
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error recording voucher usage:', error);
+                    this.settlementError = 'Error recording voucher usage';
+                    return;
+                }
+            }
 
             // Prepare transaction data with payment details
-            this.transactionData = {
-                Items: this.items,
-                SubTotal: this.subtotal,
-                Tax: this.tax,
-                TotalDiscount: this.totalDiscount,
-                GrandTotal: this.grandTotal,
-                Payments: {
-                    Cash: this.cashAmount || 0,
-                    BankPayments: this.bankPayments,
-                    DiscountVoucher: this.voucherApplied ? {
-                        Code: this.voucherCode,
-                        Amount: this.voucherAmount,
-                        
+            const transactionData = {
+                items: this.items,
+                subtotal: this.subtotal,
+                tax: this.tax,
+                totalDiscount: this.totalDiscount,
+                grandTotal: this.grandTotal,
+                payments: {
+                    cash: this.cashAmount || 0,
+                    bankPayments: this.bankPayments,
+                    voucher: this.voucherApplied ? {
+                        code: this.voucherCode,
+                        amount: this.voucherAmount,
+                        itemCode: this.voucherItemCode
                     } : null,
-                    CreditNote: this.creditNoteApplied ? { Number: this.creditNoteNumber, Amount: this.creditNoteAmount } : null,
-                    Monie: this.monieApplied ? {
-                        MonieTransactionId: this.monieTransactionId,
-                        Amount: this.monieMoneyAmount
-                    }  : null
+                    creditNote: this.creditNoteApplied ? { number: this.creditNoteNumber, amount: this.creditNoteAmount } : null,
+                    mobileMoney: this.mobileMoneyApplied ? {
+                        provider: this.mobileMoneyProvider,
+                        phone: this.mobileMoneyPhone,
+                        transactionId: this.mobileMoneyTransactionId,
+                        amount: this.mobileMoneyAmount
+                    } : null
                 },
-                TotalPaid: this.totalPayments + (this.cashAmount || 0),
-                Change: this.changeAmount,
-                Timestamp: new Date().toISOString()
+                totalPaid: this.totalPayments + (this.cashAmount || 0),
+                change: this.changeAmount,
+                timestamp: new Date().toISOString()
             };
 
-            console.log('Saving transaction with settlement:', this.transactionData);
-            focusSessionUpdater("setSession");
+            console.log('Saving transaction with settlement:', transactionData);
+
             // Close modal and show success
             this.showSettlementModal = false;
-           // this.showAlertMessage('Transaction saved successfully!');
+            this.showAlertMessage('Transaction saved successfully!');
 
             // Optionally clear items after successful save
             // this.items = [];
@@ -616,17 +522,12 @@ function posSystem() {
                     this.items = [];
                     this.rmaSearch = '';
                     this.showAlertMessage('Transaction cancelled');
-                    Focus8WAPI.gotoHomePage();
                 }
             }
-            
         },
 
         formatCurrency(amount) {
-            let num = Number(amount);
-            let formatted = num.toFixed(2);
-            return formatted;
-            //return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         },
 
         showAlertMessage(message) {

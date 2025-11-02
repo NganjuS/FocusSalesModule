@@ -459,14 +459,13 @@
                     <div class="hstack gap-1">
 
                         <h4 class="headers-style">
-                            <span>Outlet:  </span><span x-text="activeOutlet">
-                            </span>
+                            <span>Outlet: Lagos</span>
                         </h4>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <h4 class="headers-style">
-                        <span>Cashier: </span> <span x-text="cashierName"></span>
+                        <span>Cashier: Jane</span>
                     </h4>
                 </div>
                 <div class="col-md-4"></div>
@@ -645,7 +644,7 @@
                     <button class="payment-tab" :class="{ 'active': activePaymentTab === 'bank' }" @@click="activePaymentTab = 'bank'">Bank Payments</button>
                     <button class="payment-tab" :class="{ 'active': activePaymentTab === 'voucher' }" @@click="activePaymentTab = 'voucher'">Discount Voucher</button>
                     <button class="payment-tab" :class="{ 'active': activePaymentTab === 'credit' }" @@click="activePaymentTab = 'credit'">Credit Note</button>
-                    <button class="payment-tab" :class="{ 'active': activePaymentTab === 'monie' }" @@click="activePaymentTab = 'monie'">Monie</button>
+                    <button class="payment-tab" :class="{ 'active': activePaymentTab === 'mobile' }" @@click="activePaymentTab = 'monie'">Monie</button>
                 </div>
 
                 <!-- Cash Payment -->
@@ -747,37 +746,32 @@
                 </div>
 
                 <!-- Monie -->
-                <div class="payment-content" :class="{ 'active': activePaymentTab === 'monie' }">
+                <div class="payment-content" :class="{ 'active': activePaymentTab === 'mobile' }">
                     <div class="payment-form-group">
-                        <label>Reference Number</label>
-                        <input type="text" x-model="newMoniePayment.reference" placeholder="Enter reference number">
+                        <label>Mobile Money Provider</label>
+                        <select x-model="mobileMoneyProvider">
+                            <option value="">Select provider</option>
+                            <option value="M-Pesa">M-Pesa</option>
+                            <option value="Airtel Money">Airtel Money</option>
+                            <option value="T-Kash">T-Kash</option>
+                        </select>
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Phone Number</label>
+                        <input type="text" x-model="mobileMoneyPhone" placeholder="Enter phone number">
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Transaction ID</label>
+                        <input type="text" x-model="mobileMoneyTransactionId" placeholder="Enter transaction ID">
                     </div>
                     <div class="payment-form-group">
                         <label>Amount</label>
-                        <input type="number" x-model.number="newMoniePayment.amount" placeholder="Enter amount" step="0.01">
+                        <input type="number" x-model.number="mobileMoneyAmount" @@input="calculatePayments()" placeholder="Enter amount" step="0.01">
                     </div>
-                    <button class="btn-add-payment" @@click="addMonie()">Add Payment</button>
-
-                    <table class="bank-payments-table" x-show="bankPayments.length > 0">
-                        <thead>
-                            <tr>
-                                <th>Reference</th>
-                                <th>Amount</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="(payment, index) in moniePayments" :key="index">
-                                <tr>                     
-                                    <td x-text="payment.reference"></td>
-                                    <td x-text="formatCurrency(payment.amount)"></td>
-                                    <td>
-                                        <button class="btn-remove-payment" @@click="removeMoniePayment(index)">Remove</button>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
+                    <button class="btn-add-payment" @@click="applyMobileMoney()">Apply Mobile Money</button>
+                    <div x-show="mobileMoneyApplied" style="margin-top: 10px; color: #28a745; font-weight: 600;">
+                        Mobile Money applied: <span x-text="formatCurrency(mobileMoneyAmount)"></span>
+                    </div>
                 </div>
 
                 <!-- Settlement Actions -->
@@ -794,6 +788,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script defer src="~/Scripts/alpine.min.js"></script>
 
-    <script src="~/Scripts/pos/posscreen.js?v=7709902cc3j"></script>
+    <script src="~/Scripts/pos/posscreen.js?v=7700sj343j77s223j"></script>
 </body>
 </html>

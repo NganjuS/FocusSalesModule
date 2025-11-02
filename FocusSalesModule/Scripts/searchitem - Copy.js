@@ -439,7 +439,7 @@ var Focus8WAPI = {
 
 }
 window.addEventListener('message', Focus8WAPI.PRIVATE.onReceiveMessage);
-var initialRequestId = 0;
+
 var requestsProcessed = [];
 var requestId = 0;
 var companyid = 0;
@@ -447,23 +447,7 @@ var sessionid = "";
 var vtype = 0;
 var docno = "";
 var totalRows = 0;
-let shadowItemList = [];
-let validRows = 0;
-var lineRequestsProcessed = [];
-var lineRequestId = 0;
-function resetDefaults() {
-
-    lineRequestsProcessed = [];
-    shadowItemList = [];
-    requestId = 0;
-    companyid = 0;
-    sessionid = "";
-    vtype = 0;
-    docno = "";
-    totalRows = 0;
-   shadowItemList = [];
-    validRows = 0;
-}
+var shadowItemList = [];
 function isRequestProcessed(iRequestId) {
 
     for (let i = 0; i < requestsProcessed.length; i++) {
@@ -472,31 +456,10 @@ function isRequestProcessed(iRequestId) {
         }
     } return false;
 }
-
-function isLineRequestProcessed(iRequestId) {
-
-    for (let i = 0; i < lineRequestsProcessed.length; i++) {
-        if (lineRequestsProcessed[i] == iRequestId) {
-            return true;
-        }
-    } return false;
-}
 function initRmaSearch(response) {
-
-    console.log("Initial log ...",response.iRequestId)
-    //if (initialRequestId != 0) {
-    //    resetDefaults()
-    //}
-    //initialRequestId = response.iRequestId;
-    //resetDefaults();
     ++requestId;
 
     Focus8WAPI.getFieldValue("getRma", ["", "DocNo", "RmaSearch","Outlet"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
-}
-function clearSearchField(clearField)
-{
-    ++requestId;
-    Focus8WAPI.setFieldValue("afterLineAdded", [clearField], [""], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
 function getRma(response) {
     if (isRequestProcessed(response.iRequestId)) {
@@ -504,38 +467,42 @@ function getRma(response) {
     }
  
     requestsProcessed.push(response.iRequestId);
-
-    validRows = response.data[0].RowsInfo.iValidRows;
-    
-    shadowItemList = [];
-    lineRequestsProcessed = [];
-    
+    console.log(response.data);
     companyid = response.data[0].CompanyId;
     sessionid = response.data[0].SessionId;
     vtype = response.data[0].iVoucherType;
     docno = response.data[1].FieldValue;
     let rmano = response.data[2].FieldValue;
     let outletid = response.data[3].FieldValue;
-    if (rmano.trim().length == 0) {
-
-        console.log("Initiated rma trigger but rma field is empty !!");
-        return;
-    }
 
     if (outletid == 0) {
 
         alert("Select outlet to continue !!! ");
         return;
     }
-    searchRma(rmano, outletid)
+
+
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "/focussalesmodule/content/sweetalert2.min.css";
+    document.head.appendChild(link);
+
+
+    const script = document.createElement("script");
+    script.src = "/focussalesmodule/scripts/sweetalert2.all.min.js";
+    script.onload = () => {
+        Focus8WAPI.closePopup();
+        openPopup(rmano);
+    };
+    document.body.appendChild(script);
 
 }
-async function searchRma(rmano, outletid)
+async function openPopup(rmano)
 {
     try
     {
-       
-        let url = `/focussalesmodule/api/sales/rmaitems/?compid=${companyid}&outletid=${outletid}&rmano=${rmano}`;
+        displaySearch(rmano)
+        let url = `/focussalesmodule/api/sales/rmaitems/?compid=${companyid}&rmano=${rmano}`;
         let response = await fetch(url);
 
         if (!response.ok) {
@@ -543,213 +510,289 @@ async function searchRma(rmano, outletid)
         }
 
         let dataObj = await response.json();
-
         console.log(dataObj);
-
         if (dataObj.result == -1) {
             alert(dataObj.message);
 
             return;
         }
-        else {
-            clearSearchField("RmaSearch");
-            console.log("Valid rows", validRows);
-            if (validRows == 0) {
-                console.log("Setting row no",)
-                
-                setLineItemsToDoc(1, dataObj.data)
-                
-            }
-            else {
-                console.log("Retrieving existing",)
-                getExistingItems(dataObj.data)
-            }
-            
-        }
-
+        setTableRows(dataObj.datalist);
 
         }
         catch (err) {
 
-            alert("Error when searching Rma: " + err);
-    
+            alert("Unable when loading Rma: " + err);
+
         }
         finally {
             
         }
 
 }
-var loadedItem = null;
+async function getRmaData() {
 
-function getExistingItems(item) {
-    loadedItem = item;
-    lineRequestsProcessed = [];
-    console.log(`Processing for Rma No:`, item.RmaNo);
-    console.log("Getting data from focus, valid Rows ", validRows);
-    for (i = 0; i < validRows; i++) {
-        console.log(`Getting row ${i}`, validRows);
-        Focus8WAPI.getBodyFieldValue("getDocBodyData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
-        //After last row
-        //problem area
+    try {
+        let inputsearch = document.getElementById("searchitem");
+        if (inputsearch == null) {
+            return;
+        }
+        let rmano = document.getElementById("searchitem").value;
+        console.log(rmano);
+
+        let url = `/focussalesmodule/api/sales/rmaitems/?compid=${companyid}&rmano=${rmano}`;
+        let response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+
+        let dataObj = await response.json();
+        console.log(dataObj);
+        if (dataObj.result == -1) {
+            alert(dataObj.message);
+
+            return;
+        }
+        setTableRows(dataObj.datalist);
+
+
+    }
+    catch (err) {
+
+        console.log(err);
+        alert("Unable when loading Rma: " + err);
+
+    }
+    finally {
+
+    }
+
+}
+function displaySearch(rmano) {
+
+       
+    let htmltext = `${getStyling()}
+        <div class="sa-grid sa-gutter-sm">
+        <div class="sa-col">
+            <label style="margin-left : 10px;"><b>Rma No:</b> <label>
+                <input value="${rmano}" id="searchitem" type="text" style="width: 200px; height: 40px;font-size: 14px;" />
+                <button style="margin-left: 5px;padding: 10px;" id="btnSearchRma">Search</button>
+        </div>
+        </div>
+        <div class="sa-grid sa-gutter-sm">
+        <div class="sa-col">
+                ${getTable()}
+        </div>
+        </div>
+    `;
+
+    
+
+    Swal.fire(
+        {
+            width: '800px',
+            html: htmltext,
+            showDenyButton: false,
+            showCancelButton: true,
+            allowOutsideClick: false,
+            confirmButtonColor: "#333333",
+            cancelButtonText: `<div><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+</svg><br/>Cancel</div>`,
+
+            confirmButtonText: `<div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-floppy2" viewBox="0 0 16 16">
+  <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v3.5A1.5 1.5 0 0 1 11.5 6h-7A1.5 1.5 0 0 1 3 4.5V1H1.5a.5.5 0 0 0-.5.5m9.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5z"/>
+</svg>
+            <br/>Save</div>`,
+            preConfirm: () => {
+                
+              
+            }
+        }
+    ).then(result => {
+        if (result.isConfirmed) {
+            console.log("Selected rows:", result.value);
+
+            Swal.close();
+        }
+    });
+    var searchBar = document.getElementById("searchitem");
+    if (searchBar != null) {
+
+        searchBar.onchange = getRmaData(companyid);
+    }
+    var searchBtn = document.getElementById("btnSearchRma");
+    if (searchBtn != null) {
+        console.log("Clicked search button!!");
+        searchBtn.onclick = getRmaData;
+    }
+    
+}
+
+function setTableRows(datalist) {
+    let tbody = document.getElementById("dataList");
+    tbody.innerHTML = '';
+    let rowStrList = "";
+    for (let i = 0; i < datalist.length; i++) {
+
+        rowStrList += ` <tr><td style="display: none;">${datalist[i].Id}</td>
+                      <td style="padding: 12px 15px;
+border-bottom: 1px solid #ddd;">${datalist[i].Name}</td>
+ <td style="padding: 12px 15px;
+border-bottom: 1px solid #ddd;">${datalist[i].RmaNo}</td>
+<td  style="padding: 12px 15px;
+border-bottom: 1px solid #ddd;">${datalist[i].Price}</td><td  style="padding: 12px 15px;
+border-bottom: 1px solid #ddd;">${datalist[i].Stock}</td><td style="padding: 12px 15px;
+border-bottom: 1px solid #ddd;">
+ <button style="margin-left: 5px;padding: 10px;" id="btnAddItem">Add</button>
+</td>
+                  </tr>`
+
         
+
+    }
+
+    tbody.innerHTML = rowStrList;
+    var btnAdd = document.getElementById("btnAddItem");
+    if (btnAdd != null) {
+
+        btnAdd.onclick = addItemToScr;
+    }
+   
+
+}
+function getHeaderDetails(response) {
+    ++requestId;
+    shadowItemList = [];
+    Focus8WAPI.getFieldValue("getExistingItems", ["", "DocNo", "RmaSearch", "Outlet"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+}
+let validRows = 0;
+function getExistingItems(response) {
+
+    if (isRequestProcessed(response.iRequestId)) {
+        return;
+    }
+
+    requestsProcessed.push(response.iRequestId);
+
+    for (i = 0; i < response.data[0].RowsInfo.iValidRows; i++) {
+        ++requestId;
+        Focus8WAPI.getBodyFieldValue("getDocBodyData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i);
     }
 }
 function getDocBodyData(response) {
 
-    console.log("Logging row no", response.iRequestId);
-    if (isLineRequestProcessed(response.iRequestId)) {
-        console.log("Row no already exists, returning", response.iRequestId);
+    if (isRequestProcessed(response.iRequestId)) {
         return;
     }
 
-    lineRequestsProcessed.push(response.iRequestId);
-    console.log("Adding data for row no:", response.iRequestId);
-    var docNo = response.data[1].FieldValue;
-    var companyid = response.data[0].CompanyId;
-    var sessid = response.data[0].SessionId;
-    var vtype = response.data[0].iVoucherType;
-    //"Item", "Unit", "RMA", "Quantity", "Rate", "Gross"
-    let payload = {
+    requestsProcessed.push(response.iRequestId);
 
-        "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docNo, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue
-    };
-    shadowItemList.push(payload);
-    console.log("Valid rows", response.data[0].RowsInfo.iValidRows);
-    console.log("Request Id", response.iRequestId, "Valid rows", validRows)
-    if (response.iRequestId == validRows) {
+    if (response.iRequestId == response.data[0].RowsInfo.iValidRows) {
 
-        console.log("Valid rows: ", validRows, "Reading lines completed");
+        lastrowid = response.data[0].RowsInfo.iValidRows;
+    }
+
+}
+function addItemToScr() {
+
+    let tbody = document.getElementById("dataList");
+    let rows = tbody.querySelectorAll("tr");
+    let selected = [];
+
+    shadowItemList.push({
+        ItemId: 0, ItemName: "", RmaNo: "", RmaNoList: [],Price: 0, Qty: 0
+    });
+
+    rows.forEach(row => {
+
+            let itemId = row.cells[0].textContent;
+            let rmano = row.cells[2].textContent;
+            let price = row.cells[3].textContent;
+        let qty = 1;
+
+        selected.push({ ItemId: itemId, RmaNo: rmano, Price: price, Qty: qty });
         
-            console.log(shadowItemList);
-            //check if rma exists
-            // let rmaExists = false;
-
-            /*"Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue*/
-            //Find Item in shadow list
-            let itemExists = shadowItemList.find(x => x.Item == loadedItem.Id);
-            if (itemExists) {
-                let rmaExists = itemExists.RMA.find(x => x == loadedItem.RmaNo);
-                console.log(rmaExists);
-                let rowNo = shadowItemList.indexOf(itemExists) + 1;
-                if (rmaExists) {
-                    
-                    alert("RMA already exists !!")
-                    console.log("Rma Item", rmaExists);
-                    console.log("Current Item", loadedItem);
-                    let newQty = itemExists.RMA.length;
-                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity"], [itemExists.RMA, newQty], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
-                    //clearSearchField();
-                    return;
-                }
-                else {
-                    //clearSearchField();
-                    console.log("updating existing row !!");
-                    ++requestId;
-                    
-                    itemExists.RMA.push(loadedItem.RmaNo);
-                    let newQty = itemExists.RMA.length;
-                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity"], [itemExists.RMA, newQty], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+    });
 
 
-                }
+    for (i = 0; i < selected.length; i++) {
+        ++requestId
 
-            }
-            else {
-                console.log("Adding new line for rma item");
-                setLineItemsToDoc(validRows + 1, loadedItem)
-            }
-
-       
-    }
-
-}
-function setLineItemsToDoc(rowNo, item) {
-
-    ++requestId;
-    let gross = parseInt(item.Qty) * parseFloat(item.Price);
-    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "Rate", "Gross", "RMA"], [item.Id, item.UnitId, item.Qty, item.Price, gross, item.RmaNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
-}
-function afterLineAdded(response) {
-}
-//Remove item RMA
-let validRemovalRows = 0;
-let removalRmaNo = "";
-let removalRequestsProcessed = [];
-let removalRequestId = 0;
-
-function initRemoveRma(response) {
-
-    console.log("Initial remove RMA ...", response.iRequestId)
-    ++removalRequestId;
-
-    Focus8WAPI.getFieldValue("getRemoveRmaList", ["", "DocNo", "RemoveRma", "Outlet"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, removalRequestId);
-}
-
-function isRemoveRequestProcessed(iRequestId) {
-
-    for (let i = 0; i < removalRequestsProcessed.length; i++) {
-        if (removalRequestsProcessed[i] == iRequestId) {
-            return true;
-        }
-    } return false;
-}
-function getRemoveRmaList(response) {
-
-    if (isRemoveRequestProcessed(response.iRequestId)) {
-        return;
-    }
-    validRemovalRows = response.data[0].RowsInfo.iValidRows;
-    removalRequestsProcessed = [];
-    companyid = response.data[0].CompanyId;
-    sessionid = response.data[0].SessionId;
-    vtype = response.data[0].iVoucherType;
-    docno = response.data[1].FieldValue;
-    let rmano = response.data[2].FieldValue;
-    let outletid = response.data[3].FieldValue;
-    if (rmano.trim().length == 0 || validRemovalRows == 0) {
-
-        console.log("Initiated rma trigger but rma field is empty or no valid rows!!");
-        return;
-    }
-    getRemovalItems(rmano)
-}
-function getRemovalItems(rmano) {
-    removalRmaNo = rmano;
-    for (i = 0; i < validRows; i++) {
-        console.log(`Getting row ${i}`, validRows);
-        Focus8WAPI.getBodyFieldValue("removeRmaData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
-        //After last row
-        //problem area
+        let gross = parseInt(selected[i].Qty) * parseFloat(selected[i].Price);
+        Focus8WAPI.setBodyFieldValue("AddLinesToScr", ["Item", "Quantity", "Rate", "Gross", "RMA"], [selected[i].ItemId, selected[i].Qty, selected[i].Price, gross, selected[i].RmaNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, totalRows + 1, requestId);
 
     }
 }
 
 
-function removeRmaData(response) {
 
-    console.log("Logging row no", response.iRequestId);
-    if (isRemoveRequestProcessed(response.iRequestId)) {
-        console.log("Row no already exists, returning", response.iRequestId);
-        return;
-    }
+function getTable() {
+    return `<table style="width: 100%;border-collapse: collapse; 
+  margin: 20px 0;font-size: 14px;text-align: left;border-radius: 8px;overflow: hidden;box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <thead>
+                    <tr>
+                         <th style="display: none;">##</th>   <th style="background-color: #0073AA;color: white;
+font-weight: bold;padding: 12px 15px;">Product</th>
+<th style="background-color: #0073AA;color: white;
+font-weight: bold;padding: 12px 15px;">Rma No</th>
+<th style="background-color: #0073AA;color: white;
+font-weight: bold;padding: 12px 15px;">Price</th><th style="background-color: #0073AA;color: white;
+font-weight: bold;padding: 12px 15px;">Stock</th><th style="background-color: #0073AA;color: white;
+font-weight: bold;padding: 12px 15px;">##</th>
+                    </tr>
+                    </thead>
+                    <tbody id="dataList">
+                    <tr><td rowspan='5' style='padding: 12px 15px;border - bottom: 1px solid #ddd;'>No data found !!</td></></tr>
+                    </tbody>
+            </table>`
+}
+function getStyling() {
+    return `<style>
+/* ---------- Simple Sa-Grid (self-contained for Swal) ---------- */
+.sa-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* responsive columns */
+  gap: 12px;            /* default gutter */
+  align-items: start;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+.sa-col{
+  background: #fbfdff;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(20,30,50,0.06);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02) inset;
+  font-size: 14px;
+  line-height: 1.3;
+  box-sizing: border-box;
+}
 
-    removalRequestsProcessed.push(response.iRequestId);
-    let rmaList = response.data[3].FieldValue; 
-    rmaExists = rmaList.find(x => x == removalRmaNo);
-    if (rmaExists) {
-        console.log("Rma to remove found")
-        rmaList = rmaList.filter(x => x != removalRmaNo);
-        ++requestId;
-        let newQty = rmaList.length;
-        if (rmaList.length == 0) {
-            console.log("Removing Item")
-            Focus8WAPI.setBodyFieldValue("afterLineAdded", [ "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], ["0","0",[],0,0,0], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, response.iRequestId, requestId);
-        }
-        else {
+/* Utilities */
+.sa-gutter-sm{ gap: 8px; }
+.sa-gutter-lg{ gap: 18px; }
+.sa-center{ text-align: center; }
+.sa-strong{ font-weight: 600; }
 
-            Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity"], [rmaList, newQty], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, response.iRequestId, requestId);
-        }
-       
-    }
-    clearSearchField("RemoveRma");
+/* Column span helpers (use sparingly) */
+.sa-span-2{ grid-column: span 2; }
+.sa-span-3{ grid-column: span 3; }
+
+/* Stack to single column on narrow modals */
+@media (max-width: 420px){
+  .sa-grid{ grid-template-columns: 1fr; }
+  .sa-span-2, .sa-span-3 { grid-column: auto; }
+}
+
+/* Small helper for label/value rows inside a column */
+.sa-row{ display:flex; justify-content:space-between; gap:8px; align-items:center; }
+.sa-label{ color: #586069; font-size:13px; }
+.sa-value{ font-weight:600; color:#111827; font-size:13px; }
+</style>`;
 }

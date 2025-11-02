@@ -256,7 +256,7 @@
         <!-- Page Header -->
         <div class="page-header">
             <h1><i class="bi bi-box-arrow-right me-2"></i>Stock Issue</h1>
-            <button class="btn-save-issue" @click="saveStockIssue()">
+            <button class="btn-save-issue" @@click="saveStockIssue()">
                 <i class="bi bi-check-circle me-2"></i>Save Stock Issue
             </button>
         </div>
@@ -310,7 +310,7 @@
                             <template x-for="(item, index) in stockIssue.items" :key="index">
                                 <tr>
                                     <td>
-                                        <select :id="'product-' + index" x-model="item.productId" @change="updateProductDetails(index)" class="product-select">
+                                        <select :id="'product-' + index" x-model="item.productId" @@change="updateProductDetails(index)" class="product-select">
                                             <option value="">Select Product</option>
                                         </select>
                                     </td>
@@ -327,7 +327,7 @@
                                         <input type="text" x-model="item.rmaNo" placeholder="Enter RMA NO">
                                     </td>
                                     <td>
-                                        <button class="btn-remove-row" @click="removeRow(index)">
+                                        <button class="btn-remove-row" @@click="removeRow(index)">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </td>
@@ -336,7 +336,7 @@
                         </tbody>
                     </table>
                 </div>
-                <button class="btn-add-row" @click="addRow()">
+                <button class="btn-add-row" @@click="addRow()">
                     <i class="bi bi-plus-circle"></i>Add Row
                 </button>
             </div>

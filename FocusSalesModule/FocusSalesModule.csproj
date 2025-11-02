@@ -190,18 +190,35 @@
     <Compile Include="Controllers\DiscountVoucherController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\POSScreenController.cs" />
+    <Compile Include="Controllers\POSScreenAPIController.cs" />
     <Compile Include="Controllers\RmaItemAPIController.cs" />
+    <Compile Include="Controllers\StockTransferController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Data\DbCtx.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\APIManager.cs" />
+    <Compile Include="Helpers\UtilFuncs.cs" />
     <Compile Include="Logs\Logger.cs" />
+    <Compile Include="Models\BankPaymentDTO.cs" />
     <Compile Include="Models\DiscountVoucher.cs" />
+    <Compile Include="Models\GenericPayment.cs" />
     <Compile Include="Models\HashData.cs" />
     <Compile Include="Models\HashDataFocus.cs" />
+    <Compile Include="Models\MasterDTO.cs" />
+    <Compile Include="Models\Outlet.cs" />
+    <Compile Include="Models\PaymentDTO.cs" />
+    <Compile Include="Models\POSDto.cs" />
+    <Compile Include="Models\PosLine.cs" />
     <Compile Include="Models\Product.cs" />
+    <Compile Include="Models\RmaItem.cs" />
+    <Compile Include="Models\StockTransfer.cs" />
+    <Compile Include="Models\StockTransferItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Queries\MasterQueries.cs" />
+    <Compile Include="Queries\ProductQueries.cs" />
+    <Compile Include="Screens\POSSales.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
@@ -226,6 +243,7 @@
     <Content Include="Content\waitMe.min.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
+    <Content Include="Scripts\alpine.min.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
@@ -258,7 +276,9 @@
     <Content Include="Scripts\jquery-3.7.0.slim.js" />
     <Content Include="Scripts\jquery-3.7.0.slim.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\pos\posscreen - Copy.js" />
     <Content Include="Scripts\pos\posscreen.js" />
+    <Content Include="Scripts\searchitem - Copy.js" />
     <Content Include="Scripts\searchitem.js" />
     <Content Include="Scripts\select2.min.js" />
     <Content Include="Scripts\sweetalert2.all.min.js" />
@@ -279,10 +299,12 @@
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\POSScreen\Index.cshtml" />
     <Content Include="Views\DiscountVoucher\Index.cshtml" />
+    <Content Include="Views\StockTransfer\StockIssue.cshtml" />
+    <Content Include="Views\StockTransfer\StockReceipt.cshtml" />
+    <Content Include="Views\POSScreen\Index - Copy.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Queries\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Scripts\bootstrap.min.js.map" />
