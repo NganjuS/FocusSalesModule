@@ -86,7 +86,6 @@
             width: 66.67%;
             display: flex;
             flex-direction: column;
-            border-left: 1px solid #dee2e6;
         }
 
         .search-section {
@@ -96,6 +95,7 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            border-left: 1px solid #dee2e6;
         }
 
         .table-container {
@@ -585,7 +585,54 @@
         </div>
 
         <div class="content-wrapper">
-            <!-- Search Section (1/3) - Left Side -->
+            <!-- Items Section (2/3) - Left Side -->
+            <div class="items-section">
+                <div class="table-container">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 4%;">#</th>
+                                <th style="width: 12%;">Item Code</th>
+                                <th style="width: 27%;">Item</th>
+                                <th style="width: 8%;">Unit</th>
+                                <th style="width: 8%;">Qty</th>
+                                <th style="width: 10%;">Rate</th>
+                                <th style="width: 10%;">Disc Amt</th>
+                                <th style="width: 8%;">Disc %</th>
+                                <th style="width: 10%;">Gross</th>
+                                <th style="width: 3%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="(item, index) in items" :key="index">
+                                <tr>
+                                    <td x-text="index + 1"></td>
+                                    <td>
+                                        <span class="item-code-link" @@click="showRMAs(item.Id)" x-text="item.Code"></span>
+                                    </td>
+                                    <td x-text="item.Name"></td>
+                                    <td x-text="item.Unit"></td>
+                                    <td x-text="item.Qty"></td>
+                                    <td x-text="formatCurrency(item.Price)"></td>
+                                    <td x-text="formatCurrency(item.FixedDiscountAmt)"></td>
+                                    <td x-text="item.DiscountPct + '%'"></td>
+                                    <td x-text="formatCurrency(item.Gross)"></td>
+                                    <td class="text-center">
+                                        <button class="remove-btn" @@click="removeItem(index)" title="Remove item">
+                                            <i class="bi bi-x-circle-fill"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                            <tr x-show="items.length === 0">
+                                <td colspan="10" class="text-center text-muted">No items added. Scan an RMA to add items.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Search Section (1/3) - Right Side -->
             <div class="search-section">
                 <!-- RMA Search Field -->
                 <div>
@@ -636,53 +683,6 @@
                             <span x-text="formatCurrency(grandTotal)"></span>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Items Section (2/3) - Right Side -->
-            <div class="items-section">
-                <div class="table-container">
-                    <table class="table table-bordered table-hover">
-                        <thead>
-                            <tr>
-                                <th style="width: 4%;">#</th>
-                                <th style="width: 12%;">Item Code</th>
-                                <th style="width: 27%;">Item</th>
-                                <th style="width: 8%;">Unit</th>
-                                <th style="width: 8%;">Qty</th>
-                                <th style="width: 10%;">Rate</th>
-                                <th style="width: 10%;">Disc Amt</th>
-                                <th style="width: 8%;">Disc %</th>
-                                <th style="width: 10%;">Gross</th>
-                                <th style="width: 3%;"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="(item, index) in items" :key="index">
-                                <tr>
-                                    <td x-text="index + 1"></td>
-                                    <td>
-                                        <span class="item-code-link" @@click="showRMAs(item.Id)" x-text="item.Code"></span>
-                                    </td>
-                                    <td x-text="item.Name"></td>
-                                    <td x-text="item.Unit"></td>
-                                    <td x-text="item.Qty"></td>
-                                    <td x-text="formatCurrency(item.Price)"></td>
-                                    <td x-text="formatCurrency(item.FixedDiscountAmt)"></td>
-                                    <td x-text="item.DiscountPct + '%'"></td>
-                                    <td x-text="formatCurrency(item.Gross)"></td>
-                                    <td class="text-center">
-                                        <button class="remove-btn" @@click="removeItem(index)" title="Remove item">
-                                            <i class="bi bi-x-circle-fill"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </template>
-                            <tr x-show="items.length === 0">
-                                <td colspan="10" class="text-center text-muted">No items added. Scan an RMA to add items.</td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
