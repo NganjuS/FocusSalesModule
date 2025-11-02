@@ -83,7 +83,7 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
-            border-right: 1px solid #dee2e6;
+            border-left: 1px solid #dee2e6;
             height: 100vh;
             overflow-y: auto;
         }
@@ -528,61 +528,7 @@
     <div class="main-container" id="main-container" x-data="posSystem()">
         <input x-ref="compid" value="@ViewBag.compid" type="hidden" />
 
-        <!-- Sidebar Section (1/3) - Left Side -->
-        <div class="sidebar-section">
-            <!-- RMA Search Field -->
-            <div>
-                <label class="search-label">Search RMA</label>
-                <input type="text"
-                       class="form-control search-input"
-                       placeholder="Enter RMA number..."
-                       x-model="rmaSearch"
-                       @@keyup.enter="scanRMA()">
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="footer-buttons">
-                <button class="btn btn-light" @@click="saveTransaction()">
-                    <i class="bi bi-save me-2"></i>Save
-                </button>
-                <button class="btn btn-light" @@click="reprintTransaction()">
-                    <i class="bi bi-printer me-2"></i>Reprint
-                </button>
-                <button class="btn btn-light" @@click="newTransaction()">
-                    <i class="bi bi-plus-circle me-2"></i>New Transaction
-                </button>
-                <button class="btn btn-warning" @@click="holdTransaction()">
-                    <i class="bi bi-pause-circle me-2"></i>Hold
-                </button>
-                <button class="btn btn-danger" @@click="cancelTransaction()">
-                    <i class="bi bi-x-circle me-2"></i>Cancel
-                </button>
-            </div>
-
-            <!-- Totals Section -->
-            <div class="totals-footer">
-                <div class="footer-totals">
-                    <div class="total-row">
-                        <span>Subtotal:</span>
-                        <span x-text="formatCurrency(subtotal)"></span>
-                    </div>
-                    <div class="total-row">
-                        <span>Total Discount:</span>
-                        <span x-text="formatCurrency(totalDiscount)"></span>
-                    </div>
-                    <div class="total-row">
-                        <span>Tax:</span>
-                        <span x-text="formatCurrency(tax)"></span>
-                    </div>
-                    <div class="total-row grand-total">
-                        <span>GRAND TOTAL:</span>
-                        <span x-text="formatCurrency(grandTotal)"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Content Section (2/3) - Right Side -->
+        <!-- Main Content Section (2/3) - Left Side -->
         <div class="main-content-section">
             <!-- Success Alert -->
             <div x-show="showAlert" x-transition class="alert alert-success alert-dismissible fade show" role="alert">
@@ -692,6 +638,60 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Section (1/3) - Right Side -->
+        <div class="sidebar-section">
+            <!-- RMA Search Field -->
+            <div>
+                <label class="search-label">Search RMA</label>
+                <input type="text"
+                       class="form-control search-input"
+                       placeholder="Enter RMA number..."
+                       x-model="rmaSearch"
+                       @@keyup.enter="scanRMA()">
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="footer-buttons">
+                <button class="btn btn-light" @@click="saveTransaction()">
+                    <i class="bi bi-save me-2"></i>Save
+                </button>
+                <button class="btn btn-light" @@click="reprintTransaction()">
+                    <i class="bi bi-printer me-2"></i>Reprint
+                </button>
+                <button class="btn btn-light" @@click="newTransaction()">
+                    <i class="bi bi-plus-circle me-2"></i>New Transaction
+                </button>
+                <button class="btn btn-warning" @@click="holdTransaction()">
+                    <i class="bi bi-pause-circle me-2"></i>Hold
+                </button>
+                <button class="btn btn-danger" @@click="cancelTransaction()">
+                    <i class="bi bi-x-circle me-2"></i>Cancel
+                </button>
+            </div>
+
+            <!-- Totals Section -->
+            <div class="totals-footer">
+                <div class="footer-totals">
+                    <div class="total-row">
+                        <span>Subtotal:</span>
+                        <span x-text="formatCurrency(subtotal)"></span>
+                    </div>
+                    <div class="total-row">
+                        <span>Total Discount:</span>
+                        <span x-text="formatCurrency(totalDiscount)"></span>
+                    </div>
+                    <div class="total-row">
+                        <span>Tax:</span>
+                        <span x-text="formatCurrency(tax)"></span>
+                    </div>
+                    <div class="total-row grand-total">
+                        <span>GRAND TOTAL:</span>
+                        <span x-text="formatCurrency(grandTotal)"></span>
+                    </div>
                 </div>
             </div>
         </div>
