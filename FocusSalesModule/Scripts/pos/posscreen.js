@@ -41,17 +41,35 @@ function posSystem() {
 
             this.compid = this.$refs.compid.value;
             this.initSetUserOutlet();
+            this.transactionDate = new Date().toISOString().split('T')[0];
+            this.docNo = 'AUTO';
         },
         compid : 0,
         items: [],
         rmaSearch: '',
         cashierName: '',
         activeOutlet: '',
+        registerName: 'Register 1',
         showAlert: false,
         alertMessage: '',
         showRMAModal: false,
         selectedItemId: '',
         selectedItemRMAs: [],
+
+        // Header fields
+        docNo: 'AUTO',
+        transactionDate: '',
+        selectedOutlet: 'Test',
+        isCreditCustomer: false,
+        selectedMember: '',
+        customerAccount: '',
+        members: [],
+
+        // Add member modal
+        showAddMemberModal: false,
+        newMemberName: '',
+        newMemberPhone: '',
+        memberError: '',
         emptyObject() {
             return {
 
@@ -285,6 +303,57 @@ function posSystem() {
 
         clearSearch() {
             this.rmaSearch = '';
+        },
+
+        handleCustomerTypeChange() {
+            if (!this.isCreditCustomer) {
+                this.selectedMember = '';
+                this.customerAccount = '';
+            }
+        },
+
+        updateCustomerAccount() {
+            if (this.selectedMember) {
+                const member = this.members.find(m => m.id === this.selectedMember);
+                if (member) {
+                    this.customerAccount = member.accountNo;
+                }
+            } else {
+                this.customerAccount = '';
+            }
+        },
+
+        addMember() {
+            if (!this.newMemberName.trim()) {
+                this.memberError = 'Please enter member name';
+                return;
+            }
+            if (!this.newMemberPhone.trim()) {
+                this.memberError = 'Please enter phone number';
+                return;
+            }
+
+            // Generate a simple ID (in production, this would come from backend)
+            const newMember = {
+                id: Date.now().toString(),
+                name: this.newMemberName.trim(),
+                phone: this.newMemberPhone.trim(),
+                accountNo: 'ACC-' + Date.now()
+            };
+
+            this.members.push(newMember);
+            this.selectedMember = newMember.id;
+            this.customerAccount = newMember.accountNo;
+
+            this.showAlertMessage('Member added successfully');
+            this.cancelAddMember();
+        },
+
+        cancelAddMember() {
+            this.showAddMemberModal = false;
+            this.newMemberName = '';
+            this.newMemberPhone = '';
+            this.memberError = '';
         },
 
         saveTransaction() {
