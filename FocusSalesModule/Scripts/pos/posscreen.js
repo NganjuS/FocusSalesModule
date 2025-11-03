@@ -56,7 +56,7 @@ function posSystem() {
         selectedItemId: '',
         selectedItemRMAs: [],
         outletList : [],
-
+        costCenters : [],
         // Header fields
         docNo: '',
         transactionDate: '',
@@ -168,6 +168,8 @@ function posSystem() {
                 this.docNo = dataObj.data.DocNo;
                 if (dataObj.result == 1) {
 
+                    this.outletList = dataObj.data.Outlets;
+                    this.costCenters = dataObj.data.CostCenters;
                     //const select2Data = dataObj.data.Outlets.map(item => ({
                     //    id: item.Id,
                     //    text: item.Name

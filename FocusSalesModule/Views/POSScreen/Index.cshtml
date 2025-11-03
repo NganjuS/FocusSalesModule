@@ -545,25 +545,26 @@
                     <div class="header-field">
                         <label>Outlet:</label>
                         <select id="outletSelect">
-                           @*<option value="0">Select Outlet</option>
+                           <option value="0">Select Outlet</option>
                             <template x-for="outlet in outletList" :key="outlet.Id">
                                 <option :value="outlet.Id" x-text="outlet.Name"></option>
-                            </template>*@
-                        </select>
-                    </div>
-                    <div class="header-field">
-                        <label>Cost Center:</label>
-                        <select x-model="selectedCostCenter">
-                            <option value="">Select Cost Center</option>
-                            <template x-for="costCenter in costCenters" :key="costCenter.id">
-                                <option :value="costCenter.id" x-text="costCenter.name"></option>
                             </template>
                         </select>
                     </div>
+                  
                 </div>
 
                 <!-- Transaction Fields - Second Row -->
                 <div class="header-section-2">
+                    <div class="header-field">
+                        <label>Cost Center:</label>
+                        <select >
+                            <option value="">Select Cost Center</option>
+                            <template x-for="costCenter in costCenters" :key="costCenter.Id">
+                                <option :value="costCenter.Id" x-text="costCenter.Name"></option>
+                            </template>
+                        </select>
+                    </div>
                     <div class="header-field">
                         <label>
                             <input type="checkbox" x-model="isCreditCustomer" @@change="handleCustomerTypeChange()">
@@ -925,6 +926,6 @@
     <script src="~/Scripts/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script defer src="~/Scripts/alpine.min.js"></script>
-    <script src="~/Scripts/pos/posscreen.js?v=77ss96699xc3j"></script>
+    <script src="~/Scripts/pos/posscreen.js?v=7799ss9s9xc3j"></script>
 </body>
 </html>

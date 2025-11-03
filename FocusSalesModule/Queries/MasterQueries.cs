@@ -14,5 +14,12 @@ namespace FocusSalesModule.Queries
 
             return $"select iMasterId Id, sCode Code,sName Name from mPos_Outlet where istatus = 0 and bgroup = 0 and iMasterId <> 0 {filterqry}";
         }
+        public static string GetAllowedCostCenters(int loginid)
+        {
+
+            string filterqry = loginid > 1 ? $" and iMasterId in (SELECT iMasterId FROM mSec_UserMasterRestriction where iUserId = {loginid} and iMasterTypeId = 5)" : "";
+
+            return $"select iMasterId Id, sCode Code,sName Name from mPos_Outlet where istatus = 0 and bgroup = 0 and iMasterId <> 0 {filterqry}";
+        }
     }
 }

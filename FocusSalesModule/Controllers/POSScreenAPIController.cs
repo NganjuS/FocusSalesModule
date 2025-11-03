@@ -70,6 +70,7 @@ namespace FocusSalesModule.Controllers
                 RequestDTO requestDTO = new RequestDTO();
                 requestDTO.DocNo = DocUtilities.GetNextDocNo(compId);
                 requestDTO.Outlets = DbCtx<Outlet>.GetObjList(compId, MasterQueries.GetAllowedOutlets(loginId));
+                requestDTO.CostCenters = DbCtx<MasterDTO>.GetObjList(compId, MasterQueries.GetAllowedCostCenters(loginId));
               
                 resp.data = requestDTO;
 

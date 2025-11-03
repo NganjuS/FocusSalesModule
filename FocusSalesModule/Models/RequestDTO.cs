@@ -9,5 +9,6 @@ namespace FocusSalesModule.Models
     {
         public string DocNo { get; set; }
         public List<Outlet> Outlets { get; set; }
+        public List<MasterDTO> CostCenters { get; set; }
     }
 }
