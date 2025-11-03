@@ -532,7 +532,7 @@
 
             <!-- Top Bar -->
             <div class="top-bar">
-                <!-- Transaction Fields -->
+                <!-- Transaction Fields - First Row -->
                 <div class="header-section-2">
                     <div class="header-field">
                         <label>Doc No:</label>
@@ -551,6 +551,19 @@
                             </template>*@
                         </select>
                     </div>
+                    <div class="header-field">
+                        <label>Cost Center:</label>
+                        <select x-model="selectedCostCenter">
+                            <option value="">Select Cost Center</option>
+                            <template x-for="costCenter in costCenters" :key="costCenter.id">
+                                <option :value="costCenter.id" x-text="costCenter.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Transaction Fields - Second Row -->
+                <div class="header-section-2">
                     <div class="header-field">
                         <label>
                             <input type="checkbox" x-model="isCreditCustomer" @@change="handleCustomerTypeChange()">
