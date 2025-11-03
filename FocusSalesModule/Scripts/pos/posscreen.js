@@ -71,6 +71,18 @@ function posSystem() {
         newMemberName: '',
         newMemberPhone: '',
         memberError: '',
+
+        // Advance Receipt modal
+        showAdvanceReceiptModal: false,
+        advanceReceiptDate: '',
+        advanceReceiptCashBankAccount: '',
+        advanceReceiptOutlet: '',
+        advanceReceiptCostCenter: '',
+        advanceReceiptMember: '',
+        advanceReceiptChequeNo: '',
+        advanceReceiptCustomerAcc: '',
+        advanceReceiptAmount: 0,
+        isCreditCustomerReadOnly: false,
         emptyObject() {
             return {
 
@@ -392,6 +404,51 @@ function posSystem() {
             this.newMemberName = '';
             this.newMemberPhone = '';
             this.memberError = '';
+        },
+
+        openAdvanceReceiptModal() {
+            this.showAdvanceReceiptModal = true;
+            this.isCreditCustomerReadOnly = true;
+            this.advanceReceiptDate = new Date().toISOString().split('T')[0];
+        },
+
+        closeAdvanceReceiptModal() {
+            this.showAdvanceReceiptModal = false;
+            this.advanceReceiptDate = '';
+            this.advanceReceiptCashBankAccount = '';
+            this.advanceReceiptOutlet = '';
+            this.advanceReceiptCostCenter = '';
+            this.advanceReceiptMember = '';
+            this.advanceReceiptChequeNo = '';
+            this.advanceReceiptCustomerAcc = '';
+            this.advanceReceiptAmount = 0;
+        },
+
+        saveAdvanceReceipt() {
+            // Validate required fields
+            if (!this.advanceReceiptDate) {
+                this.showAlertMessage('Please select a date');
+                return;
+            }
+            if (!this.advanceReceiptAmount || this.advanceReceiptAmount <= 0) {
+                this.showAlertMessage('Please enter a valid amount');
+                return;
+            }
+
+            // Here you would typically send this data to the backend
+            console.log('Advance Receipt Data:', {
+                date: this.advanceReceiptDate,
+                cashBankAccount: this.advanceReceiptCashBankAccount,
+                outlet: this.advanceReceiptOutlet,
+                costCenter: this.advanceReceiptCostCenter,
+                member: this.advanceReceiptMember,
+                chequeNo: this.advanceReceiptChequeNo,
+                customerAcc: this.advanceReceiptCustomerAcc,
+                amount: this.advanceReceiptAmount
+            });
+
+            this.showAlertMessage('Advance Receipt created successfully');
+            this.closeAdvanceReceiptModal();
         },
 
         saveTransaction() {

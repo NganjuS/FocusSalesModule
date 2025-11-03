@@ -300,6 +300,13 @@
             overflow-y: auto;
         }
 
+        /* Advance Receipt Modal */
+        .modal:has(.modal-content:has(h3:contains("Advance Receipt"))) .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+            width: 500px;
+        }
+
         .payment-tabs {
             display: flex;
             border-bottom: 2px solid #0073AA;
@@ -566,8 +573,13 @@
                         </select>
                     </div>
                     <div class="header-field">
+                        <button class="btn btn-sm btn-primary" @@click="openAdvanceReceiptModal()">
+                            <i class="bi bi-receipt me-1"></i>Advance Receipt
+                        </button>
+                    </div>
+                    <div class="header-field">
                         <label>
-                            <input type="checkbox" x-model="isCreditCustomer" @@change="handleCustomerTypeChange()">
+                            <input type="checkbox" x-model="isCreditCustomer" @@change="handleCustomerTypeChange()" :disabled="isCreditCustomerReadOnly">
                             Credit Customer
                         </label>
                     </div>
@@ -714,6 +726,69 @@
                     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                         <button class="btn btn-secondary" @@click="cancelAddMember()">Cancel</button>
                         <button class="btn btn-primary" @@click="addMember()">Add Member</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advance Receipt Modal -->
+        <div class="modal" :class="{ 'show': showAdvanceReceiptModal }" @@click.self="closeAdvanceReceiptModal()">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="modal-close" @@click="closeAdvanceReceiptModal()">&times;</span>
+                    <h3>Create Advance Receipt</h3>
+                </div>
+                <div style="margin-top: 15px;">
+                    <div class="payment-form-group">
+                        <label>Date</label>
+                        <input type="date" x-model="advanceReceiptDate">
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Cash/Bank Account</label>
+                        <input type="text" x-model="advanceReceiptCashBankAccount" placeholder="Enter cash/bank account">
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Outlet</label>
+                        <select x-model="advanceReceiptOutlet">
+                            <option value="">Select Outlet</option>
+                            <template x-for="outlet in outletList" :key="outlet.Id">
+                                <option :value="outlet.Id" x-text="outlet.Name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Cost Center</label>
+                        <select x-model="advanceReceiptCostCenter">
+                            <option value="">Select Cost Center</option>
+                            <template x-for="costCenter in costCenters" :key="costCenter.Id">
+                                <option :value="costCenter.Id" x-text="costCenter.Name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Member</label>
+                        <select x-model="advanceReceiptMember">
+                            <option value="">Select Member</option>
+                            <template x-for="member in members" :key="member.id">
+                                <option :value="member.id" x-text="member.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Cheque No</label>
+                        <input type="text" x-model="advanceReceiptChequeNo" placeholder="Enter cheque number">
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Customer A/C</label>
+                        <input type="text" x-model="advanceReceiptCustomerAcc" placeholder="Enter customer account">
+                    </div>
+                    <div class="payment-form-group">
+                        <label>Amount</label>
+                        <input type="number" x-model.number="advanceReceiptAmount" placeholder="Enter amount" step="0.01">
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button class="btn btn-secondary" @@click="closeAdvanceReceiptModal()">Cancel</button>
+                        <button class="btn btn-primary" @@click="saveAdvanceReceipt()">Save Advance Receipt</button>
                     </div>
                 </div>
             </div>
