@@ -43,6 +43,18 @@ function posSystem() {
             this.initSetUserOutlet();
             this.transactionDate = new Date().toISOString().split('T')[0];
             this.docNo = 'AUTO';
+
+            // Watch for branch name changes to auto-populate address
+            this.$watch('branchName', (value) => {
+                const branchAddresses = {
+                    'Main Branch': '123 Main Street, Downtown, City Center',
+                    'North Branch': '456 North Avenue, Northern District',
+                    'South Branch': '789 South Road, Southern District',
+                    'East Branch': '321 East Boulevard, Eastern District',
+                    'West Branch': '654 West Highway, Western District'
+                };
+                this.branchAddress = branchAddresses[value] || '';
+            });
         },
         compid : 0,
         items: [],
@@ -65,6 +77,11 @@ function posSystem() {
         selectedMember: '',
         customerAccount: '',
         members: [],
+        costCenter: '',
+
+        // Branch fields
+        branchName: '',
+        branchAddress: '',
 
         // Add member modal
         showAddMemberModal: false,
