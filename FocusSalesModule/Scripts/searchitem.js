@@ -496,7 +496,27 @@ function initRmaSearch(response) {
 function clearSearchField(clearField)
 {
     ++requestId;
+
     Focus8WAPI.setFieldValue("afterLineAdded", [clearField], [""], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    if (clearField == "RmaSearch") {
+
+        setRmaSearchFocus();
+    }
+   
+}
+function setRmaSearchFocus() {
+    // Find the label with text "Rma Search"
+    const label = Array.from(document.querySelectorAll("label"))
+        .find(l => l.textContent.trim() === "Rma Search");
+
+    if (label) {
+        const inputId = label.getAttribute("for");
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.focus();
+        }
+    }
+
 }
 function getRma(response) {
     if (isRequestProcessed(response.iRequestId)) {

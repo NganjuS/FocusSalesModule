@@ -55,11 +55,12 @@ function posSystem() {
         showRMAModal: false,
         selectedItemId: '',
         selectedItemRMAs: [],
+        outletList : [],
 
         // Header fields
-        docNo: 'AUTO',
+        docNo: '',
         transactionDate: '',
-        selectedOutlet: 'Test',
+        selectedOutlet: '',
         isCreditCustomer: false,
         selectedMember: '',
         customerAccount: '',
@@ -152,8 +153,31 @@ function posSystem() {
             focusSessionUpdater("setUserDetails");
         },
         setUserOutlet(respData) {
-            this.cashierName = respData.UserName;
-            this.activeOutlet = "Test";
+
+            let url = `/focussalesmodule/api/sales/outlets/?compId=${respData.CompanyId}&loginId=${respData.LoginId}`;
+
+            fetch(url).then(async response => {
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+                return response.json();
+            }).then(dataObj => {
+                console.log(dataObj);
+                this.docNo = dataObj.data.DocNo;
+                if (dataObj.result == 1) {
+
+                    this.outletList = dataObj.data.Outlets;
+                }
+                else {
+                    this.showAlertMessage(dataObj.message);
+                }
+
+
+            }).catch(error => {
+                console.log(error);
+                //
+            });
         },
         get canCompleteSettlement() {
             // Can complete if total payments >= grand total OR if cash is provided and covers the outstanding
@@ -179,7 +203,13 @@ function posSystem() {
                 this.showAlertMessage('Please enter an RMA number');
                 return;
             }
-            
+
+            if (!this.selectedOutlet.toString().trim()) {
+
+                this.showAlertMessage('Select outlet to continue !!!');
+                return;
+
+            }
             let outletid = 42;
             let url = `/focussalesmodule/api/sales/rmaitems/?compid=${this.compid}&outletid=${outletid}&rmano=${this.rmaSearch.trim()}`;
             fetch(url).then(async response => {

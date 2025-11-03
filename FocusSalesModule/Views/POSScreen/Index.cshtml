@@ -23,8 +23,8 @@
 
         .top-bar {
             border-bottom: 2px solid #dee2e6;
-            padding: 20px 25px;
-            min-height: 80px;
+            padding: 0px 10px;
+            /*min-height: 80px;*/
         }
 
         .header-section-2 {
@@ -544,7 +544,10 @@
                     <div class="header-field">
                         <label>Outlet:</label>
                         <select x-model="selectedOutlet">
-                            <option value="Test">Test</option>
+                           <option value="0">Select Outlet</option>
+                            <template x-for="outlet in outletList" :key="outlet.Id">
+                                <option :value="outlet.Id" x-text="outlet.Name"></option>
+                            </template>
                         </select>
                     </div>
                     <div class="header-field">
@@ -643,7 +646,7 @@
                     <i class="bi bi-printer me-2"></i>Reprint
                 </button>
                 <button class="btn btn-light" @@click="newTransaction()">
-                    <i class="bi bi-plus-circle me-2"></i>New Transaction
+                    <i class="bi bi-plus-circle me-2"></i>New
                 </button>
                 <button class="btn btn-warning" @@click="holdTransaction()">
                     <i class="bi bi-pause-circle me-2"></i>Hold
@@ -907,6 +910,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script defer src="~/Scripts/alpine.min.js"></script>
 
-    <script src="~/Scripts/pos/posscreen.js?v=7709902cxxc3j"></script>
+    <script src="~/Scripts/pos/posscreen.js?v=77ss00ssxc3j"></script>
 </body>
 </html>

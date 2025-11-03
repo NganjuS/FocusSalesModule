@@ -1,0 +1,35 @@
+﻿using FocusSalesModule.Data;
+using FocusSalesModule.Queries;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Web;
+
+namespace FocusSalesModule.Helpers
+{
+    public class DocUtilities
+    {
+        public static string GetNextDocNo(int compId)
+        {
+            const string Abbrev = "POS";
+            String docNo = DbCtx<String>.GetScalar(compId, TxnQueries.GetPOSNextDocNo());
+            if(String.IsNullOrEmpty(docNo))
+            {
+                return $"{Abbrev}00001";
+            }
+            else
+            {
+                string sntzedstr = RemoveOtherStr(docNo);
+                int nextDocNo = Convert.ToInt32(sntzedstr) + 1;
+                return $"{Abbrev}"+nextDocNo.ToString().PadLeft(4,'0');
+              
+            }
+        }
+        static string RemoveOtherStr(string inputstr)
+        {
+            string sntzedstr = Regex.Replace(inputstr.Trim(), "[^0-9]+", "");
+            return sntzedstr;
+        }
+    }
+}

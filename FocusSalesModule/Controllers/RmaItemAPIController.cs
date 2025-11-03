@@ -23,7 +23,7 @@ namespace FocusSalesModule.Controllers
             HashData<Product> hashData = new HashData<Product>();
             try
             {
-                hashData.data = DbCtx<Product>.GetObj(compid, ProductQueries.GetRmaData(rmano));
+                hashData.data = DbCtx<Product>.GetObj(compid, ProductQueries.GetRmaData(rmano, outletid));
                 if(hashData.data == null)
                 {
                     hashData.result = -1;

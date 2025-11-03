@@ -199,6 +199,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\APIManager.cs" />
+    <Compile Include="Helpers\DocUtilities.cs" />
     <Compile Include="Helpers\UtilFuncs.cs" />
     <Compile Include="Logs\Logger.cs" />
     <Compile Include="Models\BankPaymentDTO.cs" />
@@ -212,12 +213,14 @@
     <Compile Include="Models\POSDto.cs" />
     <Compile Include="Models\PosLine.cs" />
     <Compile Include="Models\Product.cs" />
+    <Compile Include="Models\RequestDTO.cs" />
     <Compile Include="Models\RmaItem.cs" />
     <Compile Include="Models\StockTransfer.cs" />
     <Compile Include="Models\StockTransferItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Queries\MasterQueries.cs" />
     <Compile Include="Queries\ProductQueries.cs" />
+    <Compile Include="Queries\TxnQueries.cs" />
     <Compile Include="Screens\POSSales.cs" />
   </ItemGroup>
   <ItemGroup>

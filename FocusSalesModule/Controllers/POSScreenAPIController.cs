@@ -60,6 +60,31 @@ namespace FocusSalesModule.Controllers
             }
             return hashDataFocus;
         }
-       
-    }
+        [HttpGet]
+        [Route("outlets")]
+        public HashData<RequestDTO> GetOutlets(int compId, int loginId)
+        {
+            HashData<RequestDTO> resp = new HashData<RequestDTO>();
+            try
+            {
+                RequestDTO requestDTO = new RequestDTO();
+                requestDTO.DocNo = DocUtilities.GetNextDocNo(compId);
+                requestDTO.Outlets = DbCtx<Outlet>.GetObjList(compId, MasterQueries.GetAllowedOutlets(loginId));
+              
+                resp.data = requestDTO;
+
+                resp.result = 1;
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+
+        }
+     }
+
 }
