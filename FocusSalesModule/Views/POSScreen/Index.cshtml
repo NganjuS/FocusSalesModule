@@ -9,6 +9,7 @@
     <title>POS Screen</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="~/Content/select2.min.css"/>
     <style>
         body {
             overflow: hidden;
@@ -543,11 +544,11 @@
                     </div>
                     <div class="header-field">
                         <label>Outlet:</label>
-                        <select x-model="selectedOutlet">
-                           <option value="0">Select Outlet</option>
+                        <select id="outletSelect">
+                           @*<option value="0">Select Outlet</option>
                             <template x-for="outlet in outletList" :key="outlet.Id">
                                 <option :value="outlet.Id" x-text="outlet.Name"></option>
-                            </template>
+                            </template>*@
                         </select>
                     </div>
                     <div class="header-field">
@@ -906,10 +907,11 @@
             </div>
         </div>
     </div>
+    <script src="~/Scripts/jquery-3.7.0.min.js"></script>
     <script src="~/Scripts/FClient.js"></script>
+    <script src="~/Scripts/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script defer src="~/Scripts/alpine.min.js"></script>
-
-    <script src="~/Scripts/pos/posscreen.js?v=77ss00ssxc3j"></script>
+    <script src="~/Scripts/pos/posscreen.js?v=77ss96699xc3j"></script>
 </body>
 </html>

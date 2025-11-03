@@ -163,11 +163,17 @@ function posSystem() {
                 }
                 return response.json();
             }).then(dataObj => {
+
                 console.log(dataObj);
                 this.docNo = dataObj.data.DocNo;
                 if (dataObj.result == 1) {
 
-                    this.outletList = dataObj.data.Outlets;
+                    //const select2Data = dataObj.data.Outlets.map(item => ({
+                    //    id: item.Id,
+                    //    text: item.Name
+                    //}));
+                    //console.log(select2Data)
+                    //$("#outletSelect").select2({ data: select2Data });
                 }
                 else {
                     this.showAlertMessage(dataObj.message);

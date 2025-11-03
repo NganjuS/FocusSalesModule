@@ -505,14 +505,30 @@ function clearSearchField(clearField)
    
 }
 function setRmaSearchFocus() {
+    console.log("Searching label ....");
     // Find the label with text "Rma Search"
     const label = Array.from(document.querySelectorAll("label"))
-        .find(l => l.textContent.trim() === "Rma Search");
+        .find(l => l.textContent.trim().toLowerCase() === "rma search" || l.textContent.trim().toLowerCase() === "rmasearch");
 
     if (label) {
-        const inputId = label.getAttribute("for");
-        const input = document.getElementById(inputId);
+        // Try to find the input connected to the label
+        let input = null;
+        console.log("Label found !!!");
+        // Case 1: label has 'for' attribute
+        const forId = label.getAttribute("for");
+        if (forId) {
+            input = document.getElementById(forId);
+        }
+
+        // Case 2: label is next to input in same container
+        if (!input) {
+            console.log("Getting input !!!");
+            input = label.parentElement.querySelector("input");
+        }
+
+        // Focus input if found
         if (input) {
+            console.log("Setting focus !!!");
             input.focus();
         }
     }
