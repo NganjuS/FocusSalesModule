@@ -44,17 +44,17 @@ function posSystem() {
             this.transactionDate = new Date().toISOString().split('T')[0];
             this.docNo = 'AUTO';
 
-            // Set default branch name and address
-            this.branchName = 'Main Branch';
-            this.branchAddress = '123 Main Street, Downtown, City Center';
-
-            // Initialize cost centers list
-            this.costCentersList = [
-                { value: 'CC001', label: 'Cost Center 001' },
-                { value: 'CC002', label: 'Cost Center 002' },
-                { value: 'CC003', label: 'Cost Center 003' }
-            ];
-            this.filteredCostCenters = [...this.costCentersList];
+            // Watch for branch name changes to auto-populate address
+            this.$watch('branchName', (value) => {
+                const branchAddresses = {
+                    'Main Branch': '123 Main Street, Downtown, City Center',
+                    'North Branch': '456 North Avenue, Northern District',
+                    'South Branch': '789 South Road, Southern District',
+                    'East Branch': '321 East Boulevard, Eastern District',
+                    'West Branch': '654 West Highway, Western District'
+                };
+                this.branchAddress = branchAddresses[value] || '';
+            });
         },
         compid : 0,
         items: [],
@@ -82,17 +82,6 @@ function posSystem() {
         // Branch fields
         branchName: '',
         branchAddress: '',
-
-        // Outlet searchbox
-        outletSearchText: '',
-        filteredOutlets: [],
-        showOutletDropdown: false,
-
-        // Cost Center searchbox
-        costCenterSearchText: '',
-        costCentersList: [],
-        filteredCostCenters: [],
-        showCostCenterDropdown: false,
 
         // Add member modal
         showAddMemberModal: false,
@@ -196,7 +185,6 @@ function posSystem() {
                 if (dataObj.result == 1) {
 
                     this.outletList = dataObj.data.Outlets;
-                    this.filteredOutlets = [...this.outletList];
                 }
                 else {
                     this.showAlertMessage(dataObj.message);
@@ -207,39 +195,6 @@ function posSystem() {
                 console.log(error);
                 //
             });
-        },
-        filterOutlets() {
-            const searchTerm = this.outletSearchText.toLowerCase();
-            if (!searchTerm) {
-                this.filteredOutlets = [...this.outletList];
-            } else {
-                this.filteredOutlets = this.outletList.filter(outlet =>
-                    outlet.Name.toLowerCase().includes(searchTerm)
-                );
-            }
-            this.showOutletDropdown = true;
-        },
-        selectOutlet(outlet) {
-            this.selectedOutlet = outlet.Id;
-            this.outletSearchText = outlet.Name;
-            this.showOutletDropdown = false;
-        },
-        filterCostCenters() {
-            const searchTerm = this.costCenterSearchText.toLowerCase();
-            if (!searchTerm) {
-                this.filteredCostCenters = [...this.costCentersList];
-            } else {
-                this.filteredCostCenters = this.costCentersList.filter(cc =>
-                    cc.label.toLowerCase().includes(searchTerm) ||
-                    cc.value.toLowerCase().includes(searchTerm)
-                );
-            }
-            this.showCostCenterDropdown = true;
-        },
-        selectCostCenter(cc) {
-            this.costCenter = cc.value;
-            this.costCenterSearchText = cc.label;
-            this.showCostCenterDropdown = false;
         },
         get canCompleteSettlement() {
             // Can complete if total payments >= grand total OR if cash is provided and covers the outstanding

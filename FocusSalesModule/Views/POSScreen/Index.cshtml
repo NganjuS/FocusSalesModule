@@ -238,85 +238,6 @@
             box-shadow: 0 0 0 0.2rem rgba(0, 115, 170, 0.25);
         }
 
-        .branch-info-label {
-            display: block;
-            font-weight: 700;
-            color: #0073AA;
-            font-size: 20px;
-            line-height: 1.4;
-            margin-bottom: 8px;
-        }
-
-        .branch-address-label {
-            display: block;
-            font-weight: 600;
-            color: #555;
-            font-size: 16px;
-            line-height: 1.4;
-        }
-
-        .searchbox-wrapper {
-            position: relative;
-            width: 100%;
-        }
-
-        .searchbox-input {
-            width: 100%;
-            padding: 8px 35px 8px 12px;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .searchbox-input:focus {
-            outline: none;
-            border-color: #0073AA;
-            box-shadow: 0 0 0 0.2rem rgba(0, 115, 170, 0.25);
-        }
-
-        .searchbox-icon {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #0073AA;
-            pointer-events: none;
-        }
-
-        .searchbox-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            margin-top: 4px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .searchbox-item {
-            padding: 10px 12px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .searchbox-item:last-child {
-            border-bottom: none;
-        }
-
-        .searchbox-item:hover {
-            background-color: #f8f9fa;
-        }
-
-        .searchbox-item.selected {
-            background-color: #e7f3f8;
-            font-weight: 600;
-        }
-
         .alert-success {
             position: absolute;
             top: 20px;
@@ -665,27 +586,12 @@
                     </div>
                     <div class="header-field">
                         <label>Outlet:</label>
-                        <div class="searchbox-wrapper" style="min-width: 200px;">
-                            <input type="text"
-                                   class="searchbox-input"
-                                   x-model="outletSearchText"
-                                   @@input="filterOutlets()"
-                                   @@focus="showOutletDropdown = true"
-                                   placeholder="Search outlet..."
-                                   autocomplete="off">
-                            <i class="bi bi-search searchbox-icon"></i>
-                            <div class="searchbox-dropdown"
-                                 x-show="showOutletDropdown && filteredOutlets.length > 0"
-                                 @@click.away="showOutletDropdown = false">
-                                <template x-for="outlet in filteredOutlets" :key="outlet.Id">
-                                    <div class="searchbox-item"
-                                         :class="{ 'selected': selectedOutlet === outlet.Id }"
-                                         @@click="selectOutlet(outlet)">
-                                        <span x-text="outlet.Name"></span>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
+                        <select x-model="selectedOutlet">
+                           <option value="0">Select Outlet</option>
+                            <template x-for="outlet in outletList" :key="outlet.Id">
+                                <option :value="outlet.Id" x-text="outlet.Name"></option>
+                            </template>
+                        </select>
                     </div>
                     <div class="header-field">
                         <label>
@@ -717,27 +623,12 @@
                 <div class="header-section-2">
                     <div class="header-field">
                         <label>Cost Center:</label>
-                        <div class="searchbox-wrapper" style="min-width: 200px;">
-                            <input type="text"
-                                   class="searchbox-input"
-                                   x-model="costCenterSearchText"
-                                   @@input="filterCostCenters()"
-                                   @@focus="showCostCenterDropdown = true"
-                                   placeholder="Search cost center..."
-                                   autocomplete="off">
-                            <i class="bi bi-search searchbox-icon"></i>
-                            <div class="searchbox-dropdown"
-                                 x-show="showCostCenterDropdown && filteredCostCenters.length > 0"
-                                 @@click.away="showCostCenterDropdown = false">
-                                <template x-for="cc in filteredCostCenters" :key="cc.value">
-                                    <div class="searchbox-item"
-                                         :class="{ 'selected': costCenter === cc.value }"
-                                         @@click="selectCostCenter(cc)">
-                                        <span x-text="cc.label"></span>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
+                        <select x-model="costCenter">
+                            <option value="">Select Cost Center</option>
+                            <option value="CC001">Cost Center 001</option>
+                            <option value="CC002">Cost Center 002</option>
+                            <option value="CC003">Cost Center 003</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -796,10 +687,19 @@
             <div class="branch-section">
                 <h4>Branch Details</h4>
                 <div class="branch-field">
-                    <span class="branch-info-label" x-text="branchName || 'No Branch Selected'"></span>
+                    <label>Branch Name:</label>
+                    <select x-model="branchName">
+                        <option value="">Select Branch</option>
+                        <option value="Main Branch">Main Branch</option>
+                        <option value="North Branch">North Branch</option>
+                        <option value="South Branch">South Branch</option>
+                        <option value="East Branch">East Branch</option>
+                        <option value="West Branch">West Branch</option>
+                    </select>
                 </div>
                 <div class="branch-field">
-                    <span class="branch-address-label" x-text="branchAddress || 'No Address Available'"></span>
+                    <label>Branch Address:</label>
+                    <input type="text" x-model="branchAddress" placeholder="Branch address will auto-populate" readonly>
                 </div>
             </div>
 
