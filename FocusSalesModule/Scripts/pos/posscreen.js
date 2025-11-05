@@ -48,6 +48,8 @@ function posSystem() {
         items: [],
         rmaSearch: '',
         cashierName: '',
+        cashierPhone: '',
+        branchName: '',
         activeOutlet: '',
         registerName: 'Register 1',
         showAlert: false,
@@ -166,6 +168,11 @@ function posSystem() {
         },
         setUserOutlet(respData) {
 
+            // Set user information
+            this.cashierName = respData.UserName || respData.LoginName || '';
+            this.cashierPhone = respData.PhoneNumber || respData.Phone || '';
+            this.branchName = respData.BranchName || respData.OutletName || '';
+
             let url = `/focussalesmodule/api/sales/outlets/?compId=${respData.CompanyId}&loginId=${respData.LoginId}`;
 
             fetch(url).then(async response => {
@@ -182,6 +189,12 @@ function posSystem() {
 
                     this.outletList = dataObj.data.Outlets;
                     this.costCenters = dataObj.data.CostCenters;
+
+                    // Update branch name from outlet list if available and not already set
+                    if (dataObj.data.BranchName) {
+                        this.branchName = dataObj.data.BranchName;
+                    }
+
                     //const select2Data = dataObj.data.Outlets.map(item => ({
                     //    id: item.Id,
                     //    text: item.Name
