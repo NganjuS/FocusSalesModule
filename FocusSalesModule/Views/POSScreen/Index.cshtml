@@ -523,6 +523,141 @@
             font-weight: 900;
             padding: 10px;
         }
+
+        /* Retrieve Modal Styles */
+        .retrieve-modal .modal-content {
+            width: 90vw;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .retrieve-modal-content {
+            padding: 20px;
+        }
+
+        .retrieve-date-row {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .retrieve-date-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 180px;
+        }
+
+            .retrieve-date-field label {
+                font-weight: 600;
+                color: #333;
+                font-size: 14px;
+            }
+
+            .retrieve-date-field input {
+                padding: 10px;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+
+                .retrieve-date-field input:focus {
+                    outline: none;
+                    border-color: #0073AA;
+                    box-shadow: 0 0 0 0.2rem rgba(0, 115, 170, 0.25);
+                }
+
+        .btn-search-transactions {
+            padding: 10px 24px;
+            background-color: #0073AA;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+            .btn-search-transactions:hover {
+                background-color: #005a87;
+            }
+
+        .retrieve-table-container {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 500px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        .retrieve-transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .retrieve-transactions-table thead {
+                position: sticky;
+                top: 0;
+                z-index: 10;
+                background-color: #0073AA;
+            }
+
+                .retrieve-transactions-table thead th {
+                    background-color: #0073AA;
+                    color: white;
+                    padding: 12px;
+                    text-align: left;
+                    font-weight: 600;
+                    border: none;
+                }
+
+            .retrieve-transactions-table tbody td {
+                padding: 12px;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .retrieve-transactions-table .transaction-row {
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+
+                .retrieve-transactions-table .transaction-row:hover {
+                    background-color: #f8f9fa;
+                }
+
+        .retrieve-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #dee2e6;
+        }
+
+            .retrieve-actions button {
+                padding: 10px 24px;
+                font-size: 14px;
+                font-weight: 600;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+        .retrieve-actions .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+            .retrieve-actions .btn-secondary:hover {
+                background-color: #5a6268;
+            }
     </style>
 </head>
 <body>
@@ -1013,6 +1148,65 @@
                 </div>
 
                 <div x-show="settlementError" class="error-message" style="margin-top: 10px;" x-text="settlementError"></div>
+            </div>
+        </div>
+
+        <!-- Retrieve Transaction Modal -->
+        <div class="modal retrieve-modal" :class="{ 'show': showRetrieveModal }">
+            <div class="modal-content retrieve-modal-content">
+                <div class="modal-header">
+                    <span class="modal-close" @@click="closeRetrieveModal()">&times;</span>
+                    <h3>Retrieve Transaction</h3>
+                </div>
+
+                <!-- Date Filter Row -->
+                <div class="retrieve-date-row">
+                    <div class="retrieve-date-field">
+                        <label>Date From:</label>
+                        <input type="date" x-model="retrieveDateFrom">
+                    </div>
+                    <div class="retrieve-date-field">
+                        <label>Date To:</label>
+                        <input type="date" x-model="retrieveDateTo">
+                    </div>
+                    <button class="btn btn-primary btn-search-transactions">
+                        <i class="bi bi-search me-1"></i>Search
+                    </button>
+                </div>
+
+                <!-- Transactions Table -->
+                <div class="retrieve-table-container">
+                    <table class="retrieve-transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Doc No</th>
+                                <th>Doc Date</th>
+                                <th>Customer</th>
+                                <th>Outlet</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="transaction in retrievedTransactions" :key="transaction.docNo">
+                                <tr @@dblclick="handleTransactionDoubleClick(transaction)" class="transaction-row">
+                                    <td x-text="transaction.docNo"></td>
+                                    <td x-text="transaction.docDate"></td>
+                                    <td x-text="transaction.customer"></td>
+                                    <td x-text="transaction.outlet"></td>
+                                    <td x-text="formatCurrency(transaction.amount)"></td>
+                                </tr>
+                            </template>
+                            <tr x-show="retrievedTransactions.length === 0">
+                                <td colspan="5" class="text-center text-muted">No transactions found. Select date range and click Search.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="retrieve-actions">
+                    <button class="btn btn-secondary" @@click="closeRetrieveModal()">Close</button>
+                </div>
             </div>
         </div>
     </div>
