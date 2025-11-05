@@ -11,6 +11,7 @@ namespace FocusSalesModule.Models
     {
         public int result { get; set; }
         public string message { get; set; }
+        public string printlink { get; set; }
         public string url { get; set; }
         public List<Hashtable> data { get; set; }
     }

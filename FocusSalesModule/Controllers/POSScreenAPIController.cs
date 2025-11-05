@@ -5,6 +5,7 @@ using FocusSalesModule.Logs;
 using FocusSalesModule.Models;
 using FocusSalesModule.Queries;
 using FocusSalesModule.Screens;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -47,7 +48,15 @@ namespace FocusSalesModule.Controllers
                 objHashRequest.data = lstHash;
                 string url = $"{baseUrl}/Transactions/{ScreenName}";
                 hashDataFocus = APIManager.postData(objHashRequest, sessionid, url);
-                hashDataFocus.message = hashDataFocus.result == 1 ? "Sale Posted succesfully" : hashDataFocus.message;
+                Logger.writeLog(JsonConvert.SerializeObject(hashDataFocus.data));
+
+                if (hashDataFocus.result == 1)
+                {
+                    string headerId = hashDataFocus.data[0]["HeaderId"].ToString();
+                    hashDataFocus.message = "Sale Posted succesfully";
+                    hashDataFocus.printlink = $"/focussalesmodule/posscreen/printcashsale?compid={compid}&headerid={headerId}";
+                }
+               
 
 
             }

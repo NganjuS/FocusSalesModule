@@ -9,7 +9,8 @@
     <title>POS Screen</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="~/Content/select2.min.css"/>
+    <link href="~/Content/select2.min.css" />
+    <link rel="stylesheet" href="~/Content/print.min.css" />
     <style>
         body {
             overflow: hidden;
@@ -42,32 +43,32 @@
             gap: 10px;
         }
 
-        .header-field label {
-            color: #333;
-            font-weight: 600;
-            font-size: 15px;
-            margin: 0;
-        }
+            .header-field label {
+                color: #333;
+                font-weight: 600;
+                font-size: 15px;
+                margin: 0;
+            }
 
-        .header-field input,
-        .header-field select {
-            padding: 8px 12px;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            font-size: 14px;
-            min-width: 160px;
-        }
+            .header-field input,
+            .header-field select {
+                padding: 8px 12px;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                font-size: 14px;
+                min-width: 160px;
+            }
 
-        .header-field input[type="checkbox"] {
-            min-width: auto;
-            width: 18px;
-            height: 18px;
-        }
+                .header-field input[type="checkbox"] {
+                    min-width: auto;
+                    width: 18px;
+                    height: 18px;
+                }
 
-        .header-field .btn-sm {
-            padding: 5px 15px;
-            font-size: 14px;
-        }
+            .header-field .btn-sm {
+                padding: 5px 15px;
+                font-size: 14px;
+            }
 
         .sidebar-section {
             width: 33.33%;
@@ -551,21 +552,21 @@
                     </div>
                     <div class="header-field">
                         <label>Outlet:</label>
-                        <select id="outletSelect">
-                           <option value="0">Select Outlet</option>
+                        <select id="outletSelect" x-model="selectedOutlet">
+                            <option value="0">Select Outlet</option>
                             <template x-for="outlet in outletList" :key="outlet.Id">
                                 <option :value="outlet.Id" x-text="outlet.Name"></option>
                             </template>
                         </select>
                     </div>
-                  
+
                 </div>
 
                 <!-- Transaction Fields - Second Row -->
                 <div class="header-section-2">
                     <div class="header-field">
                         <label>Cost Center:</label>
-                        <select >
+                        <select>
                             <option value="">Select Cost Center</option>
                             <template x-for="costCenter in costCenters" :key="costCenter.Id">
                                 <option :value="costCenter.Id" x-text="costCenter.Name"></option>
@@ -691,9 +692,12 @@
                 <button class="btn btn-light" @@click="newTransaction()">
                     <i class="bi bi-plus-circle me-2"></i>New
                 </button>
-                <button class="btn btn-warning" @@click="holdTransaction()">
-                    <i class="bi bi-pause-circle me-2"></i>Hold
+                <button class="btn btn-light" @@click="retrieveTransaction()">
+                    <i class="bi bi-collection me-2"></i> Retrieve
                 </button>
+                @*<button class="btn btn-warning" @@click="holdTransaction()">
+                        <i class="bi bi-pause-circle me-2"></i>Hold
+                    </button>*@
                 <button class="btn btn-danger" @@click="cancelTransaction()">
                     <i class="bi bi-x-circle me-2"></i>Cancel
                 </button>
@@ -990,7 +994,7 @@
                         </thead>
                         <tbody>
                             <template x-for="(payment, index) in moniePayments" :key="index">
-                                <tr>                     
+                                <tr>
                                     <td x-text="payment.reference"></td>
                                     <td x-text="formatCurrency(payment.amount)"></td>
                                     <td>
@@ -1012,11 +1016,12 @@
             </div>
         </div>
     </div>
+    <script src="~/Scripts/print.min.js"></script>
     <script src="~/Scripts/jquery-3.7.0.min.js"></script>
     <script src="~/Scripts/FClient.js"></script>
     <script src="~/Scripts/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script defer src="~/Scripts/alpine.min.js"></script>
-    <script src="~/Scripts/pos/posscreen.js?v=7799ss9s9xc3j"></script>
+    <script src="~/Scripts/pos/posscreen.js?v=7799ss999s9ddxc3j"></script>
 </body>
 </html>

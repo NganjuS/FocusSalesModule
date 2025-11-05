@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Dapper;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Dapper;
 
 namespace FocusSalesModule.Data
 {
@@ -50,6 +51,25 @@ namespace FocusSalesModule.Data
             using (var ctx = new SqlConnection(connstr))
             {
                 return ctx.ExecuteScalar<T>(query);
+            }
+        }
+        public static DataTable GetData(int compid, string query)
+        {
+            BuildConnectionStr(compid);
+            using (var connection = new SqlConnection(connstr))
+            {
+                connection.Open();
+
+                var cmd = connection.CreateCommand();
+                cmd.CommandText = query;
+                cmd.CommandTimeout = 360;
+
+                var reader = cmd.ExecuteReader();
+
+                var table = new DataTable();
+                table.Load(reader);
+
+                return table;
             }
         }
     }

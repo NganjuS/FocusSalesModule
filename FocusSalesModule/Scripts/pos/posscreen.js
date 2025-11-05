@@ -212,6 +212,10 @@ function posSystem() {
                 //
             });
         },
+        printDocument(printUrl) {
+
+            printJS({ printable: printUrl, type: 'pdf', showModal: true })
+        },
         get canCompleteSettlement() {
             // Can complete if total payments >= grand total OR if cash is provided and covers the outstanding
             const totalPaid = this.totalPayments + (this.cashAmount || 0);
@@ -498,9 +502,13 @@ function posSystem() {
             }).then(dataObj => {
 
                 this.showAlertMessage(dataObj.message);
-
+                
                 this.items = [];
                 this.transactionData = {};
+                if (dataObj.result == 1) {
+
+                    this.printDocument(dataObj.printlink)
+                }
 
             }).catch(error => {
                 console.log(error);
