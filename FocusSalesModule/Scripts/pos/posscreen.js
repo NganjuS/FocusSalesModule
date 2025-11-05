@@ -124,7 +124,13 @@ function posSystem() {
 
         settlementError: '',
 
-   
+        // Retrieve Modal
+        showRetrieveModal: false,
+        retrieveDateFrom: '',
+        retrieveDateTo: '',
+        retrievedTransactions: [],
+
+
         get subtotal() {
             return this.items.reduce((sum, item) => sum + item.Gross, 0);
         },
@@ -804,7 +810,29 @@ function posSystem() {
                     Focus8WAPI.gotoHomePage();
                 }
             }
-            
+
+        },
+
+        retrieveTransaction() {
+            // Open retrieve modal and set default dates to today
+            const today = new Date().toISOString().split('T')[0];
+            this.retrieveDateFrom = today;
+            this.retrieveDateTo = today;
+            this.retrievedTransactions = [];
+            this.showRetrieveModal = true;
+        },
+
+        closeRetrieveModal() {
+            this.showRetrieveModal = false;
+            this.retrieveDateFrom = '';
+            this.retrieveDateTo = '';
+            this.retrievedTransactions = [];
+        },
+
+        handleTransactionDoubleClick(transaction) {
+            // Placeholder function for double-click on transaction row
+            console.log('Transaction double-clicked:', transaction);
+            // TODO: Implement functionality to load the selected transaction
         },
 
         formatCurrency(amount) {
