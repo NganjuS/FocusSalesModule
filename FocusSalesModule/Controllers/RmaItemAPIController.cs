@@ -53,6 +53,32 @@ namespace FocusSalesModule.Controllers
             return hashData;
         }
         [HttpGet]
+        [Route("rmaitemsnooutlet")]
+        public HashData<Product> GetRmaItemNoOutlet(int compid, int outletid, string rmano)
+        {
+            HashData<Product> hashData = new HashData<Product>();
+            try
+            {
+                hashData.data = DbCtx<Product>.GetObj(compid, ProductQueries.GetRmaDataStocIn(rmano, outletid));
+                if (hashData.data == null)
+                {
+                    hashData.result = -1;
+                    hashData.message = "Rma number is not valid or has been consumed";
+                    return hashData;
+                }
+
+                hashData.result = 1;
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                hashData.result = -1;
+                hashData.message = ex.Message;
+            }
+            return hashData;
+        }
+        [HttpGet]
         [Route("rmadata")]
         public HashData<RmaItem> LoadRmaData(int compid, string rmano)
         {

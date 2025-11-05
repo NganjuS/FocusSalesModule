@@ -281,6 +281,7 @@
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\pos\posscreen - Copy.js" />
     <Content Include="Scripts\pos\posscreen.js" />
+    <Content Include="Scripts\stockin.js" />
     <Content Include="Scripts\searchitem - Copy.js" />
     <Content Include="Scripts\searchitem.js" />
     <Content Include="Scripts\select2.min.js" />
