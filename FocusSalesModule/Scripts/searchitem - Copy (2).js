@@ -447,8 +447,8 @@ var sessionid = "";
 var vtype = 0;
 var docno = "";
 var totalRows = 0;
-var shadowItemList = [];
-var validRows = 0;
+let shadowItemList = [];
+let validRows = 0;
 var lineRequestsProcessed = [];
 var lineRequestId = 0;
 function resetDefaults() {
@@ -461,7 +461,7 @@ function resetDefaults() {
     vtype = 0;
     docno = "";
     totalRows = 0;
-    shadowItemList = [];
+   shadowItemList = [];
     validRows = 0;
 }
 function isRequestProcessed(iRequestId) {
@@ -483,72 +483,16 @@ function isLineRequestProcessed(iRequestId) {
 }
 function initRmaSearch(response) {
 
-    
+    console.log("Initial log ...",response.iRequestId)
     //if (initialRequestId != 0) {
     //    resetDefaults()
     //}
     //initialRequestId = response.iRequestId;
     //resetDefaults();
-    setupSweetAlert();
-    onSearch(response);
     ++requestId;
 
-    
+    Focus8WAPI.getFieldValue("getRma", ["", "DocNo", "RmaSearch","Outlet"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
-function onSearch(response) {
-
-    const label = Array.from(document.querySelectorAll("label"))
-        .find(l => l.textContent.trim().toLowerCase() === "rma search" || l.textContent.trim().toLowerCase() === "rmasearch");
-
-    if (label) {
-        // Try to find the input connected to the label
-        let input = null;
-    
-        // Case 1: label has 'for' attribute
-        const forId = label.getAttribute("for");
-        if (forId) {
-            input = document.getElementById(forId);
-        }
-
-        // Case 2: label is next to input in same container
-        if (!input) {
-        
-            input = label.parentElement.querySelector("input");
-        }
-
-
-        // Focus input if found
-        if (input) {
-            console.log("Setting focus !!!");
-
-            if (!input.hasKeyListener) {
-
-                input.addEventListener("keydown", function (event) {
-                    if ((event.key === "Enter" || event.keyCode === 13) && !Swal.isVisible()) {
-                        event.preventDefault(); // optional — stops form submission
-
-                        initRmaSearchProcess();
-
-
-                        // your custom action here
-                    }
-                });
-
-                input.hasKeyListener = true; // custom flag
-            }
-
-            input.focus();
-        }
-    }
-}
-function initRmaSearchProcess() {
-    ++requestId;
-   
-    Focus8WAPI.getFieldValue("getRma", ["", "DocNo", "RmaSearch", "Outlet"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
-
-}
-
-
 function clearSearchField(clearField)
 {
     ++requestId;
@@ -561,7 +505,7 @@ function clearSearchField(clearField)
    
 }
 function setRmaSearchFocus() {
-   
+    console.log("Searching label ....");
     // Find the label with text "Rma Search"
     const label = Array.from(document.querySelectorAll("label"))
         .find(l => l.textContent.trim().toLowerCase() === "rma search" || l.textContent.trim().toLowerCase() === "rmasearch");
@@ -569,7 +513,7 @@ function setRmaSearchFocus() {
     if (label) {
         // Try to find the input connected to the label
         let input = null;
-       
+        console.log("Label found !!!");
         // Case 1: label has 'for' attribute
         const forId = label.getAttribute("for");
         if (forId) {
@@ -578,18 +522,14 @@ function setRmaSearchFocus() {
 
         // Case 2: label is next to input in same container
         if (!input) {
-         
+            console.log("Getting input !!!");
             input = label.parentElement.querySelector("input");
         }
 
         // Focus input if found
         if (input) {
-         
+            console.log("Setting focus !!!");
             input.focus();
-            if (Swal.isVisible()) {
-
-                Swal.getConfirmButton().focus();
-            }
         }
     }
 
@@ -614,13 +554,13 @@ function getRma(response) {
     let outletid = response.data[3].FieldValue;
     if (rmano.trim().length == 0) {
 
-      
+        console.log("Initiated rma trigger but rma field is empty !!");
         return;
     }
 
     if (outletid == 0) {
 
-        showMessageAlert("Select outlet to continue !!! ","warning");
+        alert("Select outlet to continue !!! ");
         return;
     }
     searchRma(rmano, outletid)
@@ -640,24 +580,24 @@ async function searchRma(rmano, outletid)
 
         let dataObj = await response.json();
 
-       
-        clearSearchField("RmaSearch");
+        console.log(dataObj);
+
         if (dataObj.result == -1) {
-            showMessageAlert(dataObj.message, "error");
-            
+            alert(dataObj.message);
+
             return;
         }
         else {
-           
-           
+            clearSearchField("RmaSearch");
+            console.log("Valid rows", validRows);
             if (validRows == 0) {
-                
+                console.log("Setting row no",)
                 
                 setLineItemsToDoc(1, dataObj.data)
                 
             }
             else {
-                
+                console.log("Retrieving existing",)
                 getExistingItems(dataObj.data)
             }
             
@@ -667,7 +607,7 @@ async function searchRma(rmano, outletid)
         }
         catch (err) {
 
-        showMessageAlert("Error when searching Rma: " + err,"error");
+            alert("Error when searching Rma: " + err);
     
         }
         finally {
@@ -680,9 +620,10 @@ var loadedItem = null;
 function getExistingItems(item) {
     loadedItem = item;
     lineRequestsProcessed = [];
-    
+    console.log(`Processing for Rma No:`, item.RmaNo);
+    console.log("Getting data from focus, valid Rows ", validRows);
     for (i = 0; i < validRows; i++) {
-        
+        console.log(`Getting row ${i}`, validRows);
         Focus8WAPI.getBodyFieldValue("getDocBodyData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
         //After last row
         //problem area
@@ -691,14 +632,14 @@ function getExistingItems(item) {
 }
 function getDocBodyData(response) {
 
-   
+    console.log("Logging row no", response.iRequestId);
     if (isLineRequestProcessed(response.iRequestId)) {
-       
+        console.log("Row no already exists, returning", response.iRequestId);
         return;
     }
 
     lineRequestsProcessed.push(response.iRequestId);
-   
+    console.log("Adding data for row no:", response.iRequestId);
     var docNo = response.data[1].FieldValue;
     var companyid = response.data[0].CompanyId;
     var sessid = response.data[0].SessionId;
@@ -709,24 +650,28 @@ function getDocBodyData(response) {
         "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docNo, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue
     };
     shadowItemList.push(payload);
-   
+    console.log("Valid rows", response.data[0].RowsInfo.iValidRows);
+    console.log("Request Id", response.iRequestId, "Valid rows", validRows)
     if (response.iRequestId == validRows) {
 
-       
+        console.log("Valid rows: ", validRows, "Reading lines completed");
+        
+            console.log(shadowItemList);
             //check if rma exists
             // let rmaExists = false;
 
             /*"Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue*/
             //Find Item in shadow list
-            let itemExists = shadowItemList.find(x => x.Item == loadedItem.ItemId);
+            let itemExists = shadowItemList.find(x => x.Item == loadedItem.Id);
             if (itemExists) {
                 let rmaExists = itemExists.RMA.find(x => x == loadedItem.RmaNo);
                 console.log(rmaExists);
                 let rowNo = shadowItemList.indexOf(itemExists) + 1;
                 if (rmaExists) {
                     
-                    showMessageAlert("RMA already exists !!","warning")
-                   
+                    alert("RMA already exists !!")
+                    console.log("Rma Item", rmaExists);
+                    console.log("Current Item", loadedItem);
                     let newQty = itemExists.RMA.length;
                     Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity"], [itemExists.RMA, newQty], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
                     //clearSearchField();
@@ -734,7 +679,7 @@ function getDocBodyData(response) {
                 }
                 else {
                     //clearSearchField();
-                   
+                    console.log("updating existing row !!");
                     ++requestId;
                     
                     itemExists.RMA.push(loadedItem.RmaNo);
@@ -746,7 +691,7 @@ function getDocBodyData(response) {
 
             }
             else {
-               
+                console.log("Adding new line for rma item");
                 setLineItemsToDoc(validRows + 1, loadedItem)
             }
 
@@ -758,25 +703,19 @@ function setLineItemsToDoc(rowNo, item) {
 
     ++requestId;
     let gross = parseInt(item.Qty) * parseFloat(item.Price);
-    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity",  "RMA"], [item.ItemId, item.UnitId, item.Qty,  item.RmaNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "Rate", "Gross", "RMA"], [item.Id, item.UnitId, item.Qty, item.Price, gross, item.RmaNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
 }
 function afterLineAdded(response) {
-    setRmaSearchFocus();
-
-    if (Swal.isVisible()) {
-
-        Swal.getConfirmButton().focus();
-    }
 }
 //Remove item RMA
-var validRemovalRows = 0;
-var removalRmaNo = "";
-var removalRequestsProcessed = [];
-var removalRequestId = 0;
+let validRemovalRows = 0;
+let removalRmaNo = "";
+let removalRequestsProcessed = [];
+let removalRequestId = 0;
 
 function initRemoveRma(response) {
 
-    
+    console.log("Initial remove RMA ...", response.iRequestId)
     ++removalRequestId;
 
     Focus8WAPI.getFieldValue("getRemoveRmaList", ["", "DocNo", "RemoveRma", "Outlet"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, removalRequestId);
@@ -805,7 +744,7 @@ function getRemoveRmaList(response) {
     let outletid = response.data[3].FieldValue;
     if (rmano.trim().length == 0 || validRemovalRows == 0) {
 
-    
+        console.log("Initiated rma trigger but rma field is empty or no valid rows!!");
         return;
     }
     getRemovalItems(rmano)
@@ -813,7 +752,7 @@ function getRemoveRmaList(response) {
 function getRemovalItems(rmano) {
     removalRmaNo = rmano;
     for (i = 0; i < validRows; i++) {
-        
+        console.log(`Getting row ${i}`, validRows);
         Focus8WAPI.getBodyFieldValue("removeRmaData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
         //After last row
         //problem area
@@ -824,9 +763,9 @@ function getRemovalItems(rmano) {
 
 function removeRmaData(response) {
 
-    
+    console.log("Logging row no", response.iRequestId);
     if (isRemoveRequestProcessed(response.iRequestId)) {
-       
+        console.log("Row no already exists, returning", response.iRequestId);
         return;
     }
 
@@ -834,12 +773,12 @@ function removeRmaData(response) {
     let rmaList = response.data[3].FieldValue; 
     rmaExists = rmaList.find(x => x == removalRmaNo);
     if (rmaExists) {
-   
+        console.log("Rma to remove found")
         rmaList = rmaList.filter(x => x != removalRmaNo);
         ++requestId;
         let newQty = rmaList.length;
         if (rmaList.length == 0) {
-          
+            console.log("Removing Item")
             Focus8WAPI.setBodyFieldValue("afterLineAdded", [ "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], ["0","0",[],0,0,0], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, response.iRequestId, requestId);
         }
         else {
@@ -849,35 +788,4 @@ function removeRmaData(response) {
        
     }
     clearSearchField("RemoveRma");
-}
-function setupSweetAlert() {
-
-    if (!document.querySelector('link[href$="sweetalert2.min.css"]')) {
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = "/focussalesmodule/content/sweetalert2.min.css";
-        document.head.appendChild(link);
-    }
-
-    if (!document.querySelector('script[src$="sweetalert2.all.min.js"]')) {
-        const script = document.createElement("script");
-        script.src = "/focussalesmodule/scripts/sweetalert2.all.min.js";
-        script.onload = () => {
-
-            isAlertActive = true;
-        };
-        document.body.appendChild(script);
-    }
-}
-function showMessageAlert(mssg, status) {
-    //Status 'success', 'error', 'warning', 'info', 'question'
-    if (isAlertActive)
-        Swal.fire(
-            {
-                title: 'Message', text: mssg, icon: status, didOpen: () => {
-                    Swal.getConfirmButton().focus();
-                }, didClose: () => {
-                    setRmaSearchFocus();
-                }
-            });
 }

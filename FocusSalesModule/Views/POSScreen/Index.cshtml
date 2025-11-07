@@ -11,6 +11,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="~/Content/select2.min.css" />
     <link rel="stylesheet" href="~/Content/print.min.css" />
+    <link rel="stylesheet" href="~/Content/waitMe.min.css" />
+
     <style>
         body {
             overflow: hidden;
@@ -660,7 +662,7 @@
             }
     </style>
 </head>
-<body>
+<body id="full-container">
     <div class="main-container" id="main-container" x-data="posSystem()">
         <input x-ref="compid" value="@ViewBag.compid" type="hidden" />
 
@@ -679,18 +681,22 @@
                 <div class="header-section-2">
                     <div class="header-field">
                         <label>Doc No:</label>
-                        <input type="text" x-model="docNo" readonly>
+                        <input type="text" x-model="posObj.DocNo" readonly>
                     </div>
                     <div class="header-field">
                         <label>Date:</label>
-                        <input type="date" x-model="transactionDate">
+                        <input type="date" x-model="posObj.DocDate">
                     </div>
                     <div class="header-field">
                         <label>Outlet:</label>
-                        <select id="outletSelect" x-model="selectedOutlet">
-                            <option value="0">Select Outlet</option>
+                        <select id="outletSelect" x-model="posObj.OutletId" @@change="updateOutletDetails($event.target.selectedOptions[0])">
+                            <option value="0">--Default--</option>
                             <template x-for="outlet in outletList" :key="outlet.Id">
-                                <option :value="outlet.Id" x-text="outlet.Name"></option>
+                                <option :value="outlet.Id"
+                                        :data-desc="outlet.Description"
+                                        :data-address="outlet.Address"
+                                        :data-email="outlet.Email"
+                                        :data-phone="outlet.Phone" x-text="outlet.Name"></option>
                             </template>
                         </select>
                     </div>
@@ -701,7 +707,7 @@
                 <div class="header-section-2">
                     <div class="header-field">
                         <label>Cost Center:</label>
-                        <select>
+                        <select x-model="posObj.CostCenterId">
                             <option value="">Select Cost Center</option>
                             <template x-for="costCenter in costCenters" :key="costCenter.Id">
                                 <option :value="costCenter.Id" x-text="costCenter.Name"></option>
@@ -715,27 +721,27 @@
                     </div>
                     <div class="header-field">
                         <label>
-                            <input type="checkbox" x-model="isCreditCustomer" @@change="handleCustomerTypeChange()" :disabled="isCreditCustomerReadOnly">
+                            <input type="checkbox" x-model="posObj.isCreditCustomer" @@change="handleCustomerTypeChange()" :disabled="isCreditCustomerReadOnly">
                             Credit Customer
                         </label>
                     </div>
-                    <div class="header-field" x-show="isCreditCustomer">
+                    <div class="header-field">
                         <label>Member:</label>
-                        <select x-model="selectedMember" @@change="updateCustomerAccount()">
+                        <select x-model="posObj.MemberId" @@change="updateCustomerAccount()">
                             <option value="">Select Member</option>
                             <template x-for="member in members" :key="member.id">
                                 <option :value="member.id" x-text="member.name"></option>
                             </template>
                         </select>
                     </div>
-                    <div class="header-field" x-show="isCreditCustomer">
+                    <div class="header-field">
                         <button class="btn btn-sm btn-light" @@click="showAddMemberModal = true">
                             <i class="bi bi-person-plus me-1"></i>Add Member
                         </button>
                     </div>
-                    <div class="header-field" x-show="isCreditCustomer">
+                    <div class="header-field" x-show="posObj.isCreditCustomer">
                         <label>Customer A/C:</label>
-                        <input type="text" x-model="customerAccount" readonly>
+                        <input type="text" x-model="posObj.customerAccount" readonly>
                     </div>
                 </div>
             </div>
@@ -759,14 +765,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="(item, index) in items" :key="index">
+                            <template x-for="(item, index) in posObj.Items" :key="index">
                                 <tr>
                                     <td x-text="index + 1"></td>
                                     <td>
-                                        <span class="item-code-link" @@click="showRMAs(item.Id)" x-text="item.Code"></span>
+                                        <span class="item-code-link" @@click="showRMAs(item.ItemId)" x-text="item.ItemCode"></span>
                                     </td>
-                                    <td x-text="item.Name"></td>
-                                    <td x-text="item.Unit"></td>
+                                    <td x-text="item.ItemName"></td>
+                                    <td x-text="item.UnitName"></td>
                                     <td x-text="item.Qty"></td>
                                     <td x-text="formatCurrency(item.Price)"></td>
                                     <td x-text="formatCurrency(item.FixedDiscountAmt)"></td>
@@ -779,7 +785,7 @@
                                     </td>
                                 </tr>
                             </template>
-                            <tr x-show="items.length === 0">
+                            <tr x-show="posObj.Items.length === 0">
                                 <td colspan="10" class="text-center text-muted">No items added. Scan an RMA to add items.</td>
                             </tr>
                         </tbody>
@@ -791,18 +797,32 @@
         <!-- Sidebar Section (1/3) - Right Side -->
         <div class="sidebar-section">
             <!-- Branch and Cashier Information -->
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 15px;">
-                <div style="margin-bottom: 15px;">
-                    <div style="font-size: 14px; font-weight: 500; color: #f0f0f0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Branch Name</div>
-                    <div x-text="branchName" style="font-size: 24px; font-weight: 700; color: #ffffff; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);"></div>
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 5px;">
+                <div style="margin-bottom: 10px;">
+                    <div class="hstack gap-1">
+                        <div style="font-size: 14px; font-weight: 500; color: #f0f0f0; text-transform: uppercase; letter-spacing: 1px;margin-top: 5px; margin-right:5px;">Status: </div>
+
+                        <div x-text="posObj.DocStatusDesc" style="font-size: 24px; font-weight: 700; color: #ffffff; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);"></div>
+                    </div>
                 </div>
-                <div style="margin-bottom: 15px;">
-                    <div style="font-size: 14px; font-weight: 500; color: #f0f0f0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Cashier Name</div>
-                    <div x-text="cashierName" style="font-size: 24px; font-weight: 700; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);"></div>
+                <div style="margin-bottom: 10px;">
+                    <div class="hstack gap-1">
+                        <div style="font-size: 14px; font-weight: 500; color: #f0f0f0; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; margin-right: 5px;">Branch Name: </div>
+
+                        <div x-text="posObj.OutletName" style="font-size: 18px; font-weight: 700; color: #ffffff; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);"></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <div class="hstack gap-1">
+                        <div style="font-size: 14px; font-weight: 500; color: #f0f0f0; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; margin-right: 5px;">Cashier Name: </div>
+                        <div x-text="posObj.CashierName" style="font-size: 24px; font-weight: 700; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);"></div>
+                    </div>
                 </div>
                 <div style="margin-bottom: 0;">
-                    <div style="font-size: 14px; font-weight: 500; color: #f0f0f0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Phone Number</div>
-                    <div x-text="cashierPhone" style="font-size: 24px; font-weight: 700; color: #00E676; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);"></div>
+                    <div class="hstack gap-1">
+                        <div style="font-size: 14px; font-weight: 500; color: #f0f0f0; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; margin-right: 5px;">Address: </div>
+                        <div x-text="posObj.OutletAddress" style="font-size: 16px; font-weight: 700; color: #00E676; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);"></div>
+                    </div>
                 </div>
             </div>
 
@@ -831,8 +851,8 @@
                     <i class="bi bi-collection me-2"></i> Retrieve
                 </button>
                 @*<button class="btn btn-warning" @@click="holdTransaction()">
-                        <i class="bi bi-pause-circle me-2"></i>Hold
-                    </button>*@
+                    <i class="bi bi-pause-circle me-2"></i>Hold
+                </button>*@
                 <button class="btn btn-danger" @@click="cancelTransaction()">
                     <i class="bi bi-x-circle me-2"></i>Cancel
                 </button>
@@ -862,7 +882,7 @@
         </div>
 
         <!-- Add Member Modal -->
-        <div class="modal" :class="{ 'show': showAddMemberModal }" @@click.self="showAddMemberModal = false">
+        <div class="modal">
             <div class="modal-content">
                 <div class="modal-header">
                     <span class="modal-close" @@click="showAddMemberModal = false">&times;</span>
@@ -902,7 +922,7 @@
                         <label>Cash/Bank Account</label>
                         <input type="text" x-model="advanceReceiptCashBankAccount" placeholder="Enter cash/bank account">
                     </div>
-                    <div class="payment-form-group">
+                    @*<div class="payment-form-group">
                         <label>Outlet</label>
                         <select x-model="advanceReceiptOutlet">
                             <option value="">Select Outlet</option>
@@ -919,7 +939,7 @@
                                 <option :value="costCenter.Id" x-text="costCenter.Name"></option>
                             </template>
                         </select>
-                    </div>
+                    </div>*@
                     <div class="payment-form-group">
                         <label>Member</label>
                         <select x-model="advanceReceiptMember">
@@ -963,7 +983,6 @@
                 </ul>
             </div>
         </div>
-
         <!-- Bill Settlement Modal -->
         <div class="modal settlement-modal" :class="{ 'show': showSettlementModal }">
             <div class="modal-content">
@@ -999,158 +1018,60 @@
                         <span x-text="formatCurrency(changeAmount)"></span>
                     </div>
                 </div>
-
                 <!-- Payment Tabs -->
                 <div class="payment-tabs">
-                    <button class="payment-tab" :class="{ 'active': activePaymentTab === 'cash' }" @@click="activePaymentTab = 'cash'">Cash</button>
-                    <button class="payment-tab" :class="{ 'active': activePaymentTab === 'bank' }" @@click="activePaymentTab = 'bank'">Bank Payments</button>
-                    <button class="payment-tab" :class="{ 'active': activePaymentTab === 'voucher' }" @@click="activePaymentTab = 'voucher'">Discount Voucher</button>
-                    <button class="payment-tab" :class="{ 'active': activePaymentTab === 'credit' }" @@click="activePaymentTab = 'credit'">Credit Note</button>
-                    <button class="payment-tab" :class="{ 'active': activePaymentTab === 'monie' }" @@click="activePaymentTab = 'monie'">Monie</button>
-                </div>
+                    <template x-for="(pmode, index) in paymentModes" :key="index">
+                        <button class="payment-tab" :class="{ 'active': activePaymentTab === pmode.PaymentType }" @@click="activePaymentTab = pmode.PaymentType" x-text="pmode.PaymentType"></button>
+                    </template>
 
+
+                </div>
                 <!-- Cash Payment -->
-                <div class="payment-content" :class="{ 'active': activePaymentTab === 'cash' }">
-                    <div class="payment-form-group">
-                        <label>Cash Amount Received</label>
-                        <input type="number" x-model.number="cashAmount" @@input="calculatePayments()" placeholder="Enter amount" step="0.01">
-                    </div>
-                    <div class="quick-cash-buttons">
-                        <button class="quick-cash-btn" @@click="cashAmount = grandTotal; calculatePayments()">Exact Amount</button>
-                        <button class="quick-cash-btn" @@click="cashAmount = Math.ceil(grandTotal / 100) * 100; calculatePayments()">Round Up 100</button>
-                        <button class="quick-cash-btn" @@click="cashAmount = Math.ceil(grandTotal / 500) * 500; calculatePayments()">Round Up 500</button>
-                        <button class="quick-cash-btn" @@click="cashAmount = Math.ceil(grandTotal / 1000) * 1000; calculatePayments()">Round Up 1000</button>
-                        <button class="quick-cash-btn" @@click="cashAmount = 5000; calculatePayments()">5,000</button>
-                        <button class="quick-cash-btn" @@click="cashAmount = 10000; calculatePayments()">10,000</button>
-                    </div>
-                </div>
-
-                <!-- Bank Payments -->
-                <div class="payment-content" :class="{ 'active': activePaymentTab === 'bank' }">
-                    <div class="payment-form-group">
-                        <label>Bank/Payment Method</label>
-                        <select x-model="newBankPayment.method">
-                            <option value="">Select payment method</option>
-                            <option value="Card">Credit/Debit Card</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="Cheque">Cheque</option>
-                        </select>
-                    </div>
-                    <div class="payment-form-group">
-                        <label>Reference Number</label>
-                        <input type="text" x-model="newBankPayment.reference" placeholder="Enter reference number">
-                    </div>
-                    <div class="payment-form-group">
-                        <label>Amount</label>
-                        <input type="number" x-model.number="newBankPayment.amount" placeholder="Enter amount" step="0.01">
-                    </div>
-                    <button class="btn-add-payment" @@click="addBankPayment()">Add Payment</button>
-
-                    <table class="bank-payments-table" x-show="bankPayments.length > 0">
-                        <thead>
-                            <tr>
-                                <th>Method</th>
-                                <th>Reference</th>
-                                <th>Amount</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="(payment, index) in bankPayments" :key="index">
-                                <tr>
-                                    <td x-text="payment.method"></td>
-                                    <td x-text="payment.reference"></td>
-                                    <td x-text="formatCurrency(payment.amount)"></td>
-                                    <td>
-                                        <button class="btn-remove-payment" @@click="removeBankPayment(index)">Remove</button>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Discount Voucher -->
-                <div class="payment-content" :class="{ 'active': activePaymentTab === 'voucher' }">
-                    <div class="payment-form-group">
-                        <label>Voucher Code</label>
-                        <input type="text" x-model="voucherCode" placeholder="Enter voucher code" :disabled="voucherApplied">
-                    </div>
-                    <button class="btn-add-payment" @@click="applyVoucher()" :disabled="voucherApplied">
-                        <i class="bi bi-check-circle me-2"></i>Validate & Apply Voucher
-                    </button>
-                    <div x-show="voucherApplied" style="margin-top: 15px; padding: 15px; background-color: #d4edda; border-radius: 4px; border: 1px solid #c3e6cb;">
-                        <div style="color: #155724; font-weight: 600; margin-bottom: 5px;">
-                            <i class="bi bi-check-circle-fill me-2"></i>Voucher Applied Successfully!
+                <template x-for="(pmode, index) in paymentModes" :key="index">
+                    <div class="payment-content" :class="{ 'active': activePaymentTab === pmode.PaymentType }">
+                        <div class="payment-form-group">
+                            <label>Reference Number</label>
+                            <input type="text" x-model="newMoniePayment.reference" placeholder="Enter reference number">
                         </div>
-                        <div style="color: #155724;">
-                            <strong>Code:</strong> <span x-text="voucherCode"></span><br>
-                            <strong>Discount Amount:</strong> <span x-text="formatCurrency(voucherAmount)"></span><br>
-                            <strong>Applied to Item:</strong> <span x-text="voucherItemCode"></span>
+                        <div class="payment-form-group">
+                            <label>Amount</label>
+                            <input type="number" x-model.number="posObj.Payments.CashAmount" @@input="calculatePayments()" placeholder="Enter amount" step="0.01">
                         </div>
-                    </div>
-                </div>
+                        <button class="btn-add-payment" @@click="addMonie()">Add Payment</button>
 
-                <!-- Credit Note -->
-                <div class="payment-content" :class="{ 'active': activePaymentTab === 'credit' }">
-                    <div class="payment-form-group">
-                        <label>Credit Note Number</label>
-                        <input type="text" x-model="creditNoteNumber" placeholder="Enter credit note number">
-                    </div>
-                    <div class="payment-form-group">
-                        <label>Credit Note Amount</label>
-                        <input type="number" x-model.number="creditNoteAmount" @@input="calculatePayments()" placeholder="Enter credit note amount" step="0.01">
-                    </div>
-                    <button class="btn-add-payment" @@click="applyCreditNote()">Apply Credit Note</button>
-                    <div x-show="creditNoteApplied" style="margin-top: 10px; color: #28a745; font-weight: 600;">
-                        Credit Note applied: <span x-text="formatCurrency(creditNoteAmount)"></span>
-                    </div>
-                </div>
-
-                <!-- Monie -->
-                <div class="payment-content" :class="{ 'active': activePaymentTab === 'monie' }">
-                    <div class="payment-form-group">
-                        <label>Reference Number</label>
-                        <input type="text" x-model="newMoniePayment.reference" placeholder="Enter reference number">
-                    </div>
-                    <div class="payment-form-group">
-                        <label>Amount</label>
-                        <input type="number" x-model.number="newMoniePayment.amount" placeholder="Enter amount" step="0.01">
-                    </div>
-                    <button class="btn-add-payment" @@click="addMonie()">Add Payment</button>
-
-                    <table class="bank-payments-table" x-show="bankPayments.length > 0">
-                        <thead>
-                            <tr>
-                                <th>Reference</th>
-                                <th>Amount</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="(payment, index) in moniePayments" :key="index">
+                        <table class="bank-payments-table" x-show="bankPayments.length > 0">
+                            <thead>
                                 <tr>
-                                    <td x-text="payment.reference"></td>
-                                    <td x-text="formatCurrency(payment.amount)"></td>
-                                    <td>
-                                        <button class="btn-remove-payment" @@click="removeMoniePayment(index)">Remove</button>
-                                    </td>
+                                    <th>Reference</th>
+                                    <th>Amount</th>
+                                    <th></th>
                                 </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                <template x-for="(payment, index) in posObj.Payments.MoniePayments" :key="index">
+                                    <tr>
+                                        <td x-text="payment.reference"></td>
+                                        <td x-text="formatCurrency(payment.amount)"></td>
+                                        <td>
+                                            <button class="btn-remove-payment" @@click="removeMoniePayment(index)">Remove</button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+                    <!-- Settlement Actions -->
+                    <div class="settlement-actions">
+                        <button class="btn-cancel-settlement" @@click="cancelSettlement()">Cancel</button>
+                        <button class="btn-complete-settlement" :disabled="!canCompleteSettlement" @@click="completeSettlement()">Complete Settlement</button>
+                    </div>
 
-                <!-- Settlement Actions -->
-                <div class="settlement-actions">
-                    <button class="btn-cancel-settlement" @@click="cancelSettlement()">Cancel</button>
-                    <button class="btn-complete-settlement" :disabled="!canCompleteSettlement" @@click="completeSettlement()">Complete Settlement</button>
-                </div>
-
-                <div x-show="settlementError" class="error-message" style="margin-top: 10px;" x-text="settlementError"></div>
+                    <div x-show="settlementError" class="error-message" style="margin-top: 10px;" x-text="settlementError"></div>
             </div>
         </div>
 
+        <!-- End Bill Settlement Modal -->
         <!-- Retrieve Transaction Modal -->
         <div class="modal retrieve-modal" :class="{ 'show': showRetrieveModal }">
             <div class="modal-content retrieve-modal-content">
@@ -1169,7 +1090,7 @@
                         <label>Date To:</label>
                         <input type="date" x-model="retrieveDateTo">
                     </div>
-                    <button class="btn btn-primary btn-search-transactions">
+                    <button @@click="showRetrievedData" class="btn btn-primary btn-search-transactions">
                         <i class="bi bi-search me-1"></i>Search
                     </button>
                 </div>
@@ -1187,13 +1108,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="transaction in retrievedTransactions" :key="transaction.docNo">
+                            <template x-for="(transaction, index) in retrievedTransactions" :key="index">
                                 <tr @@dblclick="handleTransactionDoubleClick(transaction)" class="transaction-row">
-                                    <td x-text="transaction.docNo"></td>
-                                    <td x-text="transaction.docDate"></td>
-                                    <td x-text="transaction.customer"></td>
-                                    <td x-text="transaction.outlet"></td>
-                                    <td x-text="formatCurrency(transaction.amount)"></td>
+                                    <td x-text="transaction.DocNo"></td>
+                                    <td x-text="formatDisplayDate(transaction.DocDate)"></td>
+                                    <td x-text="transaction.CustomerName"></td>
+                                    <td x-text="transaction.OutletName"></td>
+                                    <td x-text="formatCurrency(transaction.Amount)"></td>
                                 </tr>
                             </template>
                             <tr x-show="retrievedTransactions.length === 0">
@@ -1210,12 +1131,15 @@
             </div>
         </div>
     </div>
-    <script src="~/Scripts/print.min.js"></script>
-    <script src="~/Scripts/jquery-3.7.0.min.js"></script>
-    <script src="~/Scripts/FClient.js"></script>
-    <script src="~/Scripts/select2.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script defer src="~/Scripts/alpine.min.js"></script>
-    <script src="~/Scripts/pos/posscreen.js?v=7799ss999s9ddxc3j"></script>
+
+                <script src="~/Scripts/print.min.js"></script>
+                <script src="~/Scripts/jquery-3.7.0.min.js"></script>
+                <script src="~/Scripts/waitMe.min.js"></script>
+                <script src="~/Scripts/FClient.js"></script>
+                <script src="~/Scripts/select2.min.js"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+                <script defer src="~/Scripts/alpine.min.js"></script>
+                <script src="~/Scripts/pos/posscreen.js?v=77g77863d9j"></script>
+
 </body>
 </html>

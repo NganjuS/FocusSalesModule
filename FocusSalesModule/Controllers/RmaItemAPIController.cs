@@ -54,12 +54,12 @@ namespace FocusSalesModule.Controllers
         }
         [HttpGet]
         [Route("rmaitemsnooutlet")]
-        public HashData<Product> GetRmaItemNoOutlet(int compid, int outletid, string rmano)
+        public HashData<Product> GetRmaItemNoOutlet(int compid, string stockoutdocno, string rmano)
         {
             HashData<Product> hashData = new HashData<Product>();
             try
             {
-                hashData.data = DbCtx<Product>.GetObj(compid, ProductQueries.GetRmaDataStocIn(rmano, outletid));
+                hashData.data = DbCtx<Product>.GetObj(compid, ProductQueries.GetRmaDataStockIn(rmano, stockoutdocno));
                 if (hashData.data == null)
                 {
                     hashData.result = -1;

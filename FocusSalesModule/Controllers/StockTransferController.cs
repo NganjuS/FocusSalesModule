@@ -27,7 +27,7 @@ namespace FocusSalesModule.Controllers
                 Id = _nextOutletId++,
                 Code = "OUT001",
                 Name = "Main Warehouse",
-                Location = "Downtown",
+               
                 IsActive = true
             });
             _outlets.Add(new Outlet
@@ -35,7 +35,7 @@ namespace FocusSalesModule.Controllers
                 Id = _nextOutletId++,
                 Code = "OUT002",
                 Name = "Branch Store 1",
-                Location = "Uptown",
+                
                 IsActive = true
             });
             _outlets.Add(new Outlet
@@ -43,34 +43,34 @@ namespace FocusSalesModule.Controllers
                 Id = _nextOutletId++,
                 Code = "OUT003",
                 Name = "Branch Store 2",
-                Location = "Suburbs",
+              
                 IsActive = true
             });
 
             // Initialize sample products
             _products.Add(new Product
             {
-                Id = _nextProductId++,
-                Code = "PROD001",
-                Name = "Product A",
+                ItemId = _nextProductId++,
+                ItemCode = "PROD001",
+                ItemName = "Product A",
                 BaseUnit = "PCS",
                 Stock = 100,
                 Price = 50.00m
             });
             _products.Add(new Product
             {
-                Id = _nextProductId++,
-                Code = "PROD002",
-                Name = "Product B",
+                ItemId = _nextProductId++,
+                ItemCode = "PROD002",
+                ItemName = "Product B",
                 BaseUnit = "KG",
                 Stock = 200,
                 Price = 30.00m
             });
             _products.Add(new Product
             {
-                Id = _nextProductId++,
-                Code = "PROD003",
-                Name = "Product C",
+                ItemId = _nextProductId++,
+                ItemCode = "PROD003",
+                ItemName = "Product C",
                 BaseUnit = "LTR",
                 Stock = 150,
                 Price = 25.00m
@@ -100,7 +100,7 @@ namespace FocusSalesModule.Controllers
                 id = o.Id,
                 text = o.Name,
                 code = o.Code,
-                location = o.Location
+            
             }).ToList();
 
             return Json(new { success = true, data = outlets });
@@ -112,9 +112,9 @@ namespace FocusSalesModule.Controllers
         {
             var products = _products.Select(p => new
             {
-                id = p.Id,
-                text = p.Name,
-                code = p.Code,
+                id = p.ItemId,
+                text = p.ItemName,
+                code = p.ItemCode,
                 unit = p.BaseUnit,
                 stock = p.Stock,
                 price = p.Price

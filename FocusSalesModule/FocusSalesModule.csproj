@@ -227,7 +227,7 @@
     <Compile Include="Models\MasterDTO.cs" />
     <Compile Include="Models\Outlet.cs" />
     <Compile Include="Models\PaymentDTO.cs" />
-    <Compile Include="Models\POSDto.cs" />
+    <Compile Include="Models\POSDTO.cs" />
     <Compile Include="Models\PosLine.cs" />
     <Compile Include="Models\Product.cs" />
     <Compile Include="Models\RequestDTO.cs" />
@@ -300,12 +300,14 @@
     <Content Include="Scripts\pos\posscreen - Copy.js" />
     <Content Include="Scripts\pos\posscreen.js" />
     <Content Include="Scripts\print.min.js" />
+    <Content Include="Scripts\searchitem - Copy %282%29.js" />
     <Content Include="Scripts\stockin.js" />
     <Content Include="Scripts\searchitem - Copy.js" />
     <Content Include="Scripts\searchitem.js" />
     <Content Include="Scripts\select2.min.js" />
     <Content Include="Scripts\sweetalert2.all.min.js" />
     <Content Include="Scripts\toastr.min.js" />
+    <Content Include="Scripts\waitMe.min.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

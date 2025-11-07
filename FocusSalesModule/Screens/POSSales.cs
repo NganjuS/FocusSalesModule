@@ -10,61 +10,65 @@ namespace FocusSalesModule.Screens
 {
     public class POSSales
     {
-        public static Hashtable GetHeader(POSDto posDTO) 
+        public static Hashtable GetHeader(POSDTO posDTO) 
         {
             var product = posDTO.Items.FirstOrDefault();
             var headerDoc = new Hashtable
             {
-                { "SalesAC__Id", product.SalesAccId },
-                { "CustomerAC__Id", product.CustAccId },
-                { "Member__Id",  product.MemberId },
-                { "Outlet__Id", product.OutletId },
-                { "Cost Center__Id", product.CostCenterId },
-                { "sNarration",  product.Narration },
-                { "CashReceived", posDTO.Payments.Cash },
+                { "Date", UtilFuncs.GetDateToInt(posDTO.DocDate) },
+                { "SalesAC__Id", posDTO.SalesAccId },
+                { "CustomerAC__Id", posDTO.CustAccId },
+                { "Member__Id",  posDTO.MemberId },
+                { "Outlet__Id", posDTO.OutletId },
+                { "Cost Center__Id", posDTO.CostCenterId },
+                { "sNarration",  posDTO.Narration },
+               
                 { "SaleTimestamp", UtilFuncs.GetDateToInt(posDTO.Timestamp)},
 
             };
-            //Set Bank Payments
-            string[] extList = { "" ,"O","T" ,"H" };
-            if(posDTO.Payments.BankPayments != null)
+            if (posDTO.Payments != null)
             {
-                for (int i = 0; i < posDTO.Payments.BankPayments.Count; i++)
+                headerDoc["CashReceived"] = posDTO.Payments.CashAmount;
+                //Set Bank Payments
+                string[] extList = { "", "O", "T", "H" };
+                if (posDTO.Payments.BankPayments != null)
                 {
-                    string ext = extList[i];
-                    headerDoc[$"BankAccount{ext}__Id"] = 0;
-                    headerDoc[$"BankPaymentMethod{ext}"] = posDTO.Payments.BankPayments[i].Method;
-                    headerDoc[$"ReferenceNo{ext}"] = posDTO.Payments.BankPayments[i].Reference;
-                    headerDoc[$"Amount{ext}"] = posDTO.Payments.BankPayments[i].Amount;
-                }
-            }
-            
-            //Set Monie
-            if(posDTO.Payments.Monie != null)
-            {
-                for (int i = 0; i < posDTO.Payments.Monie.Count; i++)
-                {
-                    string ext = extList[i];
-                    headerDoc[$"MonieBranchNo{ext}"] = posDTO.Payments.Monie[i].Code;
-                    headerDoc[$"MonieRefNo{ext}"] = posDTO.Payments.Monie[i].Reference;
-                    headerDoc[$"MonieAmount{ext}"] = posDTO.Payments.Monie[i].Amount;
-                }
-            }
-            
-            //Set Discount Voucher
-            if(posDTO.Payments.DiscountVouchers != null)
-            {
-
-                for (int i = 0; i < posDTO.Payments.DiscountVouchers.Count; i++)
-                {
-
-                    string ext = extList[i];
-                    headerDoc[$"VoucherCode{ext}"] = posDTO.Payments.DiscountVouchers[i].ItemCode;
-                    headerDoc[$"VoucherAmount{ext}"] = posDTO.Payments.DiscountVouchers[i].VoucherValue;
+                    for (int i = 0; i < posDTO.Payments.BankPayments.Count; i++)
+                    {
+                        string ext = extList[i];
+                        headerDoc[$"BankAccount{ext}__Id"] = 0;
+                        headerDoc[$"BankPaymentMethod{ext}"] = posDTO.Payments.BankPayments[i].Method;
+                        headerDoc[$"ReferenceNo{ext}"] = posDTO.Payments.BankPayments[i].Reference;
+                        headerDoc[$"Amount{ext}"] = posDTO.Payments.BankPayments[i].Amount;
+                    }
                 }
 
+                //Set Monie
+                if (posDTO.Payments.MoniePayments != null)
+                {
+                    for (int i = 0; i < posDTO.Payments.MoniePayments.Count; i++)
+                    {
+                        string ext = extList[i];
+                        headerDoc[$"MonieBranchNo{ext}"] = posDTO.Payments.MoniePayments[i].Code;
+                        headerDoc[$"MonieRefNo{ext}"] = posDTO.Payments.MoniePayments[i].Reference;
+                        headerDoc[$"MonieAmount{ext}"] = posDTO.Payments.MoniePayments[i].Amount;
+                    }
+                }
+
+                //Set Discount Voucher
+                if (posDTO.Payments.DiscountVouchers != null)
+                {
+
+                    for (int i = 0; i < posDTO.Payments.DiscountVouchers.Count; i++)
+                    {
+
+                        string ext = extList[i];
+                        headerDoc[$"VoucherCode{ext}"] = posDTO.Payments.DiscountVouchers[i].ItemCode;
+                        headerDoc[$"VoucherAmount{ext}"] = posDTO.Payments.DiscountVouchers[i].VoucherValue;
+                    }
+
+                }
             }
-            
 
             return headerDoc;
 
@@ -78,7 +82,7 @@ namespace FocusSalesModule.Screens
                 var lineTbl = new Hashtable
                 {
                    
-                    { "Item__Id", line.Id },
+                    { "Item__Id", line.ItemId },
                     { "Unit__Id", line.UnitId },
                     { "RMA", rmaNos },
                     { "Quantity", line.Qty },

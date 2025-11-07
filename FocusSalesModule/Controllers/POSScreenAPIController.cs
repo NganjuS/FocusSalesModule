@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.Remoting.Messaging;
 using System.Web.Configuration;
 using System.Web.Http;
 
@@ -21,9 +22,78 @@ namespace FocusSalesModule.Controllers
     public class POSScreenAPIController : ApiController
     {
         const string ScreenName = "FBI POS Sales";
+        [HttpGet]
+        [Route("salesdata")]
+        public HashData<POSDTO> GetSalesData(int compid, int outletid, DateTime datefrom , DateTime dateto)
+        {
+            HashData<POSDTO> resp = new HashData<POSDTO>();
+            try
+            {
+                int startDate = UtilFuncs.GetDateToInt(datefrom);
+                int endDate = UtilFuncs.GetDateToInt(dateto);
+                resp.datalist = DbCtx<POSDTO>.GetObjList(compid, TxnQueries.GetPOSData(outletid, startDate, endDate));
+                resp.result = 1;
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
+        [HttpGet]
+        [Route("salesbytxnid")]
+        public HashData<POSDTO> GetSalesData(int compid, int headerid)
+        {
+            HashData<POSDTO> resp = new HashData<POSDTO>();
+            try
+            {
+
+                POSDTO headerObj  = DbCtx<POSDTO>.GetObj(compid, TxnQueries.GetPOSDataByHeaderId(headerid));
+                headerObj.Items = DbCtx<Product>.GetObjList(compid,  TxnQueries.GetPOSLinesByHeaderId(headerid));
+                foreach(var item in headerObj.Items)
+                {
+                    item.RmaNoList = DbCtx<String>.GetObjList(compid, TxnQueries.GetRmaNoListQry(item.LineId));
+                }
+
+                resp.data = headerObj;
+
+                resp.result = 1;
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
+        [HttpGet]
+        [Route("outletpaymenttypes")]
+        public HashData<dynamic> GetOutletPaymenttypes(int compid, int outletid)
+        {
+            HashData<dynamic> resp = new HashData<dynamic>();
+            try
+            {
+                resp.datalist = DbCtx<dynamic>.GetObjList(compid, TxnQueries.GetOutletPaymentTypesQry(outletid));
+                resp.result = 1;
+
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
         [HttpPost]
         [Route("addsale")]
-        public HashDataFocus AddSale(int compid, string sessionid, POSDto posDTO)
+        public HashDataFocus AddSale(int compid, string sessionid, POSDTO posDTO)
         {
             HashDataFocus hashDataFocus = new HashDataFocus();
             try
@@ -31,14 +101,14 @@ namespace FocusSalesModule.Controllers
                 string baseUrl = WebConfigurationManager.AppSettings["Server_API_IP"];
                 HashDataFocus objHashRequest = new HashDataFocus();
                 Hashtable objHash = new Hashtable();
-               
-                var docHeader = posDTO.Items.FirstOrDefault();
-                docHeader.SalesAccId = 27;
-                docHeader.CustAccId = 4;
-                docHeader.MemberId = 1;
-                docHeader.OutletId = 42;
-                docHeader.CostCenterId = 6;
-                docHeader.Narration = "Test Posting";
+
+                //var docHeader = posDTO.Items.FirstOrDefault();
+                posDTO.SalesAccId = 27;
+                posDTO.CustAccId = 4;
+                posDTO.MemberId = 1;
+                //posDTO.OutletId = 42;
+                //posDTO.CostCenterId = 6;
+                posDTO.Narration = "Test Posting";
                 Hashtable header = POSSales.GetHeader(posDTO);
                 List<Hashtable> doclines = POSSales.GetLines(posDTO.Items);
                 objHash.Add("Header", header);

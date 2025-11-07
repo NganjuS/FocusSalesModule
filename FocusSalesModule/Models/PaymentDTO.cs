@@ -7,10 +7,10 @@ namespace FocusSalesModule.Models
 {
     public class PaymentDTO
     {
-        public decimal Cash { get; set; }
+        public decimal CashAmount { get; set; }
         public List<BankPaymentDTO> BankPayments { get; set; }
         public List<DiscountVoucher> DiscountVouchers { get; set; }
-        public List<GenericPayment> Monie { get; set; }
+        public List<GenericPayment> MoniePayments { get; set; }
         public List<GenericPayment> CreditNote { get; set; }
     }
 }
