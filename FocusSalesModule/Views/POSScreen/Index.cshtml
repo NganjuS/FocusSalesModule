@@ -297,10 +297,38 @@
 
         /* Bill Settlement Modal */
         .settlement-modal .modal-content {
-            width: 800px;
+            width: 900px;
             max-width: 90vw;
             max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .settlement-modal-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 20px;
+        }
+
+        .settlement-left-sidebar {
+            width: 200px;
+            border-right: 2px solid #dee2e6;
+            padding-right: 15px;
             overflow-y: auto;
+        }
+
+        .settlement-main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .settlement-footer {
+            border-top: 2px solid #dee2e6;
+            padding: 15px 0 0 0;
+            background-color: #fff;
         }
 
         /* Advance Receipt Modal */
@@ -312,29 +340,33 @@
 
         .payment-tabs {
             display: flex;
-            border-bottom: 2px solid #0073AA;
-            margin-bottom: 20px;
+            flex-direction: column;
+            gap: 5px;
         }
 
         .payment-tab {
-            padding: 12px 24px;
+            padding: 12px 16px;
             cursor: pointer;
             background: none;
             border: none;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             color: #666;
             transition: all 0.3s;
+            text-align: left;
+            border-radius: 4px;
+            border-left: 3px solid transparent;
         }
 
             .payment-tab:hover {
                 color: #0073AA;
+                background-color: #f8f9fa;
             }
 
             .payment-tab.active {
                 color: #0073AA;
-                border-bottom: 3px solid #0073AA;
-                margin-bottom: -2px;
+                background-color: #e7f3f8;
+                border-left-color: #0073AA;
             }
 
         .payment-content {
@@ -347,36 +379,36 @@
 
         .payment-summary {
             background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
         }
 
         .payment-summary-row {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            font-size: 16px;
+            padding: 5px 0;
+            font-size: 14px;
         }
 
             .payment-summary-row.total {
                 font-weight: bold;
-                font-size: 20px;
+                font-size: 16px;
                 color: #0073AA;
                 border-top: 2px solid #0073AA;
-                padding-top: 12px;
-                margin-top: 8px;
+                padding-top: 8px;
+                margin-top: 5px;
             }
 
             .payment-summary-row.outstanding {
                 font-weight: bold;
-                font-size: 18px;
+                font-size: 15px;
                 color: #dc3545;
             }
 
             .payment-summary-row.change {
                 font-weight: bold;
-                font-size: 18px;
+                font-size: 15px;
                 color: #28a745;
             }
 
@@ -457,9 +489,9 @@
             display: flex;
             gap: 10px;
             justify-content: flex-end;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #dee2e6;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #dee2e6;
         }
 
             .settlement-actions button {
@@ -991,76 +1023,86 @@
                     <h3>Bill Settlement</h3>
                 </div>
 
-                <!-- Payment Summary -->
-                <div class="payment-summary">
-                    <div class="payment-summary-row">
-                        <span>Subtotal:</span>
-                        <span x-text="formatCurrency(subtotal)"></span>
+                <!-- Modal Body with Left Sidebar -->
+                <div class="settlement-modal-body">
+                    <!-- Left Sidebar - Payment Modes -->
+                    <div class="settlement-left-sidebar">
+                        <div class="payment-tabs">
+                            <template x-for="(pmode, index) in paymentModes" :key="index">
+                                <button class="payment-tab" :class="{ 'active': activePaymentTab === pmode.PaymentType }" @@click="activePaymentTab = pmode.PaymentType" x-text="pmode.PaymentType"></button>
+                            </template>
+                        </div>
                     </div>
-                    <div class="payment-summary-row">
-                        <span>Tax:</span>
-                        <span x-text="formatCurrency(tax)"></span>
-                    </div>
-                    <div class="payment-summary-row">
-                        <span>Total Discount:</span>
-                        <span x-text="formatCurrency(totalDiscount)"></span>
-                    </div>
-                    <div class="payment-summary-row total">
-                        <span>TOTAL DUE:</span>
-                        <span x-text="formatCurrency(grandTotal)"></span>
-                    </div>
-                    <div class="payment-summary-row outstanding" x-show="outstandingAmount > 0">
-                        <span>Outstanding:</span>
-                        <span x-text="formatCurrency(outstandingAmount)"></span>
-                    </div>
-                    <div class="payment-summary-row change" x-show="changeAmount > 0">
-                        <span>Change:</span>
-                        <span x-text="formatCurrency(changeAmount)"></span>
+
+                    <!-- Main Content - Payment Forms -->
+                    <div class="settlement-main-content">
+                        <template x-for="(pmode, index) in paymentModes" :key="index">
+                            <div class="payment-content" :class="{ 'active': activePaymentTab === pmode.PaymentType }">
+                                <div class="payment-form-group">
+                                    <label>Reference Number</label>
+                                    <input type="text" x-model="newMoniePayment.reference" placeholder="Enter reference number">
+                                </div>
+                                <div class="payment-form-group">
+                                    <label>Amount</label>
+                                    <input type="number" x-model.number="posObj.Payments.CashAmount" @@input="calculatePayments()" placeholder="Enter amount" step="0.01">
+                                </div>
+                                <button class="btn-add-payment" @@click="addMonie()">Add Payment</button>
+
+                                <table class="bank-payments-table" x-show="bankPayments.length > 0">
+                                    <thead>
+                                        <tr>
+                                            <th>Reference</th>
+                                            <th>Amount</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="(payment, index) in posObj.Payments.MoniePayments" :key="index">
+                                            <tr>
+                                                <td x-text="payment.reference"></td>
+                                                <td x-text="formatCurrency(payment.amount)"></td>
+                                                <td>
+                                                    <button class="btn-remove-payment" @@click="removeMoniePayment(index)">Remove</button>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
                     </div>
                 </div>
-                <!-- Payment Tabs -->
-                <div class="payment-tabs">
-                    <template x-for="(pmode, index) in paymentModes" :key="index">
-                        <button class="payment-tab" :class="{ 'active': activePaymentTab === pmode.PaymentType }" @@click="activePaymentTab = pmode.PaymentType" x-text="pmode.PaymentType"></button>
-                    </template>
 
-
-                </div>
-                <!-- Cash Payment -->
-                <template x-for="(pmode, index) in paymentModes" :key="index">
-                    <div class="payment-content" :class="{ 'active': activePaymentTab === pmode.PaymentType }">
-                        <div class="payment-form-group">
-                            <label>Reference Number</label>
-                            <input type="text" x-model="newMoniePayment.reference" placeholder="Enter reference number">
+                <!-- Footer Section -->
+                <div class="settlement-footer">
+                    <!-- Payment Summary -->
+                    <div class="payment-summary">
+                        <div class="payment-summary-row">
+                            <span>Subtotal:</span>
+                            <span x-text="formatCurrency(subtotal)"></span>
                         </div>
-                        <div class="payment-form-group">
-                            <label>Amount</label>
-                            <input type="number" x-model.number="posObj.Payments.CashAmount" @@input="calculatePayments()" placeholder="Enter amount" step="0.01">
+                        <div class="payment-summary-row">
+                            <span>Tax:</span>
+                            <span x-text="formatCurrency(tax)"></span>
                         </div>
-                        <button class="btn-add-payment" @@click="addMonie()">Add Payment</button>
-
-                        <table class="bank-payments-table" x-show="bankPayments.length > 0">
-                            <thead>
-                                <tr>
-                                    <th>Reference</th>
-                                    <th>Amount</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template x-for="(payment, index) in posObj.Payments.MoniePayments" :key="index">
-                                    <tr>
-                                        <td x-text="payment.reference"></td>
-                                        <td x-text="formatCurrency(payment.amount)"></td>
-                                        <td>
-                                            <button class="btn-remove-payment" @@click="removeMoniePayment(index)">Remove</button>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
+                        <div class="payment-summary-row">
+                            <span>Total Discount:</span>
+                            <span x-text="formatCurrency(totalDiscount)"></span>
+                        </div>
+                        <div class="payment-summary-row total">
+                            <span>TOTAL DUE:</span>
+                            <span x-text="formatCurrency(grandTotal)"></span>
+                        </div>
+                        <div class="payment-summary-row outstanding" x-show="outstandingAmount > 0">
+                            <span>Outstanding:</span>
+                            <span x-text="formatCurrency(outstandingAmount)"></span>
+                        </div>
+                        <div class="payment-summary-row change" x-show="changeAmount > 0">
+                            <span>Change:</span>
+                            <span x-text="formatCurrency(changeAmount)"></span>
+                        </div>
                     </div>
-                </template>
+
                     <!-- Settlement Actions -->
                     <div class="settlement-actions">
                         <button class="btn-cancel-settlement" @@click="cancelSettlement()">Cancel</button>
@@ -1068,6 +1110,7 @@
                     </div>
 
                     <div x-show="settlementError" class="error-message" style="margin-top: 10px;" x-text="settlementError"></div>
+                </div>
             </div>
         </div>
 
