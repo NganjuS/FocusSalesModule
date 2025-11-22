@@ -109,5 +109,57 @@ namespace FocusSalesModule.Controllers
             }
             return hashData;
         }
+        [HttpGet]
+        [Route("brstockinrma")]
+        public HashData<Product> GetBrStockIn(int compid, int outletid, string rmano)
+        {
+            HashData<Product> hashData = new HashData<Product>();
+            try
+            {
+                
+                hashData.data = DbCtx<Product>.GetObj(compid, ProductQueries.GetBrStockIn(rmano));
+                if (hashData.data == null)
+                {
+                    hashData.result = -1;
+                    hashData.message = "Rma number is not valid";
+                    return hashData;
+                }
+                //Check if already posted
+                if (hashData.data.PostedRma != 0)
+                {
+                    hashData.result = -1;
+                    hashData.message = "Rma has already been utilised !!";
+                    return hashData;
+                }
+
+                //Check outlets
+
+                string outletQry = $"select count(he.ToOutlet) from tCore_HeaderData5380_0 he join tCore_Header_0 h on h.iHeaderId = he.iHeaderId where he.ToOutlet = {outletid}  and h.sVoucherNo = '{hashData.data.DocNo}' ";
+                int reccount = DbCtx<Int32>.GetScalar(compid , outletQry);
+                if(reccount == 0)
+                {
+                    hashData.result = -1;
+                    hashData.message = "From and To outlets do not match";
+                    return hashData;
+                }
+
+                //if (hashData.data.Stock <= 0)
+                //{
+                //    hashData.result = -1;
+                //    hashData.message = "Rma has already been utilised !!";
+                //    return hashData;
+                //}
+                
+                hashData.result = 1;
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                hashData.result = -1;
+                hashData.message = ex.Message;
+            }
+            return hashData;
+        }
     }
 }

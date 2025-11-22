@@ -13,6 +13,7 @@ namespace FocusSalesModule.Models
         public string ItemCode { get; set; }
         public string ItemName { get; set; }
         public int BaseUnitId { get; set; }
+        public int PostedRma { get; set; }
         public int UnitId { get; set; }
         public string UnitName { get; set; } = String.Empty;
         public string BaseUnit { get; set; } = String.Empty;
@@ -28,5 +29,13 @@ namespace FocusSalesModule.Models
         public decimal FixedDiscountAmt { get; set; } = 0m;
         public bool IsPriceExcl { get; set; } = false;
         public bool AllowZeroPrice { get; set; }
+        public int TxnId { get; set; }
+        public int RefId { get; set; }
+        public int LinkId { get; set; }
+        public bool Base { get; set; }
+        public bool Closed { get; set; }
+        public string LinkVoucherNo { get; set; }
+        public string DocNo { get; set; }
+        public int LinkVoucherType { get; set; }
     }
 }

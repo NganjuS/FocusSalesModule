@@ -1,4 +1,5 @@
-﻿using FocusSalesModule.Data;
+﻿using Focus.Common.DataStructs;
+using FocusSalesModule.Data;
 using FocusSalesModule.Queries;
 using System;
 using System.Collections.Generic;
@@ -20,11 +21,21 @@ namespace FocusSalesModule.Helpers
             }
             else
             {
-                string sntzedstr = RemoveOtherStr(docNo);
-                int nextDocNo = Convert.ToInt32(sntzedstr) + 1;
-                return $"{Abbrev}"+nextDocNo.ToString().PadLeft(4,'0');
-              
+                return GetNextNo(docNo);
+
             }
+        }
+        static string GetNextNo(string input)
+        {
+            string prefix = new string(input.TakeWhile(c => !char.IsDigit(c)).ToArray());
+            string numericPart = input.Substring(prefix.Length);
+
+            // Convert and increment
+            int number = int.Parse(numericPart) + 1;
+
+            // Keep same padding length
+            string newString = prefix + number.ToString(new string('0', numericPart.Length));
+            return newString;
         }
         static string RemoveOtherStr(string inputstr)
         {

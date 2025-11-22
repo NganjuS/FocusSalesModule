@@ -1,0 +1,688 @@
+﻿body {
+    overflow: hidden;
+    height: 100vh;
+}
+
+.main-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: row;
+}
+
+.top-bar {
+    border-bottom: 2px solid #dee2e6;
+    padding: 0px 10px;
+    /*min-height: 80px;*/
+}
+
+.header-section-2 {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 10px 0;
+}
+
+.header-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .header-field label {
+        color: #333;
+        font-weight: 600;
+        font-size: 15px;
+        margin: 0;
+    }
+
+    .header-field input,
+    .header-field select {
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 160px;
+    }
+
+        .header-field input[type="checkbox"] {
+            min-width: auto;
+            width: 18px;
+            height: 18px;
+        }
+
+    .header-field .btn-sm {
+        padding: 5px 15px;
+        font-size: 14px;
+    }
+
+.sidebar-section {
+    width: 33.33%;
+    padding: 20px;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border-left: 1px solid #dee2e6;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.main-content-section {
+    width: 66.67%;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+.items-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.table-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+    .table thead th {
+        background-color: #0073AA;
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 12px 8px;
+    }
+
+.table tbody td {
+    padding: 10px 8px;
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.totals-footer {
+    border-top: 2px solid #0073AA;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 5px;
+}
+
+.footer-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 5px;
+}
+
+.footer-totals {
+    width: 100%;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 15px;
+}
+
+    .total-row.grand-total {
+        font-weight: bold;
+        font-size: 18px;
+        color: #0073AA;
+        border-top: 2px solid #0073AA;
+        padding-top: 10px;
+        margin-top: 6px;
+    }
+
+.action-footer {
+    background-color: #0073AA;
+    padding: 15px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+    .action-footer .btn {
+        min-width: 100px;
+        font-weight: 600;
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+.search-input {
+    font-size: 18px;
+    padding: 12px;
+    border: 2px solid #0073AA;
+}
+
+    .search-input:focus {
+        border-color: #005a87;
+        box-shadow: 0 0 0 0.25rem rgba(0, 115, 170, 0.25);
+    }
+
+.search-label {
+    font-weight: 600;
+    color: #0073AA;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.alert-success {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    min-width: 300px;
+}
+
+.item-code-link {
+    color: #0073AA;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+    .item-code-link:hover {
+        color: #005a87;
+    }
+
+.remove-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0;
+}
+
+    .remove-btn:hover {
+        color: #bb2d3b;
+    }
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1060;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+}
+
+    .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+.modal-content {
+    background-color: #fefefe;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    border-bottom: 2px solid #0073AA;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+    .modal-header h3 {
+        margin: 0;
+        color: #0073AA;
+    }
+
+.modal-close {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 20px;
+}
+
+    .modal-close:hover {
+        color: #000;
+    }
+
+.rma-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    .rma-list li {
+        padding: 8px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+        .rma-list li:last-child {
+            border-bottom: none;
+        }
+
+/* Bill Settlement Modal */
+.settlement-modal .modal-content {
+    width: 1200px;
+    max-width: 120vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.settlement-modal-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    gap: 20px;
+}
+
+.settlement-left-sidebar {
+    width: 200px;
+    border-right: 2px solid #dee2e6;
+    padding-right: 15px;
+    overflow-y: auto;
+}
+
+.settlement-main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-bottom: 10px;
+}
+
+.settlement-footer {
+    border-top: 2px solid #dee2e6;
+    padding: 5px 0 0 0;
+    background-color: #fff;
+}
+
+/* Advance Receipt Modal */
+.modal:has(.modal-content:has(h3:contains("Advance Receipt"))) .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+    width: 500px;
+}
+
+.payment-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.payment-tab {
+    padding: 12px 16px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: #666;
+    transition: all 0.3s;
+    text-align: left;
+    border-radius: 4px;
+    border-left: 3px solid transparent;
+}
+
+    .payment-tab:hover {
+        color: #0073AA;
+        background-color: #f8f9fa;
+    }
+
+    .payment-tab.active {
+        color: #0073AA;
+        background-color: #e7f3f8;
+        border-left-color: #0073AA;
+    }
+
+.payment-content {
+    display: none;
+}
+
+    .payment-content.active {
+        display: block;
+    }
+
+.payment-summary {
+    background-color: #f8f9fa;
+    padding: 5px 8px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+}
+
+.payment-summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 14px;
+}
+
+    .payment-summary-row.total {
+        font-weight: bold;
+        font-size: 16px;
+        color: #0073AA;
+        border-top: 2px solid #0073AA;
+        padding-top: 8px;
+        margin-top: 5px;
+    }
+
+    .payment-summary-row.outstanding {
+        font-weight: bold;
+        font-size: 15px;
+        color: #dc3545;
+    }
+
+    .payment-summary-row.change {
+        font-weight: bold;
+        font-size: 15px;
+        color: #28a745;
+    }
+
+.payment-form-group {
+    margin-bottom: 15px;
+}
+
+    .payment-form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #333;
+    }
+
+    .payment-form-group input,
+    .payment-form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+        .payment-form-group input:focus,
+        .payment-form-group select:focus {
+            outline: none;
+            border-color: #0073AA;
+            box-shadow: 0 0 0 0.2rem rgba(0, 115, 170, 0.25);
+        }
+
+.bank-payments-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+    .bank-payments-table th,
+    .bank-payments-table td {
+        padding: 10px;
+        text-align: left;
+        border: 1px solid #dee2e6;
+    }
+
+    .bank-payments-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+
+.btn-add-payment {
+    background-color: #28a745;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+    .btn-add-payment:hover {
+        background-color: #218838;
+    }
+
+.btn-remove-payment {
+    background-color: #dc3545;
+    color: white;
+    padding: 5px 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+    .btn-remove-payment:hover {
+        background-color: #c82333;
+    }
+
+.settlement-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    /*            margin-top: 10px;*/
+    padding-top: 10px;
+    border-top: 1px solid #dee2e6;
+}
+
+    .settlement-actions button {
+        padding: 5px 10px;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+.btn-complete-settlement {
+    background-color: #28a745;
+    color: white;
+}
+
+    .btn-complete-settlement:hover {
+        background-color: #218838;
+    }
+
+    .btn-complete-settlement:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+    }
+
+.btn-cancel-settlement {
+    background-color: #6c757d;
+    color: white;
+}
+
+    .btn-cancel-settlement:hover {
+        background-color: #5a6268;
+    }
+
+.error-message {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.quick-cash-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.quick-cash-btn {
+    padding: 12px;
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+    .quick-cash-btn:hover {
+        background-color: #dee2e6;
+    }
+
+.headers-style {
+    color: white;
+    font-weight: 900;
+    padding: 10px;
+}
+
+/* Retrieve Modal Styles */
+.retrieve-modal .modal-content {
+    width: 90vw;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.retrieve-modal-content {
+    padding: 20px;
+}
+
+.retrieve-date-row {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.retrieve-date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 180px;
+}
+
+    .retrieve-date-field label {
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+    }
+
+    .retrieve-date-field input {
+        padding: 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+        .retrieve-date-field input:focus {
+            outline: none;
+            border-color: #0073AA;
+            box-shadow: 0 0 0 0.2rem rgba(0, 115, 170, 0.25);
+        }
+
+.btn-search-transactions {
+    padding: 10px 24px;
+    background-color: #0073AA;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+    .btn-search-transactions:hover {
+        background-color: #005a87;
+    }
+
+.retrieve-table-container {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 500px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+.retrieve-transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .retrieve-transactions-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: #0073AA;
+    }
+
+        .retrieve-transactions-table thead th {
+            background-color: #0073AA;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border: none;
+        }
+
+    .retrieve-transactions-table tbody td {
+        padding: 12px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .retrieve-transactions-table .transaction-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+        .retrieve-transactions-table .transaction-row:hover {
+            background-color: #f8f9fa;
+        }
+
+.retrieve-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #dee2e6;
+}
+
+    .retrieve-actions button {
+        padding: 10px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .retrieve-actions .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+        .retrieve-actions .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+.modal-header {
+    padding: 0px;
+}
+
+.modal-content {
+    padding: 8px;
+}

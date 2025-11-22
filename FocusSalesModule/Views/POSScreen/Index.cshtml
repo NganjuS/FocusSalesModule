@@ -12,687 +12,8 @@
     <link href="~/Content/select2.min.css" />
     <link rel="stylesheet" href="~/Content/print.min.css" />
     <link rel="stylesheet" href="~/Content/waitMe.min.css" />
+    <link rel="stylesheet" href="~/Content/posscreen.css" />
 
-    <style>
-        body {
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        .main-container {
-            height: 100vh;
-            display: flex;
-            flex-direction: row;
-        }
-
-        .top-bar {
-            border-bottom: 2px solid #dee2e6;
-            padding: 0px 10px;
-            /*min-height: 80px;*/
-        }
-
-        .header-section-2 {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            flex-wrap: wrap;
-            padding: 10px 0;
-        }
-
-        .header-field {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-            .header-field label {
-                color: #333;
-                font-weight: 600;
-                font-size: 15px;
-                margin: 0;
-            }
-
-            .header-field input,
-            .header-field select {
-                padding: 8px 12px;
-                border: 1px solid #dee2e6;
-                border-radius: 4px;
-                font-size: 14px;
-                min-width: 160px;
-            }
-
-                .header-field input[type="checkbox"] {
-                    min-width: auto;
-                    width: 18px;
-                    height: 18px;
-                }
-
-            .header-field .btn-sm {
-                padding: 5px 15px;
-                font-size: 14px;
-            }
-
-        .sidebar-section {
-            width: 33.33%;
-            padding: 20px;
-            background-color: #f8f9fa;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            border-left: 1px solid #dee2e6;
-            height: 100vh;
-            overflow-y: auto;
-        }
-
-        .main-content-section {
-            width: 66.67%;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .items-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .table-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-        }
-
-        .table thead {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-            .table thead th {
-                background-color: #0073AA;
-                color: white;
-                font-weight: 600;
-                border: none;
-                padding: 12px 8px;
-            }
-
-        .table tbody td {
-            padding: 10px 8px;
-            vertical-align: middle;
-        }
-
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .totals-footer {
-            border-top: 2px solid #0073AA;
-            padding: 15px;
-            background-color: #fff;
-            border-radius: 5px;
-        }
-
-        .footer-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-            padding: 10px;
-            background-color: #fff;
-            border-radius: 5px;
-        }
-
-        .footer-totals {
-            width: 100%;
-        }
-
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            font-size: 15px;
-        }
-
-            .total-row.grand-total {
-                font-weight: bold;
-                font-size: 18px;
-                color: #0073AA;
-                border-top: 2px solid #0073AA;
-                padding-top: 10px;
-                margin-top: 6px;
-            }
-
-        .action-footer {
-            background-color: #0073AA;
-            padding: 15px;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-            .action-footer .btn {
-                min-width: 100px;
-                font-weight: 600;
-                padding: 10px 20px;
-                font-size: 14px;
-            }
-
-        .search-input {
-            font-size: 18px;
-            padding: 12px;
-            border: 2px solid #0073AA;
-        }
-
-            .search-input:focus {
-                border-color: #005a87;
-                box-shadow: 0 0 0 0.25rem rgba(0, 115, 170, 0.25);
-            }
-
-        .search-label {
-            font-weight: 600;
-            color: #0073AA;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .alert-success {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-            min-width: 300px;
-        }
-
-        .item-code-link {
-            color: #0073AA;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-            .item-code-link:hover {
-                color: #005a87;
-            }
-
-        .remove-btn {
-            background: none;
-            border: none;
-            color: #dc3545;
-            cursor: pointer;
-            font-size: 18px;
-            padding: 0;
-        }
-
-            .remove-btn:hover {
-                color: #bb2d3b;
-            }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1060;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.4);
-        }
-
-            .modal.show {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-        .modal-content {
-            background-color: #fefefe;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 400px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-header {
-            border-bottom: 2px solid #0073AA;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
-            .modal-header h3 {
-                margin: 0;
-                color: #0073AA;
-            }
-
-        .modal-close {
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            color: #aaa;
-            cursor: pointer;
-            line-height: 20px;
-        }
-
-            .modal-close:hover {
-                color: #000;
-            }
-
-        .rma-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-            .rma-list li {
-                padding: 8px;
-                border-bottom: 1px solid #dee2e6;
-            }
-
-                .rma-list li:last-child {
-                    border-bottom: none;
-                }
-
-        /* Bill Settlement Modal */
-        .settlement-modal .modal-content {
-            width: 900px;
-            max-width: 90vw;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .settlement-modal-body {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-            gap: 20px;
-        }
-
-        .settlement-left-sidebar {
-            width: 200px;
-            border-right: 2px solid #dee2e6;
-            padding-right: 15px;
-            overflow-y: auto;
-        }
-
-        .settlement-main-content {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-
-        .settlement-footer {
-            border-top: 2px solid #dee2e6;
-            padding: 15px 0 0 0;
-            background-color: #fff;
-        }
-
-        /* Advance Receipt Modal */
-        .modal:has(.modal-content:has(h3:contains("Advance Receipt"))) .modal-content {
-            max-height: 90vh;
-            overflow-y: auto;
-            width: 500px;
-        }
-
-        .payment-tabs {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .payment-tab {
-            padding: 12px 16px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            font-size: 15px;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.3s;
-            text-align: left;
-            border-radius: 4px;
-            border-left: 3px solid transparent;
-        }
-
-            .payment-tab:hover {
-                color: #0073AA;
-                background-color: #f8f9fa;
-            }
-
-            .payment-tab.active {
-                color: #0073AA;
-                background-color: #e7f3f8;
-                border-left-color: #0073AA;
-            }
-
-        .payment-content {
-            display: none;
-        }
-
-            .payment-content.active {
-                display: block;
-            }
-
-        .payment-summary {
-            background-color: #f8f9fa;
-            padding: 12px 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-        }
-
-        .payment-summary-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            font-size: 14px;
-        }
-
-            .payment-summary-row.total {
-                font-weight: bold;
-                font-size: 16px;
-                color: #0073AA;
-                border-top: 2px solid #0073AA;
-                padding-top: 8px;
-                margin-top: 5px;
-            }
-
-            .payment-summary-row.outstanding {
-                font-weight: bold;
-                font-size: 15px;
-                color: #dc3545;
-            }
-
-            .payment-summary-row.change {
-                font-weight: bold;
-                font-size: 15px;
-                color: #28a745;
-            }
-
-        .payment-form-group {
-            margin-bottom: 15px;
-        }
-
-            .payment-form-group label {
-                display: block;
-                font-weight: 600;
-                margin-bottom: 5px;
-                color: #333;
-            }
-
-            .payment-form-group input,
-            .payment-form-group select {
-                width: 100%;
-                padding: 10px;
-                border: 1px solid #dee2e6;
-                border-radius: 4px;
-                font-size: 14px;
-            }
-
-                .payment-form-group input:focus,
-                .payment-form-group select:focus {
-                    outline: none;
-                    border-color: #0073AA;
-                    box-shadow: 0 0 0 0.2rem rgba(0, 115, 170, 0.25);
-                }
-
-        .bank-payments-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-            .bank-payments-table th,
-            .bank-payments-table td {
-                padding: 10px;
-                text-align: left;
-                border: 1px solid #dee2e6;
-            }
-
-            .bank-payments-table th {
-                background-color: #f8f9fa;
-                font-weight: 600;
-            }
-
-        .btn-add-payment {
-            background-color: #28a745;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-            .btn-add-payment:hover {
-                background-color: #218838;
-            }
-
-        .btn-remove-payment {
-            background-color: #dc3545;
-            color: white;
-            padding: 4px 8px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-            .btn-remove-payment:hover {
-                background-color: #c82333;
-            }
-
-        .settlement-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #dee2e6;
-        }
-
-            .settlement-actions button {
-                padding: 12px 32px;
-                font-size: 16px;
-                font-weight: 600;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-
-        .btn-complete-settlement {
-            background-color: #28a745;
-            color: white;
-        }
-
-            .btn-complete-settlement:hover {
-                background-color: #218838;
-            }
-
-            .btn-complete-settlement:disabled {
-                background-color: #6c757d;
-                cursor: not-allowed;
-            }
-
-        .btn-cancel-settlement {
-            background-color: #6c757d;
-            color: white;
-        }
-
-            .btn-cancel-settlement:hover {
-                background-color: #5a6268;
-            }
-
-        .error-message {
-            color: #dc3545;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        .quick-cash-buttons {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .quick-cash-btn {
-            padding: 12px;
-            background-color: #e9ecef;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-            .quick-cash-btn:hover {
-                background-color: #dee2e6;
-            }
-
-        .headers-style {
-            color: white;
-            font-weight: 900;
-            padding: 10px;
-        }
-
-        /* Retrieve Modal Styles */
-        .retrieve-modal .modal-content {
-            width: 90vw;
-            max-width: 1200px;
-            max-height: 90vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .retrieve-modal-content {
-            padding: 20px;
-        }
-
-        .retrieve-date-row {
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .retrieve-date-field {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            min-width: 180px;
-        }
-
-            .retrieve-date-field label {
-                font-weight: 600;
-                color: #333;
-                font-size: 14px;
-            }
-
-            .retrieve-date-field input {
-                padding: 10px;
-                border: 1px solid #dee2e6;
-                border-radius: 4px;
-                font-size: 14px;
-            }
-
-                .retrieve-date-field input:focus {
-                    outline: none;
-                    border-color: #0073AA;
-                    box-shadow: 0 0 0 0.2rem rgba(0, 115, 170, 0.25);
-                }
-
-        .btn-search-transactions {
-            padding: 10px 24px;
-            background-color: #0073AA;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-            .btn-search-transactions:hover {
-                background-color: #005a87;
-            }
-
-        .retrieve-table-container {
-            flex: 1;
-            overflow-y: auto;
-            max-height: 500px;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-        }
-
-        .retrieve-transactions-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-            .retrieve-transactions-table thead {
-                position: sticky;
-                top: 0;
-                z-index: 10;
-                background-color: #0073AA;
-            }
-
-                .retrieve-transactions-table thead th {
-                    background-color: #0073AA;
-                    color: white;
-                    padding: 12px;
-                    text-align: left;
-                    font-weight: 600;
-                    border: none;
-                }
-
-            .retrieve-transactions-table tbody td {
-                padding: 12px;
-                border-bottom: 1px solid #dee2e6;
-            }
-
-            .retrieve-transactions-table .transaction-row {
-                cursor: pointer;
-                transition: background-color 0.2s;
-            }
-
-                .retrieve-transactions-table .transaction-row:hover {
-                    background-color: #f8f9fa;
-                }
-
-        .retrieve-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #dee2e6;
-        }
-
-            .retrieve-actions button {
-                padding: 10px 24px;
-                font-size: 14px;
-                font-weight: 600;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-
-        .retrieve-actions .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-
-            .retrieve-actions .btn-secondary:hover {
-                background-color: #5a6268;
-            }
-    </style>
 </head>
 <body id="full-container">
     <div class="main-container" id="main-container" x-data="posSystem()">
@@ -760,9 +81,9 @@
                     <div class="header-field">
                         <label>Member:</label>
                         <select x-model="posObj.MemberId" @@change="updateCustomerAccount()">
-                            <option value="">Select Member</option>
-                            <template x-for="member in members" :key="member.id">
-                                <option :value="member.id" x-text="member.name"></option>
+                            <option value="">--Default--</option>
+                            <template x-for="member in memberList" :key="member.Id">
+                                <option :value="member.Id" x-text="member.Name"></option>
                             </template>
                         </select>
                     </div>
@@ -914,7 +235,7 @@
         </div>
 
         <!-- Add Member Modal -->
-        <div class="modal">
+        <div class="modal" :class="{ 'show': showAddMemberModal }">
             <div class="modal-content">
                 <div class="modal-header">
                     <span class="modal-close" @@click="showAddMemberModal = false">&times;</span>
@@ -949,53 +270,19 @@
                     <div class="payment-form-group">
                         <label>Date</label>
                         <input type="date" x-model="advanceReceiptDate">
-                    </div>
-                    <div class="payment-form-group">
-                        <label>Cash/Bank Account</label>
-                        <input type="text" x-model="advanceReceiptCashBankAccount" placeholder="Enter cash/bank account">
-                    </div>
-                    @*<div class="payment-form-group">
-                        <label>Outlet</label>
-                        <select x-model="advanceReceiptOutlet">
-                            <option value="">Select Outlet</option>
-                            <template x-for="outlet in outletList" :key="outlet.Id">
-                                <option :value="outlet.Id" x-text="outlet.Name"></option>
-                            </template>
-                        </select>
-                    </div>
-                    <div class="payment-form-group">
-                        <label>Cost Center</label>
-                        <select x-model="advanceReceiptCostCenter">
-                            <option value="">Select Cost Center</option>
-                            <template x-for="costCenter in costCenters" :key="costCenter.Id">
-                                <option :value="costCenter.Id" x-text="costCenter.Name"></option>
-                            </template>
-                        </select>
-                    </div>*@
-                    <div class="payment-form-group">
-                        <label>Member</label>
-                        <select x-model="advanceReceiptMember">
-                            <option value="">Select Member</option>
-                            <template x-for="member in members" :key="member.id">
-                                <option :value="member.id" x-text="member.name"></option>
-                            </template>
-                        </select>
-                    </div>
+                    </div>               
                     <div class="payment-form-group">
                         <label>Cheque No</label>
                         <input type="text" x-model="advanceReceiptChequeNo" placeholder="Enter cheque number">
                     </div>
-                    <div class="payment-form-group">
-                        <label>Customer A/C</label>
-                        <input type="text" x-model="advanceReceiptCustomerAcc" placeholder="Enter customer account">
-                    </div>
+                  
                     <div class="payment-form-group">
                         <label>Amount</label>
                         <input type="number" x-model.number="advanceReceiptAmount" placeholder="Enter amount" step="0.01">
                     </div>
                     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                         <button class="btn btn-secondary" @@click="closeAdvanceReceiptModal()">Cancel</button>
-                        <button class="btn btn-primary" @@click="saveAdvanceReceipt()">Save Advance Receipt</button>
+                        <button class="btn btn-primary" @@click="initSaveAdvanceReceipt()">Save Advance Receipt</button>
                     </div>
                 </div>
             </div>
@@ -1038,34 +325,61 @@
                     <div class="settlement-main-content">
                         <template x-for="(pmode, index) in paymentModes" :key="index">
                             <div class="payment-content" :class="{ 'active': activePaymentTab === pmode.PaymentType }">
-                                <div class="payment-form-group">
-                                    <label>Reference Number</label>
-                                    <input type="text" x-model="newMoniePayment.reference" placeholder="Enter reference number">
+                                <div class="payment-form-group" x-show="pmode.ShowBank">
+                                    <label><span class="me-2"></span> Cash/Bank </label>
+                                    <select @@change="setBankDetails(pmode, $event.target.value, $event.target.options[$event.target.selectedIndex].text)" >
+                                        <option value=""> --cash/bank-- </option>
+                                        <template x-for="bank in bankAccounts" :key="bank.Id">
+                                            <option :value="bank.Id" x-text="bank.Name"></option>
+                                        </template>
+                                    </select>
                                 </div>
-                                <div class="payment-form-group">
+                                <div class="payment-form-group" x-show="pmode.ShowReference">
+                                    <label><span x-text="pmode.PaymentType" class="me-2"></span> Reference Number</label>
+                                    <input type="text" x-model="pmode.Reference" placeholder="Enter reference number">
+                                </div>
+                                <div class="payment-form-group" x-show="!(pmode.TypeSelect == 3)">
                                     <label>Amount</label>
-                                    <input type="number" x-model.number="posObj.Payments.CashAmount" @@input="calculatePayments()" placeholder="Enter amount" step="0.01">
+                                    <input type="number" x-model.number="pmode.Amount" @@input="calculatePayments(pmode)" placeholder="Enter amount" step="0.01">
                                 </div>
-                                <button class="btn-add-payment" @@click="addMonie()">Add Payment</button>
+                                <button x-show="pmode.TypeSelect == 2 || pmode.TypeSelect == 4 || pmode.TypeSelect == 5 " class="btn-add-payment" @@click="addPayment(pmode)">Add Payment</button>
 
-                                <table class="bank-payments-table" x-show="bankPayments.length > 0">
+                                <button x-show="pmode.TypeSelect == 3" class="btn-add-payment" @@click="loadExternalPayments(pmode)">Load Payments</button>
+
+                                <table class="mb-3 bank-payments-table" x-show="(pmode.PayList.length > 0) || isDisplayLoading ">
                                     <thead>
                                         <tr>
+                                         
+                                            <th x-show="pmode.TypeSelect == 3">Terminal</th>
+                                            <th x-show="pmode.TypeSelect == 3">Status</th>
                                             <th>Reference</th>
+                                            <th>Account</th>
                                             <th>Amount</th>
-                                            <th></th>
+                                            <th style="width:10px;"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <template x-for="(payment, index) in posObj.Payments.MoniePayments" :key="index">
+                                        <template x-for="(payment, index) in pmode.PayList" :key="index">
                                             <tr>
-                                                <td x-text="payment.reference"></td>
-                                                <td x-text="formatCurrency(payment.amount)"></td>
+                                              
+                                                <td x-show="pmode.TypeSelect == 3" x-text="payment.TerminalSerial"></td>
+                                                <td x-show="pmode.TypeSelect == 3" x-text="payment.TransactionStatus"></td>
+                                                <td x-text="payment.Reference"></td>
+                                                <td x-text="payment.AccountName"></td>
+                                                <td x-text="formatCurrency(payment.Amount)"></td>
                                                 <td>
-                                                    <button class="btn-remove-payment" @@click="removeMoniePayment(index)">Remove</button>
+                                                    <button class="btn-remove-payment" @@click="removePayment(pmode,index)">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                                                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
+                                                        </svg>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         </template>
+                                        <tr x-show="isDisplayLoading">
+                                            <td colspan="7">Loading transactions ..</td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1182,7 +496,7 @@
                 <script src="~/Scripts/select2.min.js"></script>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
                 <script defer src="~/Scripts/alpine.min.js"></script>
-                <script src="~/Scripts/pos/posscreen.js?v=77g77863d9j"></script>
+                <script src="~/Scripts/pos/posscreen.js?v=7376678ss89j"></script>
 
 </body>
 </html>

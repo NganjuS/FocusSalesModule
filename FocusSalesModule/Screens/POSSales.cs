@@ -1,26 +1,28 @@
 ﻿using FocusSalesModule.Helpers;
 using FocusSalesModule.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace FocusSalesModule.Screens
 {
     public class POSSales
     {
-        public static Hashtable GetHeader(POSDTO posDTO) 
+        public static Hashtable GetHeader(POSDTO posDTO, Outlet outlet) 
         {
             var product = posDTO.Items.FirstOrDefault();
             var headerDoc = new Hashtable
             {
                 { "Date", UtilFuncs.GetDateToInt(posDTO.DocDate) },
-                { "SalesAC__Id", posDTO.SalesAccId },
-                { "CustomerAC__Id", posDTO.CustAccId },
+                { "SalesAC__Id", outlet.DefaultSalesAccount },
+                { "CustomerAC__Id", outlet.DefaultCustomer },
                 { "Member__Id",  posDTO.MemberId },
                 { "Outlet__Id", posDTO.OutletId },
-                { "Cost Center__Id", posDTO.CostCenterId },
+                { "Cost Center__Id", outlet.DefaultCostCenter },
                 { "sNarration",  posDTO.Narration },
                
                 { "SaleTimestamp", UtilFuncs.GetDateToInt(posDTO.Timestamp)},
@@ -28,50 +30,40 @@ namespace FocusSalesModule.Screens
             };
             if (posDTO.Payments != null)
             {
-                headerDoc["CashReceived"] = posDTO.Payments.CashAmount;
-                //Set Bank Payments
-                string[] extList = { "", "O", "T", "H" };
-                if (posDTO.Payments.BankPayments != null)
+                foreach(var payment in posDTO.Payments)
                 {
-                    for (int i = 0; i < posDTO.Payments.BankPayments.Count; i++)
+                    int selectType = Convert.ToInt32(payment.TypeSelect.ToString());
+                    string paymentType = StripExtraChar(payment.PaymentType.ToString());
+                    if(selectType == 1)
                     {
-                        string ext = extList[i];
-                        headerDoc[$"BankAccount{ext}__Id"] = 0;
-                        headerDoc[$"BankPaymentMethod{ext}"] = posDTO.Payments.BankPayments[i].Method;
-                        headerDoc[$"ReferenceNo{ext}"] = posDTO.Payments.BankPayments[i].Reference;
-                        headerDoc[$"Amount{ext}"] = posDTO.Payments.BankPayments[i].Amount;
-                    }
-                }
+                        headerDoc[$"{paymentType}Amount"] = payment.Amount.ToString();
+                        headerDoc[$"{paymentType}Reference"] = payment.Reference.ToString();
 
-                //Set Monie
-                if (posDTO.Payments.MoniePayments != null)
-                {
-                    for (int i = 0; i < posDTO.Payments.MoniePayments.Count; i++)
+                    }
+                    var payList = payment.PayList;
+                    if(payment.PayList != null && payment.PayList.Count > 0)
                     {
-                        string ext = extList[i];
-                        headerDoc[$"MonieBranchNo{ext}"] = posDTO.Payments.MoniePayments[i].Code;
-                        headerDoc[$"MonieRefNo{ext}"] = posDTO.Payments.MoniePayments[i].Reference;
-                        headerDoc[$"MonieAmount{ext}"] = posDTO.Payments.MoniePayments[i].Amount;
+                        string[] extList = { "", "O", "T", "H", "K" };
+                        int i = 0;
+                        var pList = JsonConvert.DeserializeObject<List<PaymentFields>>(JsonConvert.SerializeObject(payment.PayList)); 
+
+                        foreach (var pay in pList)
+                        {
+                           headerDoc[$"{paymentType}Account{extList[i]}"] = pay.AccountId;
+                            headerDoc[$"{paymentType}Amount{extList[i]}"] = pay.Amount;
+                            headerDoc[$"{paymentType}Reference{extList[i]}"] = pay.Reference;
+                            i++;
+                        }
                     }
-                }
-
-                //Set Discount Voucher
-                if (posDTO.Payments.DiscountVouchers != null)
-                {
-
-                    for (int i = 0; i < posDTO.Payments.DiscountVouchers.Count; i++)
-                    {
-
-                        string ext = extList[i];
-                        headerDoc[$"VoucherCode{ext}"] = posDTO.Payments.DiscountVouchers[i].ItemCode;
-                        headerDoc[$"VoucherAmount{ext}"] = posDTO.Payments.DiscountVouchers[i].VoucherValue;
-                    }
-
                 }
             }
 
             return headerDoc;
 
+        }
+        private static string StripExtraChar(string paymentTypeName)
+        {
+            return paymentTypeName.Trim().Replace(" ", "").Replace("/", "_"); ;
         }
         public static List<Hashtable> GetLines(List<Product> lines )
         {
@@ -95,6 +87,13 @@ namespace FocusSalesModule.Screens
               
             }
             return lineItems;
+        }
+        public class PaymentFields
+        {
+            public int? AccountId { get; set; } = 0;
+            public decimal Amount { get; set; } = 0;
+            public string Reference { get; set; } = String.Empty;
+
         }
     }
 }

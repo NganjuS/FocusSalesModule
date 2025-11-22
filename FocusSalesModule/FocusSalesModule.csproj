@@ -204,6 +204,7 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Controllers\DiscountVoucherController.cs" />
+    <Compile Include="Controllers\ExternalPaymentsAPIController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\POSScreenController.cs" />
     <Compile Include="Controllers\POSScreenAPIController.cs" />
@@ -219,12 +220,14 @@
     <Compile Include="Helpers\UtilFuncs.cs" />
     <Compile Include="Logs\Logger.cs" />
     <Compile Include="Manager\ReportManager.cs" />
+    <Compile Include="Models\AdvancedPaymentDTO.cs" />
     <Compile Include="Models\BankPaymentDTO.cs" />
     <Compile Include="Models\DiscountVoucher.cs" />
     <Compile Include="Models\GenericPayment.cs" />
     <Compile Include="Models\HashData.cs" />
     <Compile Include="Models\HashDataFocus.cs" />
     <Compile Include="Models\MasterDTO.cs" />
+    <Compile Include="Models\MemberDTO.cs" />
     <Compile Include="Models\Outlet.cs" />
     <Compile Include="Models\PaymentDTO.cs" />
     <Compile Include="Models\POSDTO.cs" />
@@ -238,6 +241,8 @@
     <Compile Include="Queries\MasterQueries.cs" />
     <Compile Include="Queries\ProductQueries.cs" />
     <Compile Include="Queries\TxnQueries.cs" />
+    <Compile Include="Screens\AdvanceReceipt.cs" />
+    <Compile Include="Screens\PosReceiptScreen.cs" />
     <Compile Include="Screens\POSSales.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -258,6 +263,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
+    <Content Include="Content\posscreen.css" />
     <Content Include="Content\print.min.css" />
     <Content Include="Content\select2.min.css" />
     <Content Include="Content\sweetalert2.min.css" />
@@ -301,6 +307,7 @@
     <Content Include="Scripts\pos\posscreen.js" />
     <Content Include="Scripts\print.min.js" />
     <Content Include="Scripts\searchitem - Copy %282%29.js" />
+    <Content Include="Scripts\brstockin.js" />
     <Content Include="Scripts\stockin.js" />
     <Content Include="Scripts\searchitem - Copy.js" />
     <Content Include="Scripts\searchitem.js" />
@@ -330,6 +337,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Views\ExternalPayments\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Scripts\bootstrap.min.js.map" />

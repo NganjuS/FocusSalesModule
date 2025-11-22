@@ -35,6 +35,30 @@ function setUserDetails(response) {
     const alpineComponent = document.getElementById('main-container')._x_dataStack[0];
     alpineComponent.setUserOutlet(response.data);
 
+}//
+function setMemberDetails(response) {
+
+    if (isRequestProcessed(response.iRequestId)) {
+        return;
+    }
+    requestsProcessed.push(response.iRequestId);
+    let sessionid = response.data.SessionId;
+
+    const alpineComponent = document.getElementById('main-container')._x_dataStack[0];
+    alpineComponent.postMember(sessionid);
+
+}
+function setAdvancePayment(response) {
+
+    if (isRequestProcessed(response.iRequestId)) {
+        return;
+    }
+    requestsProcessed.push(response.iRequestId);
+    let sessionid = response.data.SessionId;
+
+    const alpineComponent = document.getElementById('main-container')._x_dataStack[0];
+    alpineComponent.saveAdvanceReceipt(sessionid);
+
 }
 function posSystem() {
     return {       
@@ -79,7 +103,7 @@ function posSystem() {
                 selectedMember: '',
                 customerAccount: '',
                 Items: [],
-                Payments: {}
+                Payments: []
             }
         },
         getPaymentsObj() {
@@ -93,6 +117,7 @@ function posSystem() {
         },
         rmaSearch: '',    
         activeOutlet: '',
+        isDisplayLoading: false,
         registerName: 'Register 1',
         showAlert: false,
         alertMessage: '',
@@ -100,7 +125,9 @@ function posSystem() {
         selectedItemId: '',
         selectedItemRMAs: [],
         outletList : [],
+        memberList : [],
         costCenters: [],
+        bankAccounts: [],
         paymentModes : [],
         // Header fields
         
@@ -138,10 +165,7 @@ function posSystem() {
 
         // Bank payments
         bankPayments: [],
-        moniePayments: [],
-        newMoniePayment: { reference: '', amount: 0 },
-        newBankPayment: { method: '', reference: '', amount: 0 },
-
+      
         // Voucher
         voucherCode: '',
         voucherAmount: 0,
@@ -152,13 +176,6 @@ function posSystem() {
         creditNoteNumber: '',
         creditNoteAmount: 0,
         creditNoteApplied: false,
-
-        // Mobile Money
-        mobileMoneyProvider: '',
-        mobileMoneyPhone: '',
-        monieMoneyTransactionId: '',
-        monieAmount: 0,
-        monieApplied: false,
 
         settlementError: '',
 
@@ -186,25 +203,40 @@ function posSystem() {
             return this.subtotal + this.tax;
         },
 
-        get totalPayments() {
-            let total = 0;
-            // Add all payment types except cash (cash can overpay for change)
-            total += this.bankPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-            if (this.voucherApplied) total += this.voucherAmount || 0;
-            if (this.creditNoteApplied) total += this.creditNoteAmount || 0;
-            if (this.mobileMoneyApplied) total += this.mobileMoneyAmount || 0;
-            return total;
-        },
+        //get totalPayments() {
+        //    let total = 0;
+        //    // Add all payment types except cash (cash can overpay for change)
+        //    total += this.bankPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        //    if (this.voucherApplied) total += this.voucherAmount || 0;
+        //    if (this.creditNoteApplied) total += this.creditNoteAmount || 0;
+        //    if (this.mobileMoneyApplied) total += this.mobileMoneyAmount || 0;
+        //    return total;
+        //},
 
         get outstandingAmount() {
-            const remaining = this.grandTotal - this.totalPayments - (this.posObj.Payments.CashAmount || 0);
+
+            const remaining = this.grandTotal - this.totalPayments;
             return remaining > 0 ? remaining : 0;
         },
-
         get changeAmount() {
-            const overpayment = (this.posObj.Payments.CashAmount || 0) + this.totalPayments - this.grandTotal;
+            const overpayment = this.totalPayments - this.grandTotal;
             return overpayment > 0 ? overpayment : 0;
         },
+        get totalPayments() {
+            let totalReceived = 0;
+            for (let i = 0; i < this.paymentModes.length; i++) {
+
+                if (this.paymentModes[i].TypeSelect == 1) {
+                    totalReceived += this.paymentModes[i].Amount;
+                }
+                else {
+
+                    totalReceived += this.paymentModes[i].PayList.reduce((sum, p) => sum + (p.Amount || 0), 0)
+                }
+            }
+            return totalReceived;
+        },
+       
         initSetUserOutlet() {
 
             Focus8WAPI.awakeSession();
@@ -236,6 +268,8 @@ function posSystem() {
 
                     this.outletList = dataObj.data.Outlets;
                     this.costCenters = dataObj.data.CostCenters;
+                    this.bankAccounts = dataObj.data.BankAccounts;
+                    this.memberList = dataObj.data.Members;
                     this.posObj.DocNo = dataObj.data.DocNo;
                     this.posObj.DocDate = this.formatDate(new Date());
                 }
@@ -251,6 +285,7 @@ function posSystem() {
         },
         updateOutletDetails(opt) {
 
+            this.paymentModes = [];
             this.posObj.OutletName = opt.text;
             this.posObj.OutletDescription = opt.dataset.desc;
             this.posObj.OutletAddress = opt.dataset.address;
@@ -274,8 +309,20 @@ function posSystem() {
             }).then(dataObj => {
        
                 if (dataObj.result == 1) {
+                    this.paymentModes = [];
+                  
+                    for (let i = 0; i < dataObj.datalist.length; i++) {
 
-                    this.paymentModes = dataObj.datalist;
+                        let pmodeObj = dataObj.datalist[i];
+                        pmodeObj.AccountId = 0;
+                        pmodeObj.AccountName = "";
+                        pmodeObj.Reference = "";
+                        pmodeObj.Amount = 0;
+                        pmodeObj.PayList = [];
+                        this.paymentModes.push(pmodeObj);
+
+                    }
+                    console.log(dataObj);
                     console.log(this.paymentModes);
                 }
                 else {
@@ -294,8 +341,8 @@ function posSystem() {
         },
         get canCompleteSettlement() {
             // Can complete if total payments >= grand total OR if cash is provided and covers the outstanding
-            const totalPaid = this.totalPayments + (this.posObj.Payments.CashAmount || 0);
-            return totalPaid >= this.grandTotal;
+            /*const totalPaid = this.totalPayments + (this.posObj.Payments.CashAmount || 0);*/
+            return this.totalPayments >= this.grandTotal;
         },
         calculateGross(qty, Price, DiscountPct, fixedDiscountAmt) {
             // Formula: (Qty*SellingRate) - ((Qty*SellingRate)* (Disc %)) - Disc Amt
@@ -477,7 +524,7 @@ function posSystem() {
                 this.posObj.customerAccount = '';
             }
         },
-
+        curMember: {},
         addMember() {
             if (!this.newMemberName.trim()) {
                 this.memberError = 'Please enter member name';
@@ -489,21 +536,63 @@ function posSystem() {
             }
 
             // Generate a simple ID (in production, this would come from backend)
-            const newMember = {
-                id: Date.now().toString(),
-                name: this.newMemberName.trim(),
-                phone: this.newMemberPhone.trim(),
-                accountNo: 'ACC-' + Date.now()
+            this.curMember = {
+                Id: Date.now().toString(),
+                Name: this.newMemberName.trim(),
+                Phone: this.newMemberPhone.trim(),
+                AccountNo: 'ACC-' + Date.now()
             };
 
-            this.members.push(newMember);
-            this.selectedMember = newMember.id;
-            this.posObj.customerAccount = newMember.accountNo;
-
-            this.showAlertMessage('Member added successfully');
-            this.cancelAddMember();
+          //  this.members.push(newMember);
+            this.selectedMember = this.curMember.Id;
+            this.posObj.customerAccount = this.curMember.AccountNo;
+            focusSessionUpdater("setMemberDetails"); 
+            //this.showAlertMessage('Member added successfully');
+            
         },
+      
+        postMember(sessionid) {
+            try {
 
+                this.showProgress("Saving member....");
+                let url = `/focussalesmodule/api/sales/addmember?compid=${this.compid}&sessionid=${sessionid}`;
+                console.log(this.curMember);
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(this.curMember)
+                }).then(async response => {
+                    this.hideProgress();
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText);
+                    }
+                    return response.json();
+                }).then(dataObj => {
+
+                    this.showAlertMessage(dataObj.message);
+                    if (dataObj.result == 1) {
+
+                        this.memberList = dataObj.datalist;
+                    }
+                    this.cancelAddMember();
+                }).catch(error => {
+                    console.log(error);
+                    this.cancelAddMember();
+                    //
+                });
+            }
+            catch (error) {
+                console.log("General error", error)
+                this.hideProgress();
+            }
+            finally {
+
+                // this.hideProgress();
+            }
+        },
         cancelAddMember() {
             this.showAddMemberModal = false;
             this.newMemberName = '';
@@ -512,9 +601,18 @@ function posSystem() {
         },
 
         openAdvanceReceiptModal() {
+            if (!this.posObj.CostCenterId.toString().trim()) {
+                this.showAlertMessage('Select cost center to continue !!');
+                return;
+            }
+            if (!this.posObj.MemberId.toString().trim()) {
+                this.showAlertMessage('Select member to continue !!');
+                return;
+            }
             this.showAdvanceReceiptModal = true;
             this.isCreditCustomerReadOnly = true;
             this.advanceReceiptDate = new Date().toISOString().split('T')[0];
+            
         },
 
         closeAdvanceReceiptModal() {
@@ -528,15 +626,23 @@ function posSystem() {
             this.advanceReceiptCustomerAcc = '';
             this.advanceReceiptAmount = 0;
         },
+        advanceReceipt: {},       
+        initSaveAdvanceReceipt() {
 
-        saveAdvanceReceipt() {
+            focusSessionUpdater("setAdvancePayment");
+        },
+        saveAdvanceReceipt(sessionid) {
             // Validate required fields
             if (!this.advanceReceiptDate) {
-                this.showAlertMessage('Please select a date');
+                alert('Please select a date');
+                return;
+            }
+            if (!this.advanceReceiptChequeNo) {
+                alert('Please enter cheque no');
                 return;
             }
             if (!this.advanceReceiptAmount || this.advanceReceiptAmount <= 0) {
-                this.showAlertMessage('Please enter a valid amount');
+                alert('Please enter a valid amount');
                 return;
             }
 
@@ -551,11 +657,55 @@ function posSystem() {
                 customerAcc: this.advanceReceiptCustomerAcc,
                 amount: this.advanceReceiptAmount
             });
-
-            this.showAlertMessage('Advance Receipt created successfully');
-            this.closeAdvanceReceiptModal();
+            this.advanceReceipt.OutletId = this.posObj.OutletId;
+            this.advanceReceipt.MemberId = this.posObj.MemberId;
+            this.advanceReceipt.DocDate = this.advanceReceiptDate;
+            this.advanceReceipt.ReferenceNo = this.advanceReceiptChequeNo;
+            this.advanceReceipt.Amount = this.advanceReceiptAmount;
+            this.postAdvanceReceipt(sessionid);
+            //this.showAlertMessage('Advance Receipt created successfully');
+           
         },
+        postAdvanceReceipt(sessionid) {
+            try {
+                this.showProgress("Saving advance receipt ....");
+                let url = `/focussalesmodule/api/sales/addadvancepayment?compid=${this.compid}&sessionid=${sessionid}`;
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(this.advanceReceipt)
+                }).then(async response => {
+                    this.hideProgress();
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText);
+                    }
+                    return response.json();
+                }).then(dataObj => {
 
+                    this.showAlertMessage(dataObj.message);
+                    if (dataObj.result == 1) {
+                        this.closeAdvanceReceiptModal();
+                    }
+                   
+
+                }).catch(error => {
+                    console.log(error);
+                    //
+                });
+            }
+            catch (error) {
+                console.log("General error", error)
+                this.hideProgress();
+                this.closeAdvanceReceiptModal();
+            }
+            finally {
+
+                // this.hideProgress();
+            }
+        },
         saveTransaction() {
             if (this.posObj.Items.length === 0) {
                 this.showAlertMessage('No items to save');
@@ -566,7 +716,10 @@ function posSystem() {
                 this.showAlertMessage('Payment modes for this outlet are not set !!!');
                 return;
             }
-
+            if (!this.posObj.CostCenterId.toString().trim()) {
+                this.showAlertMessage('Select cost center to continue !!');
+                return;
+            }
             // Open settlement modal
             this.resetSettlement();
             this.showSettlementModal = true;
@@ -580,6 +733,7 @@ function posSystem() {
             try {
                 this.showProgress("Saving transaction ....");
                 let url = `/focussalesmodule/api/sales/addsale?compid=${this.compid}&sessionid=${sessionid}`;
+                this.posObj.Payments = this.paymentModes;
                 fetch(url, {
                     method: 'POST',
                     headers: {
@@ -637,11 +791,24 @@ function posSystem() {
             this.settlementError = '';
             this.activePaymentTab = 'cash';
         },
-
         calculatePayments() {
-            // Recalculate to update computed properties
             this.settlementError = '';
         },
+        //calculatePayments(pmode) {
+        //    // Recalculate to update computed properties
+        //    console.log("Checking calculations !!");
+        //    if (pmode.IsCash) {
+        //        if ((pmode.Amount + this.totalPayments) <= this.grandTotal) {
+        //            this.outstandingAmount = this.grandTotal - (pmode.Amount + this.totalPayments)
+        //        }
+
+        //        if (pmode.Amount > this.grandTotal) {
+        //            this.changeAmount = (pmode.Amount - this.grandTotal);
+        //        }
+
+        //    }
+        //    this.settlementError = '';
+        //},
 
         addBankPayment() {
             if (!this.newBankPayment.method) {
@@ -673,43 +840,108 @@ function posSystem() {
             this.newBankPayment = { method: '', reference: '', amount: 0 };
             this.settlementError = '';
         },
-        addMonie() {
+        setBankDetails(paymentMode, accountId, accountName) {
 
-            if (!this.newMoniePayment.reference) {
+            paymentMode.AccountId = accountId;
+            paymentMode.AccountName = accountName;
+        },
+        loadExternalPayments(paymentMode) {
+            let amount = this.grandTotal - this.totalPayments;
+            if (amount <= 0) {
+                alert("Payment has already been completed !!!");
+                return;
+            }
+            this.isDisplayLoading = true;
+            let url = `${posBaseUrl}api/focuspayments/validatepayment/?compid=${this.compid}&amount=${amount}`;
+            paymentMode.PayList = [];
+            fetch(url).then(async response => {
+                this.isDisplayLoading = false;
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+                return response.json();
+            }).then(dataObj => {
+                if (dataObj.result == 1) {
+
+                    console.log(dataObj);
+                    if (dataObj.data != null) {
+                        let payObj = {
+                            IsSelected: false,
+                            AccountId: paymentMode.AccountId,
+                            AccountName: paymentMode.AccountName,
+                            Reference: dataObj.data.InvoiceID,
+                            Amount: dataObj.data.Amount,
+                            TerminalSerial: dataObj.data.TerminalSerial,
+                            TransactionStatus: dataObj.data.TransactionStatus
+                        };
+                        paymentMode.PayList.push(payObj);
+                    }
+                   
+                }
+                else {
+
+                    alert(dataObj.message);
+                }
+
+
+            }).catch(error => {
+                console.log(error);
+                
+            });
+        },
+        addPayment(paymentMode) {
+
+            if (paymentMode.TypeSelect == 4) {
+
+                applyDiscountVoucher(paymentMode)
+                return;
+
+            }
+
+            if (!paymentMode.Reference && paymentMode.ShowReference) {
                 this.settlementError = 'Please enter a reference number';
                 return;
             }
-            if (!this.newMoniePayment.amount || this.newMoniePayment.amount <= 0) {
+            if (!paymentMode.Amount || paymentMode.Amount <= 0) {
                 this.settlementError = 'Please enter a valid amount';
                 return;
             }
 
             // Check if total exceeds grand total
-            const newTotal = this.totalPayments + this.newMoniePayment.amount;
+            const newTotal = this.totalPayments + paymentMode.Amount;
             if (newTotal > this.grandTotal) {
                 this.settlementError = 'Total bank payments cannot exceed the bill amount';
                 return;
             }
+            if ((paymentMode.PayList.length + 1) > paymentMode.AllowedRows) {
 
-            this.posObj.Payments.Monie.push({
-                reference: this.newMoniePayment.reference,
-                amount: this.newMoniePayment.amount
+                alert("Maximum allowed payments reached !!!");
+                return;
+            }
+
+            paymentMode.PayList.push({
+                IsSelected: false,
+                Reference: paymentMode.Reference,
+                AccountId: paymentMode.AccountId,
+                AccountName: paymentMode.AccountName,
+                Amount: paymentMode.Amount,
+                TerminalSerial: "",
+                TransactionStatus: ""
             });
 
-            this.newMoniePayment = { reference: '', amount: 0 };
+            paymentMode.Reference = '';
+            paymentMode.Amount = 0;
+            paymentMode.AccountId = '';
             this.settlementError = '';
         },
 
-        removeBankPayment(index) {
+        removePayment(pmode,index) {
 
-            this.posObj.Payments.BankPayments.splice(index, 1);
+            pmode.PayList.splice(index, 1);
         },
-        removeMoniePayment(index) {
-            this.posObj.Payments.MoniePayments.splice(index, 1);
-        },
-
-        async applyVoucher() {
-            if (!this.voucherCode) {
+        async applyDiscountVoucher(paymentMode) {
+            if (!paymentMode.Reference) {
                 this.settlementError = 'Please enter a voucher code';
                 return;
             }
@@ -974,7 +1206,7 @@ function posSystem() {
                 }
                 this.showProgress("Retrieving data ...");
                 console.log(this.posObj.OutletId.toString().trim())
-                let outletid = 42;
+                
                 let url = `${posBaseUrl}api/sales/salesdata/?compid=${this.compid}&outletid=${this.posObj.OutletId}&datefrom=${this.retrieveDateFrom}&dateto=${this.retrieveDateTo}`;
                 fetch(url).then(async response => {
                     this.hideProgress();

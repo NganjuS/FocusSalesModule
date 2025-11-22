@@ -37,6 +37,8 @@ namespace FocusSalesModule.Controllers
             Response.AddHeader("Content-disposition", "inline; filename=POS Sale.pdf");
             Stream stream = newdoc.ExportToStream(CrystalDecisions.Shared.ExportFormatType.PortableDocFormat);
             stream.Seek(0, SeekOrigin.Begin);
+            newdoc.Close();
+            newdoc.Dispose();
             return new FileStreamResult(stream, "application/pdf");
         }
     }

@@ -41,7 +41,7 @@ namespace FocusSalesModule.Models
         public decimal Change { get; set; }
         public decimal Amount { get; set; }
         public DateTime Timestamp { get; set; }
-        public PaymentDTO Payments { get; set; }
+        public List<dynamic> Payments { get; set; }
         public List<Product> Items { get; set; }
     }
 }
