@@ -448,17 +448,13 @@ var vtype = 0;
 var docno = "";
 var totalRows = 0;
 var shadowItemList = [];
-var linksItemList = [];
 var validRows = 0;
-var linkValidRows = 0;
 var lineRequestsProcessed = [];
-var linkLineRequestsProcessed = [];
 var lineRequestId = 0;
 function resetDefaults() {
 
     lineRequestsProcessed = [];
     shadowItemList = [];
-    linksItemList = [];
     requestId = 0;
     companyid = 0;
     sessionid = "";
@@ -481,14 +477,6 @@ function isLineRequestProcessed(iRequestId) {
 
     for (let i = 0; i < lineRequestsProcessed.length; i++) {
         if (lineRequestsProcessed[i] == iRequestId) {
-            return true;
-        }
-    } return false;
-}
-function isLinkLineRequestProcessed(iRequestId) {
-
-    for (let i = 0; i < linkLineRequestsProcessed.length; i++) {
-        if (linkLineRequestsProcessed[i] == iRequestId) {
             return true;
         }
     } return false;
@@ -606,8 +594,6 @@ function setRmaSearchFocus() {
     }
 
 }
-var rmano = "";
-var outletid = 0;
 function getRma(response) {
     if (isRequestProcessed(response.iRequestId)) {
         return;
@@ -624,8 +610,8 @@ function getRma(response) {
     sessionid = response.data[0].SessionId;
     vtype = response.data[0].iVoucherType;
     docno = response.data[1].FieldValue;
-    rmano = response.data[2].FieldValue;
-    outletid = response.data[3].FieldValue;
+    let rmano = response.data[2].FieldValue;
+    let outletid = response.data[3].FieldValue;
     if (rmano.trim().length == 0) {
 
       
@@ -637,11 +623,10 @@ function getRma(response) {
         showMessageAlert("Select outlet to continue !!! ","warning");
         return;
     }
-    validateLoadedLinks()
-    
+    searchRma(rmano, outletid)
 
 }
-async function searchRma()
+async function searchRma(rmano, outletid)
 {
     try
     {
@@ -667,8 +652,8 @@ async function searchRma()
            
             if (validRows == 0) {
                 
-                showMessageAlert("Load items to continue !!", "warning");
-               // setLineItemsToDoc(1, dataObj.data)
+                
+                setLineItemsToDoc(1, dataObj.data)
                 
             }
             else {
@@ -691,67 +676,14 @@ async function searchRma()
 
 }
 var loadedItem = null;
-var isLinksValid = false;
-function validateLoadedLinks() {
-    linksItemList = [];
-    linkLineRequestsProcessed = [];
-    if (validRows == 0) {
-        showMessageAlert("Link items to continue !!", "warning")
-        clearSearchField("RmaSearch");
-        return;
-    }
-    for (i = 0; i < validRows; i++) {
 
-        Focus8WAPI.getBodyFieldValue("getValidateLinkData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross", "L-STOCK-OUT"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
-        //After last row
-       
-
-    }
-}
-function getValidateLinkData(response) {
-    if (isLinkLineRequestProcessed(response.iRequestId)) {
-
-        return;
-    }
-
-    linkLineRequestsProcessed.push(response.iRequestId);
-
-    var docNo = response.data[1].FieldValue;
-    var companyid = response.data[0].CompanyId;
-    var sessid = response.data[0].SessionId;
-    var vtype = response.data[0].iVoucherType;
-    console.log(response.data[7].FieldValue);
-    let payload = {
-
-        "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docNo, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue, "Link": response.data[7].FieldValue
-    };
-    linksItemList.push(payload); //linkValidRows
-    console.log("Links loaded :" + linksItemList.length);
-    if (response.iRequestId == validRows) {
-        console.log("Links complete")
-        var linkDocs = linksItemList.map(x => x.Link.VoucherNo);
-        const uniqueVoucher = [...new Set(linkDocs)];
-        console.log("original List",linksItemList)
-        console.log("filtered nos", linkDocs)
-        console.log("applied set", uniqueVoucher)
-
-        
-        if (uniqueVoucher.length == 1) {
-            searchRma()
-        }
-        else {
-
-            showMessageAlert("You cannot mix different documents, create a new document for each item !!!", "warning")
-        }
-    }
-}
 function getExistingItems(item) {
     loadedItem = item;
     lineRequestsProcessed = [];
     
     for (i = 0; i < validRows; i++) {
         
-        Focus8WAPI.getBodyFieldValue("getDocBodyData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross","L-STOCK-OUT"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
+        Focus8WAPI.getBodyFieldValue("getDocBodyData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross","L-BR STOCK OUTWARD"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
         //After last row
         //problem area
         
@@ -785,7 +717,7 @@ function getDocBodyData(response) {
         //Find link
         let linkExists = shadowItemList.some(x => x.Link.VoucherNo == loadedItem.LinkVoucherNo);
         if (!linkExists) {
-            showMessageAlert("You cannot mix different documents, create a new document for this item !!!", "warning")
+            showMessageAlert("You cannot mix different documents, creat a new document for this item !!!", "warning")
             return;
         }
 
@@ -803,7 +735,7 @@ function getDocBodyData(response) {
                     showMessageAlert("RMA already exists !!","warning")
                    
                     let newQty = itemExists.RMA.length;
-                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity", "L-STOCK-OUT"], [itemExists.RMA, newQty, itemExists.Link], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity", "L-BR STOCK OUTWARD"], [itemExists.RMA, newQty, itemExists.Link], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
                     //clearSearchField();
                     return;
                 }
@@ -811,7 +743,7 @@ function getDocBodyData(response) {
                     //clearSearchField();
                    
                     ++requestId;
-                   /* itemExists.Link.UsedValue = parseInt(itemExists.Link.UsedValue) + 1;*/
+                    itemExists.Link.UsedValue = parseInt(itemExists.Link.UsedValue) + 1;
                     //let linkData = {
 
                     //    "LinkId": item.LinkId,
@@ -824,53 +756,44 @@ function getDocBodyData(response) {
                     //}
                     itemExists.RMA.push(loadedItem.RmaNo);
                     let newQty = itemExists.RMA.length;
-                    Focus8WAPI.setBodyFieldValue("afterBrLineAdded", ["RMA", "Quantity", "Link"], [itemExists.RMA, newQty, ], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity", "L-BR STOCK OUTWARD"], [itemExists.RMA, newQty, itemExists.Link], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
 
                 }
 
             }
             else {
-                showMessageAlert("Rma item not found  !!", "warning")
+
                 
-                //let lastRowNo = validRows + 1;
-                //setLineItemsToDoc(lastRowNo, loadedItem);
+                let lastRowNo = validRows + 1;
+                setLineItemsToDoc(lastRowNo, loadedItem);
                 //Reupdate existing
-                
+                for (let i = 0; i < shadowItemList.length; i++) {
+                    ++requestId;
+                    let newQty = shadowItemList[i].RMA.length;
+                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity", "L-BR STOCK OUTWARD"], [shadowItemList[i].RMA, newQty, shadowItemList[i].Link], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i+1, requestId);
+                }
             }
 
        
     }
 
 }
-function afterBrLineAdded(response) {
-    reUpdateExistingLines();
-
-}
-function reUpdateExistingLines() {
-
-    for (let i = 0; i < shadowItemList.length; i++) {
-        ++requestId;
-        let newQty = shadowItemList[i].RMA.length;
-        Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "RMA", "Quantity", "L-STOCK-OUT"], [shadowItemList[i].Item, shadowItemList[i].RMA, newQty, shadowItemList[i].Link], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, requestId);
-    }
-
-}
-//function setLineItemsToDoc(rowNo, item) {
+function setLineItemsToDoc(rowNo, item) {
    
-//    ++requestId;
-//    let gross = parseInt(item.Qty) * parseFloat(item.Price);
-//    let linkData = {
+    ++requestId;
+    let gross = parseInt(item.Qty) * parseFloat(item.Price);
+    let linkData = {
 
-//        "LinkId": item.LinkId,
-//        "RefId": item.RefId,
-//        "UsedValue": "1",
-//        "Value": item.LinkVoucherNo,
-//        "VoucherNo": item.LinkVoucherNo,
-//        "VoucherType": item.LinkVoucherType
+        "LinkId": item.LinkId,
+        "RefId": item.RefId,
+        "UsedValue": "1",
+        "Value": item.LinkVoucherNo,
+        "VoucherNo": item.LinkVoucherNo,
+        "VoucherType": item.LinkVoucherType
         
-//    }
-//    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "RMA", "L-STOCK-OUT"], [item.ItemId, item.UnitId, item.Qty, item.RmaNo, linkData], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
-//    }
+    }
+    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "RMA", "L-BR STOCK OUTWARD"], [item.ItemId, item.UnitId, item.Qty, item.RmaNo, linkData], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+    }
 function afterLineAdded(response) {
     setRmaSearchFocus();
 

@@ -1,4 +1,4 @@
-var Focus8WAPI = {
+﻿var Focus8WAPI = {
     ENUMS: {
         MODULE_TYPE: {
             MASTER: 1,
@@ -439,31 +439,9 @@ var Focus8WAPI = {
 
 }
 window.addEventListener('message', Focus8WAPI.PRIVATE.onReceiveMessage);
-var initialRequestId = 0;
-var requestsProcessed = [];
-var requestId = 0;
-var companyid = 0;
-var sessionid = "";
-var vtype = 0;
-var docno = "";
-var totalRows = 0;
-let shadowItemList = [];
-let validRows = 0;
-var lineRequestsProcessed = [];
-var lineRequestId = 0;
-function resetDefaults() {
 
-    lineRequestsProcessed = [];
-    shadowItemList = [];
-    requestId = 0;
-    companyid = 0;
-    sessionid = "";
-    vtype = 0;
-    docno = "";
-    totalRows = 0;
-   shadowItemList = [];
-    validRows = 0;
-}
+var requestId = 0;
+var requestsProcessed = [];
 function isRequestProcessed(iRequestId) {
 
     for (let i = 0; i < requestsProcessed.length; i++) {
@@ -472,106 +450,34 @@ function isRequestProcessed(iRequestId) {
         }
     } return false;
 }
-
-function isLineRequestProcessed(iRequestId) {
-
-    for (let i = 0; i < lineRequestsProcessed.length; i++) {
-        if (lineRequestsProcessed[i] == iRequestId) {
-            return true;
-        }
-    } return false;
-}
-function initRmaSearch(response) {
-
-    console.log("Initial log ...",response.iRequestId)
-    //if (initialRequestId != 0) {
-    //    resetDefaults()
-    //}
-    //initialRequestId = response.iRequestId;
-    //resetDefaults();
+function updatePayment(response) {
     ++requestId;
-
-    Focus8WAPI.getFieldValue("getRma", ["", "DocNo", "RmaSearch","Outlet"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    Focus8WAPI.getFieldValue("getDocumentDetails", ["", "DocNo", "DocumentTagId"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
-function clearSearchField(clearField)
-{
-    ++requestId;
-
-    Focus8WAPI.setFieldValue("afterLineAdded", [clearField], [""], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
-    if (clearField == "RmaSearch") {
-
-        setRmaSearchFocus();
-    }
-   
-}
-function setRmaSearchFocus() {
-    console.log("Searching label ....");
-    // Find the label with text "Rma Search"
-    const label = Array.from(document.querySelectorAll("label"))
-        .find(l => l.textContent.trim().toLowerCase() === "rma search" || l.textContent.trim().toLowerCase() === "rmasearch");
-
-    if (label) {
-        // Try to find the input connected to the label
-        let input = null;
-        console.log("Label found !!!");
-        // Case 1: label has 'for' attribute
-        const forId = label.getAttribute("for");
-        if (forId) {
-            input = document.getElementById(forId);
-        }
-
-        // Case 2: label is next to input in same container
-        if (!input) {
-            console.log("Getting input !!!");
-            input = label.parentElement.querySelector("input");
-        }
-
-        // Focus input if found
-        if (input) {
-            console.log("Setting focus !!!");
-            input.focus();
-        }
-    }
-
-}
-function getRma(response) {
+function getDocumentDetails(response) {
     if (isRequestProcessed(response.iRequestId)) {
         return;
     }
- 
     requestsProcessed.push(response.iRequestId);
+    let compId = response.data[0].CompanyId;
+    let sessionId = response.data[0].SessionId;
+    let vtype = response.data[0].iVoucherType;
+    let docNo = response.data[1].FieldValue;
+    let docIdentifier = response.data[2].FieldValue;
 
-    validRows = response.data[0].RowsInfo.iValidRows;
-    
-    shadowItemList = [];
-    lineRequestsProcessed = [];
-    
-    companyid = response.data[0].CompanyId;
-    sessionid = response.data[0].SessionId;
-    vtype = response.data[0].iVoucherType;
-    docno = response.data[1].FieldValue;
-    let rmano = response.data[2].FieldValue;
-    let outletid = response.data[3].FieldValue;
-    if (rmano.trim().length == 0) {
-
-        console.log("Initiated rma trigger but rma field is empty !!");
+    if (docIdentifier.trim().length == 0) {
+        alert("Document payment details are invalid !!");
+        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
         return;
     }
 
-    if (outletid == 0) {
-
-        alert("Select outlet to continue !!! ");
-        return;
-    }
-    searchRma(rmano, outletid)
-
+    updateSavedData(compId, sessionId, docNo, vtype, docIdentifier)
 }
-async function searchRma(rmano, outletid)
-{
-    try
-    {
-       
-        let url = `/focussalesmodule/api/sales/rmaitems/?compid=${companyid}&outletid=${outletid}&rmano=${rmano}`;
+async function updateSavedData(compId, sessionId, docNo,vtype ,docIdentifier) {
+    try {
+
+        let url = `/focussalesmodule/api/salespayments/updatepaymentdetails/?compid=${compId}&sessionid=${sessionId}&docno=${docNo}&vtype=${vtype}&docIdentifier=${docIdentifier}`;
+        console.log(url);
         let response = await fetch(url);
 
         if (!response.ok) {
@@ -579,213 +485,21 @@ async function searchRma(rmano, outletid)
         }
 
         let dataObj = await response.json();
+        if (dataObj.result == 1) {
 
-        console.log(dataObj);
-
-        if (dataObj.result == -1) {
-            alert(dataObj.message);
+            Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
 
             return;
         }
-        else {
-            clearSearchField("RmaSearch");
-            console.log("Valid rows", validRows);
-            if (validRows == 0) {
-                console.log("Setting row no",)
-                
-                setLineItemsToDoc(1, dataObj.data)
-                
-            }
-            else {
-                console.log("Retrieving existing",)
-                getExistingItems(dataObj.data)
-            }
-            
-        }
-
-
-        }
-        catch (err) {
-
-            alert("Error when searching Rma: " + err);
-    
-        }
-        finally {
-            
-        }
-
-}
-var loadedItem = null;
-
-function getExistingItems(item) {
-    loadedItem = item;
-    lineRequestsProcessed = [];
-    console.log(`Processing for Rma No:`, item.RmaNo);
-    console.log("Getting data from focus, valid Rows ", validRows);
-    for (i = 0; i < validRows; i++) {
-        console.log(`Getting row ${i}`, validRows);
-        Focus8WAPI.getBodyFieldValue("getDocBodyData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
-        //After last row
-        //problem area
-        
+        alert(dataObj.message);
+        console.log(dataObj);
     }
-}
-function getDocBodyData(response) {
-
-    console.log("Logging row no", response.iRequestId);
-    if (isLineRequestProcessed(response.iRequestId)) {
-        console.log("Row no already exists, returning", response.iRequestId);
-        return;
-    }
-
-    lineRequestsProcessed.push(response.iRequestId);
-    console.log("Adding data for row no:", response.iRequestId);
-    var docNo = response.data[1].FieldValue;
-    var companyid = response.data[0].CompanyId;
-    var sessid = response.data[0].SessionId;
-    var vtype = response.data[0].iVoucherType;
-    //"Item", "Unit", "RMA", "Quantity", "Rate", "Gross"
-    let payload = {
-
-        "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docNo, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue
-    };
-    shadowItemList.push(payload);
-    console.log("Valid rows", response.data[0].RowsInfo.iValidRows);
-    console.log("Request Id", response.iRequestId, "Valid rows", validRows)
-    if (response.iRequestId == validRows) {
-
-        console.log("Valid rows: ", validRows, "Reading lines completed");
-        
-            console.log(shadowItemList);
-            //check if rma exists
-            // let rmaExists = false;
-
-            /*"Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue*/
-            //Find Item in shadow list
-            let itemExists = shadowItemList.find(x => x.Item == loadedItem.Id);
-            if (itemExists) {
-                let rmaExists = itemExists.RMA.find(x => x == loadedItem.RmaNo);
-                console.log(rmaExists);
-                let rowNo = shadowItemList.indexOf(itemExists) + 1;
-                if (rmaExists) {
-                    
-                    alert("RMA already exists !!")
-                    console.log("Rma Item", rmaExists);
-                    console.log("Current Item", loadedItem);
-                    let newQty = itemExists.RMA.length;
-                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity"], [itemExists.RMA, newQty], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
-                    //clearSearchField();
-                    return;
-                }
-                else {
-                    //clearSearchField();
-                    console.log("updating existing row !!");
-                    ++requestId;
-                    
-                    itemExists.RMA.push(loadedItem.RmaNo);
-                    let newQty = itemExists.RMA.length;
-                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity"], [itemExists.RMA, newQty], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
-
-
-                }
-
-            }
-            else {
-                console.log("Adding new line for rma item");
-                setLineItemsToDoc(validRows + 1, loadedItem)
-            }
-
-       
-    }
-
-}
-function setLineItemsToDoc(rowNo, item) {
-
-    ++requestId;
-    let gross = parseInt(item.Qty) * parseFloat(item.Price);
-    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "Rate", "Gross", "RMA"], [item.Id, item.UnitId, item.Qty, item.Price, gross, item.RmaNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
-}
-function afterLineAdded(response) {
-}
-//Remove item RMA
-let validRemovalRows = 0;
-let removalRmaNo = "";
-let removalRequestsProcessed = [];
-let removalRequestId = 0;
-
-function initRemoveRma(response) {
-
-    console.log("Initial remove RMA ...", response.iRequestId)
-    ++removalRequestId;
-
-    Focus8WAPI.getFieldValue("getRemoveRmaList", ["", "DocNo", "RemoveRma", "Outlet"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, removalRequestId);
-}
-
-function isRemoveRequestProcessed(iRequestId) {
-
-    for (let i = 0; i < removalRequestsProcessed.length; i++) {
-        if (removalRequestsProcessed[i] == iRequestId) {
-            return true;
-        }
-    } return false;
-}
-function getRemoveRmaList(response) {
-
-    if (isRemoveRequestProcessed(response.iRequestId)) {
-        return;
-    }
-    validRemovalRows = response.data[0].RowsInfo.iValidRows;
-    removalRequestsProcessed = [];
-    companyid = response.data[0].CompanyId;
-    sessionid = response.data[0].SessionId;
-    vtype = response.data[0].iVoucherType;
-    docno = response.data[1].FieldValue;
-    let rmano = response.data[2].FieldValue;
-    let outletid = response.data[3].FieldValue;
-    if (rmano.trim().length == 0 || validRemovalRows == 0) {
-
-        console.log("Initiated rma trigger but rma field is empty or no valid rows!!");
-        return;
-    }
-    getRemovalItems(rmano)
-}
-function getRemovalItems(rmano) {
-    removalRmaNo = rmano;
-    for (i = 0; i < validRows; i++) {
-        console.log(`Getting row ${i}`, validRows);
-        Focus8WAPI.getBodyFieldValue("removeRmaData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
-        //After last row
-        //problem area
+    catch (err) {
+        console.log(err);
+       alert("Error when running post save process: " );
 
     }
-}
+    finally {
 
-
-function removeRmaData(response) {
-
-    console.log("Logging row no", response.iRequestId);
-    if (isRemoveRequestProcessed(response.iRequestId)) {
-        console.log("Row no already exists, returning", response.iRequestId);
-        return;
     }
-
-    removalRequestsProcessed.push(response.iRequestId);
-    let rmaList = response.data[3].FieldValue; 
-    rmaExists = rmaList.find(x => x == removalRmaNo);
-    if (rmaExists) {
-        console.log("Rma to remove found")
-        rmaList = rmaList.filter(x => x != removalRmaNo);
-        ++requestId;
-        let newQty = rmaList.length;
-        if (rmaList.length == 0) {
-            console.log("Removing Item")
-            Focus8WAPI.setBodyFieldValue("afterLineAdded", [ "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], ["0","0",[],0,0,0], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, response.iRequestId, requestId);
-        }
-        else {
-
-            Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity"], [rmaList, newQty], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, response.iRequestId, requestId);
-        }
-       
-    }
-    clearSearchField("RemoveRma");
 }

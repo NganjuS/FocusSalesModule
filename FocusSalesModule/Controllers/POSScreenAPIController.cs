@@ -1,7 +1,9 @@
 ﻿using Focus.Common.DataStructs;
 using FocusSalesModule.Data;
+using FocusSalesModule.DTO;
 using FocusSalesModule.Helpers;
 using FocusSalesModule.Logs;
+using FocusSalesModule.Manager;
 using FocusSalesModule.Models;
 using FocusSalesModule.Queries;
 using FocusSalesModule.Screens;
@@ -18,6 +20,7 @@ using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Web.Configuration;
 using System.Web.Http;
 using System.Xml.Linq;
+using static FocusSalesModule.Helpers.AppUtilities;
 
 namespace FocusSalesModule.Controllers
 {
@@ -76,12 +79,19 @@ namespace FocusSalesModule.Controllers
         }
         [HttpGet]
         [Route("outletpaymenttypes")]
-        public HashData<dynamic> GetOutletPaymenttypes(int compid, int outletid)
+        public HashData<dynamic> GetOutletPaymenttypes(int compid, int vtype, int outletid)
         {
             HashData<dynamic> resp = new HashData<dynamic>();
             try
             {
-                resp.datalist = DbCtx<dynamic>.GetObjList(compid, TxnQueries.GetOutletPaymentTypesQry(outletid));
+                POSInitData posInitData = new POSInitData();
+
+                posInitData.DiscountVouchers = DbCtx<DiscountModel>.GetObjList(compid, DiscountVoucherQry.GetDiscountVoucherQuery(
+                    "", vtype, PosReceiptScreenMain.GetReceiptVtype(compid)));
+                
+                posInitData.PaymentTypes = DbCtx<dynamic>.GetObjList(compid, TxnQueries.GetOutletPaymentTypesQry(outletid));
+
+                resp.data = posInitData;
                 resp.result = 1;
 
             }
@@ -94,6 +104,7 @@ namespace FocusSalesModule.Controllers
             }
             return resp;
         }
+        
         [HttpGet]
         [Route("discountvoucher")]
         public HashData<dynamic> GetDiscountVoucher(int compid,DateTime txnDate,string discVoucherNo)
@@ -110,6 +121,96 @@ namespace FocusSalesModule.Controllers
                     resp.message = "Voucher does not exist or has expired !!!";
                 }
                
+
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
+        [HttpPost]
+        [Route("savetemppayment")]
+        public HashData<String> SaveTempPayment(PosBeforeSaveDto beforeSaveDto)
+        {
+            HashData<String> resp = new HashData<String>();
+            try
+            {
+              
+                resp.data = PaymentManager.PreProcessPayment(beforeSaveDto);
+                resp.result = 1;
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
+        [HttpPost]
+        [Route("postpayment")]
+        public HashDataFocus AddSale(int compid, int vtype,string sessionid, string docno, List<BillSettlement> billSettlement)
+        {
+            HashDataFocus resp = new HashDataFocus();
+            try
+            {
+               // string receiptScreenName = "";
+                string baseUrl = WebConfigurationManager.AppSettings["Server_API_IP"];
+
+                if(PosReceiptScreenMain.IsDefaultAccountsNotSet(billSettlement))
+                {
+                    resp.result = -1;
+                    resp.message = "Outlet accounts have not been set";
+                    return resp;
+                }
+
+                if(PosReceiptScreenMain.IsReceiptPosted(compid, docno))
+                {
+                    resp.result = -1;
+                    resp.message = "Payment already posted for this sale";
+                    return resp;
+                }
+
+
+               
+
+                //Post to payment screen
+               
+                string wUrl = $"{baseUrl}/screen/transactions/{AppUtilities.GetScreenName(compid, vtype)}/{docno.Replace("/","~~")}";
+                HashDataFocus response = APIManager.getData(sessionid, wUrl);
+                Hashtable docheader = JsonConvert.DeserializeObject<Hashtable>(response.data[0]["Header"].ToString());
+                List<Hashtable> docbody = JsonConvert.DeserializeObject<List<Hashtable>>(response.data[0]["Body"].ToString());
+                Hashtable header = PosReceiptScreenMain.BuildReceiptHeader(docheader);
+                List<Hashtable> doclines = PosReceiptScreenMain.BuildReceiptLines(docbody, billSettlement);
+
+                HashDataFocus objHashRequest = new HashDataFocus();
+                Hashtable objHash = new Hashtable();
+                objHash.Add("Header", header);
+                objHash.Add("Body", doclines);
+                List<Hashtable> lstHash = new List<Hashtable>();
+                lstHash.Add(objHash);
+                objHashRequest.data = lstHash;
+                string url = $"{baseUrl}/Transactions/{PosReceiptScreenMain.screenName}";
+               HashDataFocus hashDataFocus = APIManager.postData(objHashRequest, sessionid, url);
+
+                resp.result = hashDataFocus.result;
+                resp.message = hashDataFocus.result != 1 ? hashDataFocus.message  : "Payment Posted successfully";
+                if(hashDataFocus.result == 1) 
+                {
+                    //Update pos header
+                    string qry = AppUtilities.GetQueryUpdate(compid, vtype, billSettlement);
+                    string updateQry = qry.Trim().Length > 0 ? $"update tCore_HeaderData{vtype}_0 set PaymentPosted = '1', {qry} where iheaderid = (select top 1 iheaderid from tcore_header_0 where sVoucherNo = '{docno}' and ivouchertype ={vtype})  " : "";
+                    if (updateQry.Trim().Length > 0)
+                    {
+                        DbCtx<Int32>.ExecuteNonQry(compid, updateQry);
+                    }
+                }
+
 
             }
             catch (Exception ex)

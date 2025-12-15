@@ -17,7 +17,7 @@ namespace FocusSalesModule.Queries
         }
         public static string GetOutletPaymentTypesQry(int outletId)
         {
-            return $"select ptyp.sName PaymentType,putyp.* from muPos_Outlet_PaymentType_Details pdet join mCore_paymenttype ptyp on ptyp.iMasterId = pdet.TypeOfPayment  join  muCore_paymenttype putyp on putyp.iMasterId = ptyp.iMasterId  where pdet.iMasterId = {outletId} and pdet.TypeOfPayment <> 0 order by putyp.OrderField ";
+            return $"select ptyp.sName PaymentType,putyp.* , otl.DefaultAccount,dbo.udfAccountName(otl.DefaultAccount) as  DefaultAccountName,otl.DefaultCashAccount,dbo.udfAccountName(otl.DefaultCashAccount) as  DefaultCashAccountName, otl.DefaultBankAccount, dbo.udfAccountName(otl.DefaultBankAccount) as  DefaultBankAccountName,otl.DefaultOnlineAccount , dbo.udfAccountName(otl.DefaultOnlineAccount) DefaultOnlineAccountName , otl.DefaultCreditNoteAccount, dbo.udfAccountName(otl.DefaultCreditNoteAccount) DefaultCreditNoteAccountName ,otl.DefaultDiscountAccount, dbo.udfAccountName(otl.DefaultDiscountAccount) DefaultDiscountAccountName from muPos_Outlet_PaymentType_Details pdet join mCore_paymenttype ptyp on ptyp.iMasterId = pdet.TypeOfPayment  join  muCore_paymenttype putyp on putyp.iMasterId = ptyp.iMasterId  join muPos_Outlet otl on otl.iMasterId =  pdet.iMasterId  where pdet.iMasterId = {outletId} and pdet.TypeOfPayment <> 0 order by putyp.OrderField ";
         }
         public static string GetPOSData(int outletId, int dateFrom, int dateTo)
         {

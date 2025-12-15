@@ -53,6 +53,46 @@ namespace FocusSalesModule.Controllers
             return hashData;
         }
         [HttpGet]
+        [Route("salesreturnrma")]
+        public HashData<Product> GetSaleReturnRma(int compid, int outletid,int memberid, string rmano)
+        {
+            HashData<Product> hashData = new HashData<Product>();
+            try
+            {
+                
+
+                //Check if another sales return has been done for this rma
+                int rmacount = DbCtx<Int32>.GetObj(compid, ProductQueries.GetSalesReturnCount(rmano));
+
+                if (rmacount > 0)
+                {
+                    hashData.result = -1;
+                    hashData.message = "Another sales return has been done for this rma !! ";
+                    return hashData;
+                }
+
+                hashData.data = DbCtx<Product>.GetObj(compid, ProductQueries.GetSalesReturnRmaData(rmano, outletid, memberid));
+
+                if (hashData.data == null)
+                {
+                    hashData.result = -1;
+                    hashData.message = "Rma number is not valid or was not found ";
+                    return hashData;
+                }
+
+
+                hashData.result = 1;
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                hashData.result = -1;
+                hashData.message = ex.Message;
+            }
+            return hashData;
+        }
+        [HttpGet]
         [Route("rmaitemsnooutlet")]
         public HashData<Product> GetRmaItemNoOutlet(int compid, string stockoutdocno, string rmano)
         {

@@ -5,7 +5,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using static FocusSalesModule.Helpers.AppUtilities;
 using static FocusSalesModule.Screens.POSSales;
+
 
 namespace FocusSalesModule.Screens
 {
@@ -13,7 +15,7 @@ namespace FocusSalesModule.Screens
     {
         public const string screenName = "POS Sales Receipt";
         //1,Cash,2,Bank,3,Integration,4,Discount Voucher,5,Credit Note
-        enum PaymentTypes {  Cash = 1,Bank =2, Integration = 3, DiscountVoucher = 4,  CreditNote = 5}
+        
         public static Hashtable GetReceiptHeader(POSDTO posDTO,Outlet outlet,string docNo)
         {
             return new Hashtable()
