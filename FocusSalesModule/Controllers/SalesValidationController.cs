@@ -173,14 +173,18 @@ namespace FocusSalesModule.Controllers
                     string qry = AppUtilities.GetQueryUpdate(compid, vtype, paymentList);
 
                     string updateQry = qry.Trim().Length > 0 ? $"update tCore_HeaderData{vtype}_0 set PaymentPosted = '1', {qry} where iheaderid = (select top 1 iheaderid from tcore_header_0 where sVoucherNo = '{docno}' and ivouchertype ={vtype})  " : "";
+
                     string setpaymentisdone = $"update fsm_TemporaryPayments set IsValidated = 1  where DocumentTagId = '{docIdentifier}' ";
 
                     string updateMoniePointQry = $"update MoniePointData set IsAllocatedToSale = 1 where TransactionReference in (select top 1 Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
 
+                    DbCtx<Int32>.ExecuteNonQry(compid, setpaymentisdone);
+                    DbCtx<Int32>.ExecuteNonQry(compid, updateMoniePointQry);
+
                     if (updateQry.Trim().Length > 0)
                     {
                         DbCtx<Int32>.ExecuteNonQry(compid, updateQry);
-                        DbCtx<Int32>.ExecuteNonQry(compid, updateMoniePointQry);
+                       
                     }
                 }
 
