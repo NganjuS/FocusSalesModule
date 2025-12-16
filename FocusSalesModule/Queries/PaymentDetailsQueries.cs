@@ -13,7 +13,7 @@ namespace FocusSalesModule.Queries
         }
         public static string GetDiscountCodes(string itemList,int txndate)
         {
-            return $"select isnull(disc.sCode,'') Code, isnull(disc.sName,'') Name,dscmst.StartDate, dscmst.EndDate,dscmst.NoofQuantity, dscmst.DiscountValue  from mCore_discountmaster disc join muCore_discountmaster dscmst on disc.iMasterId = dscmst.iMasterId where  dscmst.Item in ({itemList}) and disc.iMasterId <> 0   and dscmst.NoofQuantity > (select count(ReferenceNo) from tCore_Data4100_0 where ReferenceNo = disc.sCode) and   dscmst.StartDate <= {txndate} and dscmst.EndDate >= {txndate}";
+            return $"select isnull(disc.sCode,'') Code, isnull(disc.sName,'') Name,dscmst.StartDate, dscmst.EndDate,dscmst.NoofQuantity, dscmst.DiscountValue,dscmst.Item ItemId  ,dscmst.DiscountAccount SelectedAccount from mCore_discountmaster disc join muCore_discountmaster dscmst on disc.iMasterId = dscmst.iMasterId where  dscmst.Item in ({itemList}) and disc.iMasterId <> 0   and dscmst.NoofQuantity > (select count(ReferenceNo) from tCore_Data4100_0 where ReferenceNo = disc.sCode) and   dscmst.StartDate <= {txndate} and dscmst.EndDate >= {txndate}";
         }
         public static string GetDetails(int outletid)
         {
@@ -23,11 +23,11 @@ namespace FocusSalesModule.Queries
         {
             if (manualvalidate)
             {
-                return $"select top 1 mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.Amount  from MoniePointData mp where TerminalSerial in (select  trm.sCode from mCore_terminalmachines trm join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId where trm1.Outlet = {outletid}) and  ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )  and  isnull(mp.IsAllocatedToSale,0) = 0 and mp.TransactionReference = '{reference}' order by mp.transactiontime desc ";
+                return $"select top 1 mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.AmountInLocalCur Amount from MoniePointData mp where TerminalSerial in (select  trm.sCode from mCore_terminalmachines trm join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId where trm1.Outlet = {outletid}) and  ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )  and  isnull(mp.IsAllocatedToSale,0) = 0 and mp.TransactionReference = '{reference}' order by mp.transactiontime desc ";
             }
             else
             {
-                return $"select top 1 mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.Amount  from MoniePointData mp where TerminalSerial in (select  trm.sCode from mCore_terminalmachines trm join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId where trm1.Outlet = {outletid})  and ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )  and mp.Amount='{outstandingamt}' and isnull(mp.IsAllocatedToSale,0) = 0 order by mp.transactiontime desc ";
+                return $"select top 1 mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.AmountInLocalCur Amount  from MoniePointData mp where TerminalSerial in (select  trm.sCode from mCore_terminalmachines trm join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId where trm1.Outlet = {outletid})  and ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )  and mp.AmountInLocalCur ={outstandingamt} and isnull(mp.IsAllocatedToSale,0) = 0 order by mp.transactiontime desc ";
             }
                
         }

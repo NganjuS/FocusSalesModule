@@ -3,6 +3,7 @@ var postRequestId = 0;
 var postRequestsProcessed = [];
 var postValidRows = 0;
 var postShadowItemList = [];
+var discountVoucherList = [];
 var linepostRequestsProcessed = [];
 var isProcessing = false; 
 
@@ -159,7 +160,7 @@ function getDocPostData(response) {
         }
         let mainUrl = `${posBaseUrl}/posscreen/openposbeforesave/?compid=${paymentHeaderObj.CompId}&vtype=${paymentHeaderObj.Vtype}&outletid=${paymentHeaderObj.OutletId}&memberid=${paymentHeaderObj.MemberId}&sessionid=${paymentHeaderObj.SessionId}&docno=${paymentHeaderObj.CompId}&amount=${amount}`
 
-        console.log(mainUrl);
+        discountVoucherList = [];
         Focus8WAPI.openPopup(mainUrl);
 
 
@@ -177,10 +178,30 @@ function setDocumentIdentifier(strval) {
     ++postRequestId;
 
     Focus8WAPI.setFieldValue("afterIdentifierAdded", ["DocumentTagId"], [strval], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, postRequestId);
-   /* Focus8WAPI.getFieldValue("getDocumentAmount", ["", "DocNo", "Date", "Outlet", "Cost Center", "CustomerAC", "Member"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, postRequestId);*/
+    if (discountVoucherList.length > 0) {
+
+        for (let i = 0; i < postShadowItemList.length; i++) {
+
+            let itemObjList = discountVoucherList.filter(obj => obj.ItemId == postShadowItemList[i].Item)
+
+            if (itemObjList.length > 0) {
+
+                let discAmt = validateDecimal(itemObjList.reduce((sum, item) => sum + item.Amount, 0))
+                let reference = itemObjList.map(x => x.Reference).join(",");
+                ++postRequestId;
+  
+                Focus8WAPI.setBodyFieldValue("afterDiscountAdded", ["VoucherCode", "Voucher Discount"], [reference,discAmt], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, postRequestId);
+            }
+        }
+    }
+   
+   
 
 }
 function afterIdentifierAdded(response) {
+
+}
+function afterDiscountAdded(response) {
 
 }
 function onPosClosePopupStop() {

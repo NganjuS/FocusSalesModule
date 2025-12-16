@@ -52,7 +52,7 @@ function posSystem() {
                 this.isDisabled = true;
                 window.parent.paymentHeaderObj.BillSettlement = this.paymentModes;
                 let mainUrl = `${posBaseUrl}api/sales/savetemppayment/?compid=${this.compid}&vtype=${this.vtype}&sessionid=${this.sessionid}`;
-
+                let self = this;
                 fetch(mainUrl, {
                     method: "POST",
                     headers: {
@@ -74,9 +74,15 @@ function posSystem() {
 
                         /*this.showAlertMessage(dataObj.message, "success");*/
                         setTimeout(() => {
+                            
+                            
+                            let discountType = this.paymentModes.filter(obj => obj.TypeSelect == this.paymentTypes.DiscountVoucher);
+                            if (discountType.length > 0 && discountType[0].PayList.length > 0) {
 
-                            console.log(dataObj);
+                                window.parent.discountVoucherList = discountType[0].PayList;
+                            }
                             window.parent.setDocumentIdentifier(dataObj.data);
+                            
                             window.parent.onPosClosePopupContinue();
                            
                         }, 2000);
@@ -160,6 +166,7 @@ function posSystem() {
                 
 
                 if (paymentMode.TypeSelect == this.paymentTypes.Cash) {
+
                     let totalReceived = 0;
                     for (let i = 0; i < this.paymentModes.length; i++) {
 
@@ -167,17 +174,18 @@ function posSystem() {
 
                     }
                     
+                    let curAmount = this.getAmount(paymentMode.Amount);
 
-                    if (totalReceived + paymentMode.Amount > this.totalInvoiceAmt) {
+                    if (totalReceived + curAmount > this.totalInvoiceAmt) {
                         this.showAlertMessage("Amount will exceed document total !!", "warning");
-                        paymentMode.Amount = 0;
+                        paymentMode.Amount = '';
                         this.outstandingAmt = this.totalInvoiceAmt - totalReceived;
                         return;
                         
                     }
                     else {
 
-                        this.outstandingAmt = this.totalInvoiceAmt - (totalReceived + paymentMode.Amount);
+                        this.outstandingAmt = this.totalInvoiceAmt - (totalReceived + curAmount);
                         this.totalPaid = this.getOustandingAmt() ;
                     }
 
@@ -274,7 +282,7 @@ function posSystem() {
 
                     if (this.paymentModes[i].TypeSelect == this.paymentTypes.Cash) {
 
-                        totalReceived += this.paymentModes[i].Amount;
+                        totalReceived += this.getAmount(this.paymentModes[i].Amount);
 
                     }
                     else {
@@ -313,7 +321,7 @@ function posSystem() {
                         }
                         this.paymentModes = dataObj.data.PaymentTypes;
                         for (let i = 0; i < this.paymentModes.length; i++) {
-                            this.paymentModes[i].Amount = 0;
+                            this.paymentModes[i].Amount = '';
                             this.paymentModes[i].Reference = "";
                             this.paymentModes[i].PayList = [];
                             this.paymentModes[i].ManualValidate = false;
@@ -363,20 +371,21 @@ function posSystem() {
 
                     if (discountObj.length > 0) {
               
-                        for (let i = 0; i < dataObj.datalist.length; i++) {
-                            console.log("Inserting discount object");
-                            console.log(dataObj.datalist);
+                        for (let i = 0; i < dataObj.datalist.length; i++) { 
+                            
                             let nwOBj = {
+                                ItemId: dataObj.datalist[i].ItemId,
                                 IsSelected: false,
                                 Reference: dataObj.datalist[i].Code,
-                                Amount: dataObj.datalist[i].DiscountValue
+                                Amount: this.getAmount(dataObj.datalist[i].DiscountValue),
+                                AccountId: dataObj.datalist[i].SelectedAccount
                             }
 
                             discountObj[0].PayList.push(nwOBj);
                         }
 
                     }
-                    console.log(discountObj[0]);
+        
 
                 }
             },
@@ -421,7 +430,7 @@ function posSystem() {
                             let nwOBj = {
                                 IsSelected: false,
                                 Reference: dataObj.datalist[i].Reference,
-                                Amount: dataObj.datalist[i].Amount
+                                Amount: this.getAmount(dataObj.datalist[i].Amount)
                             }
 
                             creditNoteObj[0].PayList.push(nwOBj);

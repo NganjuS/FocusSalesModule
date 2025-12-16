@@ -143,10 +143,11 @@
                                                         <span class="input-group-text" id="addon-wrapping">Amount</span>
                                                         <input type="number" class="form-control" aria-label="Amount" aria-describedby="addon-wrapping" x-model.number="paymentMode.Amount" @@keyup="updateTotals(paymentMode)">
                                                     </div>
-                                                    <button style="margin-top: 15px;" class="btn" x-show="paymentMode.TypeSelect == paymentTypes.Cash" @@click="setPendingAmount(paymentMode)">
+
+                                                    @*<button style="margin-top: 15px;" class="btn" x-show="paymentMode.TypeSelect == paymentTypes.Cash" @@click="setPendingAmount(paymentMode)">
                                                         <i class="bi bi-hand-index-thumb"></i>
                                                         Set
-                                                    </button>
+                                                    </button>*@
 
                                                     <div class="input-group flex-nowrap" x-show="paymentMode.ShowReference ||  paymentMode.TypeSelect ==  paymentTypes.Bank || paymentMode.ManualValidate" style="margin-top: 15px;">
                                                         <span class="input-group-text" id="addon-wrapping">Reference</span>
@@ -270,7 +271,7 @@
     <script src="~/Scripts/sweetalert2.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script defer src="~/Scripts/alpine.min.js"></script>
-    <script src="~/Scripts/pos/focusposscreenb4save.js?v=78987x5j"></script>
+    <script src="~/Scripts/pos/focusposscreenb4save.js?v=78999dd0998k7x588j"></script>
 
 </body>
 </html>
