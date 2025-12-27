@@ -14,35 +14,37 @@
     <link rel="stylesheet" href="~/Content/waitMe.min.css" />
     <link rel="stylesheet" href="~/Content/sweetalert2.min.css" />
     @*<link rel="stylesheet" href="~/Content/posscreen.css" />*@
-    <style>
-        .nav-pills .nav-link {
-            text-align: left;
-            border-radius: 0.25rem;
-        }
+<style>
+    .nav-pills .nav-link {
+        text-align: left;
+        border-radius: 0.25rem;
+    }
 
         .nav-pills .nav-link.active {
             background-color: #0d6efd;
         }
-        td.wrap {
-            word-break: break-all; /* breaks anywhere */
-            overflow-wrap: break-word; /* ensures wrapping */
-        }
-        /* Chrome, Safari, Edge, Opera */
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
 
-        /* Firefox */
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
+    td.wrap {
+        word-break: break-all; /* breaks anywhere */
+        overflow-wrap: break-word; /* ensures wrapping */
+    }
+    /* Chrome, Safari, Edge, Opera */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
 
-    </style>
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+ 
+
+ </style>
 
 </head>
-<body id="full-container"  style="overflow-x: hidden">
+<body id="full-container"  style="overflow-x: hidden; font-size: 12px;">
     <div class="row" id="main-container" x-data="posSystem()" style="overflow-x: hidden">
         <div class="col-md-12">
             <input x-ref="compid" value="@ViewBag.compid" type="hidden" />
@@ -53,7 +55,7 @@
             <input x-ref="docno" value="@ViewBag.docno" type="hidden" />
             <input x-ref="netamt" value="@ViewBag.netamt" type="hidden" />
 
-            <div class="card">
+            <div class="card" style="min-height: 600px;">
                 <div class="card-header bg-light">
                     <div class="row">
 
@@ -61,7 +63,7 @@
 
                             <div class="hstack gap-3" style="float: left;">
                                 <div>
-                                    <span class="fw-bold fs-5" style="color:#0073AA;"> Outstanding Amt:</span>
+                                    <span class="fw-bold fs-5" style="color:#0073AA;" x-text="outstandingDesc"> </span>
                                     <br />
                                     <span class="text-info fs-5 fw-bold" x-text="formatNum(outstandingAmt)">
 
@@ -102,15 +104,14 @@
 
                         </div>
                     </div>
-                    </div>
-                <div class="card-body" style="min-height: 400px;">
+                </div>
+                <div class="card-body  " style="padding: 1px;">
                     <div class="row">
                         <!-- Vertical Tabs Navigation -->
                         <div class="col-md-3">
                             <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
                                 <template x-for="(paymentMode, index) in paymentModes" :key="index">
-                                    <button class="nav-link fw-bold" :class="{ 'active' : index == 0}" id="v-pills-home-tab" data-bs-toggle="pill" :data-bs-target="'#v-pills-home'+index" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true" x-text="paymentMode.PaymentType" >
-                                        
+                                    <button class="nav-link fw-bold" :class="{ 'active' : index == 0}" id="v-pills-home-tab" data-bs-toggle="pill" :data-bs-target="'#v-pills-home'+index" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true" x-text="paymentMode.PaymentType" @@click="loadOnlinePayments(paymentMode,{},false)">
                                     </button>
                                 </template>
                             </div>
@@ -123,33 +124,24 @@
                                     <div class="tab-pane fade" :class="{'show active': index == 0}" :id="'v-pills-home'+index" role="tabpanel" aria-labelledby="v-pills-home-tab">
                                         @*<h3 x-text="paymentMode.PaymentType"></h3>*@
                                         <div class="vstack gap-1">
-                                            <div class="input-group flex-nowrap" x-show="paymentMode.ShowBank && paymentMode.TypeSelect == paymentTypes.Bank">
+                                            <div class="input-group flex-nowrap input-group-sm" x-show="paymentMode.ShowBank && paymentMode.TypeSelect == paymentTypes.Bank">
                                                 <span class="input-group-text" id="addon-wrapping">Account:</span>
                                                 <input type="text" class="form-control" aria-label="Account" aria-describedby="addon-wrapping" :value="getAccountName(paymentMode)" style="max-width: 200px;" disabled>
                                             </div>
                                             <div class="row">
                                                 <div class="col-md-12 hstack gap-1">
-                                                    <div class="form-check form-switch" x-show="paymentMode.TypeSelect == paymentTypes.Integration">
-                                                        <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" x-model="paymentMode.ManualValidate" @@click="allowManualValidation(paymentMode)">
-                                                        <br />
-                                                        <label class="form-check-label" style="margin-left: -45px;">
-
-                                                            Validate Manually
-                                                        </label>
-                                                    </div>
-
-
-                                                    <div class="input-group flex-nowrap" style="margin-top: 15px;" x-show="paymentMode.TypeSelect == paymentTypes.Bank || paymentMode.TypeSelect == paymentTypes.Cash">
+                                         
+                                                    <div class="input-group flex-nowrap input-group-sm" style="margin-top: 15px; width: 400px;" x-show="paymentMode.TypeSelect == paymentTypes.Bank || paymentMode.TypeSelect == paymentTypes.Cash">
                                                         <span class="input-group-text" id="addon-wrapping">Amount</span>
                                                         <input type="number" class="form-control" aria-label="Amount" aria-describedby="addon-wrapping" x-model.number="paymentMode.Amount" @@keyup="updateTotals(paymentMode)">
                                                     </div>
 
                                                     @*<button style="margin-top: 15px;" class="btn" x-show="paymentMode.TypeSelect == paymentTypes.Cash" @@click="setPendingAmount(paymentMode)">
-                                                        <i class="bi bi-hand-index-thumb"></i>
-                                                        Set
-                                                    </button>*@
+                                                    <i class="bi bi-hand-index-thumb"></i>
+                                                    Set
+                                                </button>*@
 
-                                                    <div class="input-group flex-nowrap" x-show="paymentMode.ShowReference ||  paymentMode.TypeSelect ==  paymentTypes.Bank || paymentMode.ManualValidate" style="margin-top: 15px;">
+                                                    <div class="input-group flex-nowrap input-group-sm" x-show="paymentMode.ShowReference ||  paymentMode.TypeSelect ==  paymentTypes.Bank || paymentMode.ManualValidate" style="margin-top: 15px;">
                                                         <span class="input-group-text" id="addon-wrapping">Reference</span>
                                                         <input type="text" class="form-control" aria-label="Reference" x-model="paymentMode.Reference" aria-describedby="addon-wrapping">
                                                     </div>
@@ -159,17 +151,17 @@
                                                         Add
                                                     </button>
 
-                                                    <button class="btn" x-show="paymentMode.TypeSelect == paymentTypes.Integration && paymentMode.PayList.length == 0" @@click="updatePaymentDetails(paymentMode,{ IsSelected : true})">
-                                                        <i class="bi bi-cash"></i>
-                                                        <br />
-                                                        Validate
-                                                    </button>
+                                                    <button class="btn" x-show="paymentMode.TypeSelect == paymentTypes.Integration && paymentMode.ManualValidate == true" @@click="loadManualSearchPayments(paymentMode)">
+                                                    <i class="bi bi-cash"></i>
+                                                    <br />
+                                                    Load
+                                                        </button>
                                                 </div>
 
                                             </div>
 
 
-                                            <hr />
+                                            <hr style="margin-top:1px;margin-bottom: 1px;" />
                                             <!--Bank table-->
                                             <table class="table table-bordered table-sm" x-show="paymentMode.TypeSelect == paymentTypes.Bank  ">
                                                 <thead style="color: white; background-color: #0073AA;">
@@ -223,31 +215,83 @@
                                             </table>
                                             <!--End table-->
                                             <!--Online Payment -->
-                                            <div style="width: 630px;height: 300px; overflow-y: scroll" x-show="paymentMode.TypeSelect == paymentTypes.Integration">
+                                            <div x-show="paymentMode.TypeSelect == paymentTypes.Integration">
+                                                <div class="hstack gap-1">
+                                                    <input type="search" class="form-control" style="width: 180px;" placeholder="search ..." x-model="searchVal" @@input="debouncedInput(paymentMode)" x-show="paymentMode.PayList.length > 0 && !paymentMode.ManualValidate"/>
+                                                    <button style="width: 30px;" class="btn" @@click="refreshData(paymentMode)" x-show="paymentMode.PayList.length > 0 && !paymentMode.ManualValidate">
+                                                        <i class="bi bi-arrow-clockwise"></i>
+                                                    </button>
+                                                    <div x-show="paymentMode.PayList.length > 0 && !paymentMode.ManualValidate" class="border-start border-primary border-2" style="height: 35px; margin-left: 10px;margin-right: 10px;"></div>
+                                                    <!--Pagination Section -->
 
 
-                                                <table class="table table-bordered table-sm" >
-                                                    <thead style="color: white; background-color: #0073AA;">
-                                                        <tr>
-                                                            <th style="width: 20px; color: white; background-color: #0073AA;">#</th>
-                                                            <th style="color: white; background-color: #0073AA; width: 250px;" >Reference</th>
-                                                            <th style="color: white; background-color: #0073AA;">Time</th>
-                                                            <th style="color: white; background-color: #0073AA;">Amount</th>
+                                                    <div x-show="paymentMode.PayList.length > 0 && !paymentMode.ManualValidate " style="margin-left:10px;margin-right:10px;margin-top: 15px;">
+                                                        <nav aria-label="Page navigation example">
+                                                            <ul class="pagination">
+                                                                <li class="page-item">
+                                                                    <a class="page-link" @@click="prevGroup(paymentMode)" aria-label="Previous">
+                                                                        <span aria-hidden="true">&laquo;</span>
+                                                                    </a>
+                                                                </li>
+                                                                <template x-for="page in pagingData.curVisiblePages" :key="page">
+                                                                    <li class="page-item" :class="{'active': currentPage === (pagingData.startingPage+page)}"><a class="page-link" href="#" x-on:click="currentGroup(paymentMode, pagingData.startingPage+page)" x-text="pagingData.startingPage + page"></a></li>
 
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <template x-for="(onlinePay, idx) in paymentMode.PayList" :key="idx">
+
+                                                                </template>
+
+                                                                <li class="page-item">
+                                                                    <a class="page-link" href="#" @@click="nextGroup(paymentMode)" aria-label="Next">
+                                                                        <span aria-hidden="true">&raquo;</span>
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </div>
+                                                    <div x-show="paymentMode.PayList.length > 0 && !paymentMode.ManualValidate">
+                                                        <span x-text="pagingData.pagingDesc"> </span>
+
+                                                    </div>
+                                                    <!--End Pagination Section -->
+                                                    <div class="border-start border-primary border-2" style="height: 35px; margin-left: 10px;margin-right: 10px;" x-show="paymentMode.PayList.length > 0 && !paymentMode.ManualValidate"></div>
+
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" x-model="paymentMode.ManualValidate" @@change="setManualOnlineSearch(paymentMode)">
+                                                        <label class="form-check-label" for="flexSwitchCheckDefault">Search Manually</label>
+                                                    </div>
+                                                </div>
+                                                <div style="overflow-y: auto;max-height: 100%;" @*style="width: 630px;height: 300px; overflow-y: scroll"*@>
+                                                    <table class="table table-bordered table-sm ">
+                                                        <thead style="color: white; background-color: #0073AA;">
                                                             <tr>
-                                                                <td x-text="idx + 1"></td>        
-                                                                <td style="width: 250px;" scope="row" x-text="onlinePay.Reference" class="wrap"></td>
-                                                                <td scope="row" x-text="new Date(onlinePay.TransactionTime).toLocaleString()"></td>
-                                                                <td scope="row" x-text="formatNum(onlinePay.Amount)"></td>
+                                                                <th style="width: 20px; color: white; background-color: #0073AA;">#</th>
+                                                                <th style="width: 20px; color: white; background-color: #0073AA;">##</th>
+                                                                <th style="color: white; background-color: #0073AA; min-width: 300px;">Reference</th>
+                                                                <th style="width: 150px;color: white; background-color: #0073AA;">Time</th>
+                                                                <th style="width: 150px; color: white; background-color: #0073AA;">Amount</th>
 
-                                                            </tr>
-                                                        </template>
-                                                    </tbody>
-                                                </table>
+                                                                <th style="width: 30px; color: white; background-color: #0073AA;" x-show="paymentMode.ManualValidate">##</th>
+</thead>
+                                                        <tbody>
+                                                            <template x-for="(onlinePay, idx) in paymentMode.PayList" :key="idx">
+                                                                <tr>
+                                                                    <td x-text="((currentPage-1)*pagingData.pageSize)+idx+1"></td>
+                                                                    <td>
+                                                                        <input type="checkbox" x-model="onlinePay.IsSelected" @@change="updateOtherPayments(paymentMode,onlinePay)" />
+                                                                    </td>
+                                                                    <td style="min-width: 300px;" scope="row" x-text="onlinePay.Reference" class="wrap"></td>
+                                                                    <td style="width: 150px;" scope="row" x-text="new Date(onlinePay.TransactionTime).toLocaleString()"></td>
+                                                                    <td style="width: 150px;" scope="row" x-text="formatNum(onlinePay.Amount)"></td>
+                                                                    <td x-show="paymentMode.ManualValidate">
+                                                                        <button class="btn" @@click="removeRowItem(paymentMode, idx)">
+                                                                            <i class="bi bi-x-lg"></i>
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            </template>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
                                             </div>
                                             <!--End table-->
                                         </div>
@@ -255,12 +299,14 @@
                                 </template>
                             </div>
                         </div>
-                   
+
                     </div>
 
                 </div>
+              
             </div>
 
+           
         </div>
     </div>
 
@@ -271,7 +317,7 @@
     <script src="~/Scripts/sweetalert2.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script defer src="~/Scripts/alpine.min.js"></script>
-    <script src="~/Scripts/pos/focusposscreenb4save.js?v=78999dd0998k7x588j"></script>
+    <script src="~/Scripts/pos/focusposscreenb4save.js?v=78d988888uis8j"></script>
 
 </body>
 </html>

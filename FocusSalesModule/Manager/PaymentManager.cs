@@ -58,13 +58,29 @@ namespace FocusSalesModule.Manager
                 case (int)PaymentTypes.Bank:
                     return billSettlement.DefaultBankAccount;
                 case (int)PaymentTypes.Integration:
-                    return billSettlement.DefaultOnlineAccount;
+                    return getOnlineAccountsId(billSettlement);
                 case (int)PaymentTypes.DiscountVoucher:
                     return billSettlement.DefaultDiscountAccount; 
                 case (int)PaymentTypes.CreditNote:
                     return billSettlement.DefaultCreditNoteAccount;
                 default:
                     return billSettlement.DefaultAccount;
+            }
+        }
+        static int getOnlineAccountsId(BillSettlement billSettlement)
+        {
+
+            switch (billSettlement.IntegrationType)
+            {
+                case (Int32)IntegrationTypes.Moniepoint:
+                    return billSettlement.DefaultMoniepointAccount;
+                case (Int32)IntegrationTypes.Easybuy:
+                    return billSettlement.DefaultEasyBuyAccount;
+                case (Int32)IntegrationTypes.Sentinal:
+                    return billSettlement.DefaultSentinalAccount; 
+                default:
+                    return billSettlement.DefaultOnlineAccount;
+
             }
         }
     }

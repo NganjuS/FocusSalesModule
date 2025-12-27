@@ -30,7 +30,7 @@ namespace FocusSalesModule.Screens
         {
             foreach (var bill in billSettlement)
             {
-                if(bill.DefaultBankAccount == 0 || bill.DefaultCashAccount == 0 || bill.DefaultOnlineAccount == 0 || bill.DefaultCreditNoteAccount == 0 || bill.DefaultDiscountAccount == 0)
+                if(bill.DefaultBankAccount == 0 || bill.DefaultCashAccount == 0 || bill.DefaultOnlineAccount == 0 || bill.DefaultCreditNoteAccount == 0 || bill.DefaultDiscountAccount == 0 || bill.DefaultMoniepointAccount == 0 || bill.DefaultEasyBuyAccount == 0 || bill.DefaultSentinalAccount == 0)
                 return true;
             }
             return false;

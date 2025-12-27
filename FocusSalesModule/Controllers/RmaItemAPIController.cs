@@ -54,7 +54,7 @@ namespace FocusSalesModule.Controllers
         }
         [HttpGet]
         [Route("salesreturnrma")]
-        public HashData<Product> GetSaleReturnRma(int compid, int outletid,int memberid, string rmano)
+        public HashData<Product> GetSaleReturnRma(int compid, int vtype,int outletid,int memberid, string rmano)
         {
             HashData<Product> hashData = new HashData<Product>();
             try
@@ -70,6 +70,7 @@ namespace FocusSalesModule.Controllers
                     hashData.message = "Another sales return has been done for this rma !! ";
                     return hashData;
                 }
+                //Get voucher discount column
 
                 hashData.data = DbCtx<Product>.GetObj(compid, ProductQueries.GetSalesReturnRmaData(rmano, outletid, memberid));
 

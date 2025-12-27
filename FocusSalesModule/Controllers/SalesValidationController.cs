@@ -6,6 +6,7 @@ using FocusSalesModule.Logs;
 using FocusSalesModule.Models;
 using FocusSalesModule.Queries;
 using FocusSalesModule.Screens;
+using FocusSalesModule.ViewModel;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
@@ -16,6 +17,7 @@ using System.Net.Http;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Web.Configuration;
 using System.Web.Http;
+using static FocusSalesModule.Helpers.AppUtilities;
 
 namespace FocusSalesModule.Controllers
 {
@@ -45,6 +47,54 @@ namespace FocusSalesModule.Controllers
             {
                 Logger.writeLog(ex.Message);
                 Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
+        [HttpGet]
+        [Route("manualonlinepayment")]
+        public HashData<OnlinePaymentDTO> GetOnlinePaymentList(int compid, int integrationtype, int outletid,  string reference)
+        {
+            HashData<OnlinePaymentDTO> resp = new HashData<OnlinePaymentDTO>();
+            try
+            {
+
+                resp.datalist = DbCtx<OnlinePaymentDTO>.GetObjList(compid, PaymentDetailsQueries.GetManualSearchPayment(outletid, reference));
+                resp.result = 1;
+
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+
+        }
+        [HttpGet]
+        [Route("onlinepaymentlist")]
+        public HashData<PagingStatus<OnlinePaymentDTO>> GetOnlinePaymentList(int compid, int maxmin, int integrationtype, int outletid, int pageno = 1, int pagesize = 10, string searchval = "")
+        {
+            HashData<PagingStatus<OnlinePaymentDTO>> resp = new HashData<PagingStatus<OnlinePaymentDTO>>();
+            try
+            {
+                if(integrationtype == (Int32)IntegrationTypes.Moniepoint)
+                {
+                    resp.data = OnlinePaymentVM.GetPagedOnlinePayments(compid, outletid, maxmin,pageno, pagesize, searchval);
+                }
+               
+                resp.result = 1;
+
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+    
                 resp.result = -1;
                 resp.message = ex.Message;
             }
@@ -176,7 +226,7 @@ namespace FocusSalesModule.Controllers
 
                     string setpaymentisdone = $"update fsm_TemporaryPayments set IsValidated = 1  where DocumentTagId = '{docIdentifier}' ";
 
-                    string updateMoniePointQry = $"update MoniePointData set IsAllocatedToSale = 1 where TransactionReference in (select top 1 Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
+                    string updateMoniePointQry = $"update MoniePointData set IsAllocatedToSale = 1 where TransactionReference in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
 
                     DbCtx<Int32>.ExecuteNonQry(compid, setpaymentisdone);
                     DbCtx<Int32>.ExecuteNonQry(compid, updateMoniePointQry);

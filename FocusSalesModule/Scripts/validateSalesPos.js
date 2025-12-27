@@ -140,6 +140,7 @@ function getDocPostData(response) {
     postShadowItemList.push(payload);
 
     if (response.iRequestId == postValidRows) {
+
         console.log("Finished loading items, continuing to post");
         let amount = validateDecimal(postShadowItemList.reduce((sum, item) => sum + item.Gross, 0));
 
@@ -154,16 +155,13 @@ function getDocPostData(response) {
             if (validateDecimal(postShadowItemList[i].Rate) <= 0) {
                 alert(`Rate required for item on line ${i + 1} !! `);
                 isProcessing = false;
-                Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+               Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
                 return;
             }
         }
-        let mainUrl = `${posBaseUrl}/posscreen/openposbeforesave/?compid=${paymentHeaderObj.CompId}&vtype=${paymentHeaderObj.Vtype}&outletid=${paymentHeaderObj.OutletId}&memberid=${paymentHeaderObj.MemberId}&sessionid=${paymentHeaderObj.SessionId}&docno=${paymentHeaderObj.CompId}&amount=${amount}`
-
-        discountVoucherList = [];
-        Focus8WAPI.openPopup(mainUrl);
-
-
+        ++postRequestId
+        Focus8WAPI.getBodyFieldValue("getGrandTotal", ["", "GRAND TOTAL"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, -1, postRequestId);
+        
     }
     //else {
 
@@ -173,6 +171,19 @@ function getDocPostData(response) {
     //    Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
     //}
 
+}
+function getGrandTotal(response) {
+
+    if (isPostRequestProcessed(response.iRequestId)) {
+        return;
+    }
+    postRequestsProcessed.push(response.iRequestId);
+
+    let amount = response.data[1].OutputValue;
+    let mainUrl = `${posBaseUrl}/posscreen/openposbeforesave/?compid=${paymentHeaderObj.CompId}&vtype=${paymentHeaderObj.Vtype}&outletid=${paymentHeaderObj.OutletId}&memberid=${paymentHeaderObj.MemberId}&sessionid=${paymentHeaderObj.SessionId}&docno=${paymentHeaderObj.CompId}&amount=${amount}`
+
+    discountVoucherList = [];
+    Focus8WAPI.openPopup(mainUrl);
 }
 function setDocumentIdentifier(strval) {
     ++postRequestId;

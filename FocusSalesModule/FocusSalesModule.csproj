@@ -216,6 +216,7 @@
     <Compile Include="Data\DbCtx.cs" />
     <Compile Include="DTO\CreditNoteRequestDto.cs" />
     <Compile Include="DTO\DiscountRequestDto.cs" />
+    <Compile Include="DTO\OnlinePaymentDTO.cs" />
     <Compile Include="DTO\PosBeforeSaveDto.cs" />
     <Compile Include="DTO\TemporaryPaymentDataDto.cs" />
     <Compile Include="Global.asax.cs">
@@ -225,6 +226,7 @@
     <Compile Include="Helpers\AppUtilities.cs" />
     <Compile Include="Helpers\DocUtilities.cs" />
     <Compile Include="Helpers\ExecuteCreateTable.cs" />
+    <Compile Include="Helpers\GeneralUtils.cs" />
     <Compile Include="Helpers\UtilFuncs.cs" />
     <Compile Include="Logs\Logger.cs" />
     <Compile Include="Manager\PaymentManager.cs" />
@@ -251,6 +253,7 @@
     <Compile Include="Models\StockTransfer.cs" />
     <Compile Include="Models\StockTransferItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Queries\CreateTableQueries.cs" />
     <Compile Include="Queries\DiscountVoucherQry.cs" />
     <Compile Include="Queries\MasterQueries.cs" />
     <Compile Include="Queries\MoneyPointQuery.cs" />
@@ -259,9 +262,11 @@
     <Compile Include="Queries\ProductQueries.cs" />
     <Compile Include="Queries\TxnQueries.cs" />
     <Compile Include="Screens\AdvanceReceipt.cs" />
+    <Compile Include="Screens\PagingStatus.cs" />
     <Compile Include="Screens\PosReceiptScreenMain.cs" />
     <Compile Include="Screens\PosReceiptScreen.cs" />
     <Compile Include="Screens\POSSales.cs" />
+    <Compile Include="ViewModel\OnlinePaymentVM.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
@@ -323,6 +328,7 @@
     <Content Include="Scripts\jquery-3.7.0.slim.js" />
     <Content Include="Scripts\jquery-3.7.0.slim.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\onlinepaymentpagination.js" />
     <Content Include="Scripts\openPOS.js" />
     <Content Include="Scripts\pos\focusposscreen.js" />
     <Content Include="Scripts\pos\focusposscreenb4save.js" />

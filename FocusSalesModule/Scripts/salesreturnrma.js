@@ -637,7 +637,7 @@ async function searchRma(rmano, outletid,memberid)
     try
     {
        
-        let url = `/focussalesmodule/api/sales/salesreturnrma/?compid=${companyid}&outletid=${outletid}&memberid=${memberid}&rmano=${rmano}`;
+        let url = `/focussalesmodule/api/sales/salesreturnrma/?compid=${companyid}&vtype=${vtype}&outletid=${outletid}&memberid=${memberid}&rmano=${rmano}`;
         debugger;
         let response = await fetch(url);
 
@@ -655,7 +655,8 @@ async function searchRma(rmano, outletid,memberid)
             return;
         }
         else {
-           
+
+            setHeaderDetails(dataObj.data);
            
             if (validRows == 0) {
                 
@@ -758,11 +759,23 @@ function getDocBodyData(response) {
     }
 
 }
+function setHeaderDetails(item) {
+    ++requestId;
+    Focus8WAPI.setFieldValue("afterLineAdded", ["POSDocNo"], [item.DocNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+}
 function setLineItemsToDoc(rowNo, item) {
 
     ++requestId;
     let gross = parseInt(item.Qty) * parseFloat(item.Price);
-    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "Rate", "Gross", "RMA"], [item.ItemId, item.UnitId, item.Qty, item.Price, gross, item.RmaNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "Rate", "Gross", "RMA", "VoucherCode", "Voucher Discount"], [item.ItemId, item.UnitId, item.Qty, item.Price, gross, item.RmaNo, item.VoucherCode, item.VoucherDiscount], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+}
+function afterHeaderAdded(response) {
+    setRmaSearchFocus();
+
+    if (Swal.isVisible()) {
+
+        Swal.getConfirmButton().focus();
+    }
 }
 function afterLineAdded(response) {
     setRmaSearchFocus();

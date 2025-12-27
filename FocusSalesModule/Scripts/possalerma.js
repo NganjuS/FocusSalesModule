@@ -756,7 +756,7 @@ function setLineItemsToDoc(rowNo, item) {
 
     ++requestId;
     let gross = parseInt(item.Qty) * parseFloat(item.Price);
-    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "Rate", "Gross", "RMA"], [item.ItemId, item.UnitId, item.Qty, item.Price, gross, item.RmaNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "ItemCode", "Unit", "Quantity", "Rate", "Gross", "RMA"], [item.ItemId, item.ItemCode,item.UnitId, item.Qty, item.Price, gross, item.RmaNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
 }
 function afterLineAdded(response) {
     setRmaSearchFocus();

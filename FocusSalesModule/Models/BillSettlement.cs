@@ -17,9 +17,13 @@ namespace FocusSalesModule.Models
         public int DefaultCashAccount { get; set; }
         public int DefaultBankAccount { get; set; }
         public int DefaultOnlineAccount { get; set; }
+        public int DefaultEasyBuyAccount { get; set; }
+        public int DefaultSentinalAccount { get; set; }
+        public int DefaultMoniepointAccount { get; set; }
         public int DefaultCreditNoteAccount { get; set; }
         public int DefaultDiscountAccount { get; set; }
         public int TypeSelect { get; set; }
+        public int IntegrationType { get; set; }
         public List<GenericPayment> PayList { get; set; }
     }
 }

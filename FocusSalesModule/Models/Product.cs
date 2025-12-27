@@ -37,5 +37,7 @@ namespace FocusSalesModule.Models
         public string LinkVoucherNo { get; set; }
         public string DocNo { get; set; }
         public int LinkVoucherType { get; set; }
+        public string VoucherCode { get; set; } = String.Empty;
+        public decimal VoucherDiscount { get; set; }
     }
 }

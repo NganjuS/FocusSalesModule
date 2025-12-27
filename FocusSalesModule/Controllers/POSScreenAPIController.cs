@@ -139,7 +139,14 @@ namespace FocusSalesModule.Controllers
             HashData<String> resp = new HashData<String>();
             try
             {
-              
+
+                if (PosReceiptScreenMain.IsDefaultAccountsNotSet(beforeSaveDto.BillSettlement))
+                {
+                    resp.result = -1;
+                    resp.message = "All outlet accounts have not been set !!";
+                    return resp;
+                }
+
                 resp.data = PaymentManager.PreProcessPayment(beforeSaveDto);
                 resp.result = 1;
             }

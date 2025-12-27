@@ -11,14 +11,36 @@ namespace FocusSalesModule.Helpers
 {
     public class AppUtilities
     {
-
+        public enum PaymentTypes { Cash = 1, Bank = 2, Integration = 3, DiscountVoucher = 4, CreditNote = 5 }
+        public enum IntegrationTypes
+        {
+            None = 0, Moniepoint =1, Easybuy = 2, Sentinal = 3
+        }
+        public enum FieldTypes
+        {
+            Discount = 1
+        }
         public static string GetScreenName(int compid, int vtype)
         {
             string voucherQry = $"select sname from cCore_Vouchers_0 where iVoucherType = {vtype} ";
             return DbCtx<String>.GetObj(compid, voucherQry);
 
         }
-        public enum PaymentTypes { Cash = 1, Bank = 2, Integration = 3, DiscountVoucher = 4, CreditNote = 5 }
+        public static string SanitizeStr(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            // Escape special LIKE characters: %, _, [, ]
+            string escaped = input
+                .Replace("[", "[[]")   // Escape [ character
+                .Replace("]", "[]]")   // Escape ] character
+                .Replace("%", "[%]")   // Escape % character
+                .Replace("_", "[_]");  // Escape _ character
+
+            return escaped;
+        }
+        
         public static string StripExtraChar(string paymentTypeName)
         {
             return paymentTypeName.Trim().Replace(" ", "").Replace("/", "_");
@@ -142,92 +164,43 @@ namespace FocusSalesModule.Helpers
         }
         public static string GetQueryUpdate(int compid, int vtype, List<TemporaryPaymentDataDto> billSettlement)
         {
-            string fieldlistqry = $"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'tCore_HeaderData{vtype}_0'";
+            string fieldlistqry = $"SELECT upper(COLUMN_NAME) COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'tCore_HeaderData{vtype}_0'";
             List<string> fieldList = DbCtx<String>.GetObjList(compid, fieldlistqry);
             string qry = "";
-            foreach (var billSettle in billSettlement)
+            var paymentTypeList = billSettlement.Select(x => x.PaymentType).Distinct().ToList();
+            foreach (var paymentType in paymentTypeList)
             {
-                string pname = DbCtx<string>.GetScalar(compid, $"select sName from mCore_paymenttype where imasterid = {billSettle.PaymentMethodId}");
-                string strippedName = AppUtilities.StripExtraChar(pname);
 
-                //if (billSettle.PaymentType == (Int32)PaymentTypes.Cash)
-                //{
+                var paymentList = billSettlement.Where(x => x.PaymentType == paymentType).ToList();
+                int i = 0;
+                string[] extList = { "", "A", "B", "C", "D" , "E" , "F", "G" };
+                foreach (var payment in paymentList)
+                {
+                    string pname = DbCtx<string>.GetScalar(compid, $"select sName from mCore_paymenttype where imasterid = {payment.PaymentMethodId}");
+                    string strippedName = AppUtilities.StripExtraChar(pname);                    
+                    string ext = extList[i];
+                    string cashreferencefield = $"{strippedName}Reference{ext}";
+                    string cashamountfield = $"{strippedName}Amount{ext}";
+                    string cashaccountfield = $"{strippedName}Account{ext}";
 
-                    string cashreferencefield = $"{strippedName}Reference";
-                    string cashamountfield = $"{strippedName}Amount";
-                    string cashaccountfield = $"{strippedName}Account";
-
-                    if (fieldList.Contains(cashreferencefield))
+                    if (fieldList.Contains(cashreferencefield.ToUpper()))
                     {
                         string comma = qry.Length > 0 ? "," : "";
-                        qry += $"{comma}{cashreferencefield} = '{billSettle.Reference}'";
+                        qry += $"{comma}{cashreferencefield} = '{payment.Reference}'";
                     }
-                    if (fieldList.Contains(cashamountfield))
+                    if (fieldList.Contains(cashamountfield.ToUpper()))
                     {
                         string comma = qry.Length > 0 ? "," : "";
-                        qry += $"{comma}{cashamountfield} = '{billSettle.Amount}'";
+                        qry += $"{comma}{cashamountfield} = '{payment.Amount}'";
                     }
-                    if (fieldList.Contains(cashaccountfield))
+                    if (fieldList.Contains(cashaccountfield.ToUpper()))
                     {
                         string comma = qry.Length > 0 ? "," : "";
-                        qry += $"{comma}{cashaccountfield} = '{billSettle.SelectedAccount}'";
+                        qry += $"{comma}{cashaccountfield} = '{payment.SelectedAccount}'";
                     }
-
-                //}
-                //else
-                //{
-                //    string[] extList = { "", "O", "T", "H", "K" };
-                //    string payreferencefield = $"{strippedName}Reference";
-                //    string paymentrefamountfield = $"{strippedName}Amount";
-                //    string payaccountfield = $"{strippedName}Account";
-                //    if (billSettle.PayList.Count == 1)
-                //    {
-                //        if (fieldList.Contains(payreferencefield))
-                //        {
-                //            string comma = qry.Length > 0 ? "," : "";
-                //            qry += $"{comma}{payreferencefield} = '{billSettle.Reference}'";
-                //        }
-                //        if (fieldList.Contains(paymentrefamountfield))
-                //        {
-                //            string comma = qry.Length > 0 ? "," : "";
-                //            qry += $"{comma}{paymentrefamountfield} = '{billSettle.Amount}'";
-                //        }
-                //        if (fieldList.Contains(payaccountfield))
-                //        {
-                //            string comma = qry.Length > 0 ? "," : "";
-                //            qry += $"{comma}{payaccountfield} = '{AppUtilities.GetAccountId(billSettle.TypeSelect, billSettle)}'";
-                //        }
-                //    }
-                //    else
-                //    {
-                //        for (int i = 0; i < billSettle.PayList.Count; i++)
-                //        {
-                //            string ext = extList[i];
-                //            string payreffieldExt = $"{strippedName}Reference{ext}";
-                //            string payamountfieldExt = $"{strippedName}Amount{ext}";
-                //            string payaccountfieldExt = $"{strippedName}Account{ext}";
-                //            if (fieldList.Contains(payreffieldExt))
-                //            {
-                //                string comma = qry.Length > 0 ? "," : "";
-                //                qry += $"{comma}{payreffieldExt} = '{billSettle.PayList[i].Reference}'";
-                //            }
-                //            if (fieldList.Contains(payamountfieldExt))
-                //            {
-                //                string comma = qry.Length > 0 ? "," : "";
-                //                qry += $"{comma}{payamountfieldExt} = '{billSettle.PayList[i].Amount}'";
-                //            }
-                //            //if (fieldList.Contains(payaccountfieldExt))
-                //            //{
-                //            //    string comma = qry.Length > 0 ? "," : "";
-                //            //    qry += $"{comma}{payaccountfieldExt} = '{billSettle.PayList[i].Acc}'";
-                //            //}
-                //        }
-                //    }
-
-
-
-                //}
-
+                    ++i;
+                }
+                      
             }
             return qry;
         }

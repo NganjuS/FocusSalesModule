@@ -8,6 +8,7 @@ namespace FocusSalesModule.Models
     public class MasterDTO
     {
         public int Id { get; set; }
+        public int ColMap { get; set; }
         public string Code { get; set; }
         public string Name { get; set; }
     }
