@@ -212,10 +212,12 @@
     <Compile Include="Controllers\RmaItemAPIController.cs" />
     <Compile Include="Controllers\SalesValidationController.cs" />
     <Compile Include="Controllers\StockTransferController.cs" />
+    <Compile Include="Controllers\TransactionManagerController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Data\DbCtx.cs" />
     <Compile Include="DTO\CreditNoteRequestDto.cs" />
     <Compile Include="DTO\DiscountRequestDto.cs" />
+    <Compile Include="DTO\MoniepointTxnDto.cs" />
     <Compile Include="DTO\OnlinePaymentDTO.cs" />
     <Compile Include="DTO\PosBeforeSaveDto.cs" />
     <Compile Include="DTO\TemporaryPaymentDataDto.cs" />
@@ -334,6 +336,7 @@
     <Content Include="Scripts\pos\focusposscreenb4save.js" />
     <Content Include="Scripts\pos\posscreen - Copy.js" />
     <Content Include="Scripts\pos\posscreen.js" />
+    <Content Include="Scripts\pos\transactionsmanager.js" />
     <Content Include="Scripts\print.min.js" />
     <Content Include="Scripts\brstockin.js" />
     <Content Include="Scripts\possalerma.js" />
@@ -367,6 +370,7 @@
     <Content Include="Views\POSScreen\Index - Copy.cshtml" />
     <Content Include="Views\POSScreen\OpenPOS.cshtml" />
     <Content Include="Views\POSScreen\OpenPOSBeforeSave.cshtml" />
+    <Content Include="Views\TransactionManager\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -54,6 +54,15 @@ function openPOS(response) {
     console.log("Request Obj", postRequestsProcessed);
     ++postRequestId;
     Focus8WAPI.getFieldValue("getDocumentAmount", ["", "DocNo", "Date", "Outlet", "Cost Center", "CustomerAC", "Member"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, postRequestId);
+
+    ++postRequestId
+    Focus8WAPI.setBodyFieldValue("setGrandTotal", ["GRAND TOTAL"], [100], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, -1, postRequestId);
+    
+}
+function setGrandTotal(response) {
+
+    console.log("Setting grand total");
+    console.log(response)
     
 }
 function getDocumentAmount(response) {
@@ -143,6 +152,7 @@ function getDocPostData(response) {
 
         console.log("Finished loading items, continuing to post");
         let amount = validateDecimal(postShadowItemList.reduce((sum, item) => sum + item.Gross, 0));
+        let discAmt = validateDecimal(postShadowItemList.reduce((sum, item) => sum + item.Discount, 0));
 
         if (amount <= 0) {
             alert("Sale amount not valid !!");
@@ -160,7 +170,7 @@ function getDocPostData(response) {
             }
         }
         ++postRequestId
-        Focus8WAPI.getBodyFieldValue("getGrandTotal", ["", "GRAND TOTAL"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, -1, postRequestId);
+        Focus8WAPI.getBodyFieldValue("getGrandTotal", ["", "GRAND TOTAL", "Additional Charges","Additional Discount"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, -1, postRequestId);
         
     }
     //else {
@@ -179,8 +189,25 @@ function getGrandTotal(response) {
     }
     postRequestsProcessed.push(response.iRequestId);
 
-    let amount = response.data[1].OutputValue;
-    let mainUrl = `${posBaseUrl}/posscreen/openposbeforesave/?compid=${paymentHeaderObj.CompId}&vtype=${paymentHeaderObj.Vtype}&outletid=${paymentHeaderObj.OutletId}&memberid=${paymentHeaderObj.MemberId}&sessionid=${paymentHeaderObj.SessionId}&docno=${paymentHeaderObj.CompId}&amount=${amount}`
+    let grossAmt = validateDecimal(postShadowItemList.reduce((sum, item) => sum + item.Gross, 0));
+
+    let discAmt = validateDecimal(postShadowItemList.reduce((sum, item) => sum + item.Discount, 0));
+
+    let grandTotal = validateDecimal(response.data[1].OutputValue);
+    let additionalCharges = validateDecimal(response.data[2].OutputValue);
+    let additionalDisc = validateDecimal(response.data[3].OutputValue);
+
+    let finalTotal = grossAmt - discAmt + additionalCharges - additionalDisc;
+
+    if (finalTotal <= 0) {
+
+        alert("Total amount is less or equal zero,cannot proceed!!!");
+        isProcessing = false;
+        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+        return;
+    }
+
+    let mainUrl = `${posBaseUrl}/posscreen/openposbeforesave/?compid=${paymentHeaderObj.CompId}&vtype=${paymentHeaderObj.Vtype}&outletid=${paymentHeaderObj.OutletId}&memberid=${paymentHeaderObj.MemberId}&sessionid=${paymentHeaderObj.SessionId}&docno=${paymentHeaderObj.CompId}&amount=${finalTotal}`
 
     discountVoucherList = [];
     Focus8WAPI.openPopup(mainUrl);

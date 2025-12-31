@@ -335,8 +335,8 @@ function posSystem() {
             },
             updateOtherPayments(paymentMode, tableLineData) {
 
-                console.log(tableLineData);
-                if (paymentMode.AllowedRows == paymentMode.PayList.length + 1 && paymentMode.TypeSelect != this.paymentTypes.Integration) {
+                console.log(paymentMode);
+                if (paymentMode.AllowedRows == paymentMode.PayList.length  && paymentMode.TypeSelect != this.paymentTypes.Integration) {
                     this.showAlertMessage("Maximum allowed entries reached !!", "warning");
                     tableLineData.IsSelected = false;
                     return;

@@ -54,10 +54,11 @@ namespace FocusSalesModule.Controllers
                 string  validationId = WebConfigurationManager.AppSettings["ValidationId"].ToString();
                
                 var computedSignature = ComputeHmacSha256(payload, validationId);
+                bool isTxnValid = true;
                 if (!SlowEquals(computedSignature, signature))
                 {
                     Logger.writeLog($"Payment was invalid, received signature is {webhookId}, Computed signature is {computedSignature}");
-
+                    isTxnValid = false;
                     //return Unauthorized();
                 }
 
@@ -65,7 +66,7 @@ namespace FocusSalesModule.Controllers
 
                 try
                 {
-                    string qry = MoneyPointQuery.InsertTransactionsTable(requestDTO, webhookId, timestamp);
+                    string qry = MoneyPointQuery.InsertTransactionsTable(requestDTO, webhookId, timestamp, isTxnValid);
                     Logger.writeLog(qry);
                     //Insert into database
                     DbCtx<Int32>.ExecuteNonQry(compId , qry);

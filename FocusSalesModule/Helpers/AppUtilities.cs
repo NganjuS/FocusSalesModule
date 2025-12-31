@@ -16,6 +16,7 @@ namespace FocusSalesModule.Helpers
         {
             None = 0, Moniepoint =1, Easybuy = 2, Sentinal = 3
         }
+        public const bool MergePaymentMode = true;
         public enum FieldTypes
         {
             Discount = 1
@@ -167,40 +168,75 @@ namespace FocusSalesModule.Helpers
             string fieldlistqry = $"SELECT upper(COLUMN_NAME) COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'tCore_HeaderData{vtype}_0'";
             List<string> fieldList = DbCtx<String>.GetObjList(compid, fieldlistqry);
             string qry = "";
-            var paymentTypeList = billSettlement.Select(x => x.PaymentType).Distinct().ToList();
-            foreach (var paymentType in paymentTypeList)
+            var paymentMethodList = billSettlement.Select(x => x.PaymentMethodId).Distinct().ToList();
+            foreach (var paymentMethod in paymentMethodList)
             {
 
-                var paymentList = billSettlement.Where(x => x.PaymentType == paymentType).ToList();
+                
                 int i = 0;
                 string[] extList = { "", "A", "B", "C", "D" , "E" , "F", "G" };
-                foreach (var payment in paymentList)
-                {
-                    string pname = DbCtx<string>.GetScalar(compid, $"select sName from mCore_paymenttype where imasterid = {payment.PaymentMethodId}");
-                    string strippedName = AppUtilities.StripExtraChar(pname);                    
-                    string ext = extList[i];
-                    string cashreferencefield = $"{strippedName}Reference{ext}";
-                    string cashamountfield = $"{strippedName}Amount{ext}";
-                    string cashaccountfield = $"{strippedName}Account{ext}";
+                string pname = DbCtx<string>.GetScalar(compid, $"select sName from mCore_paymenttype where imasterid = {paymentMethod}");
+                string strippedName = AppUtilities.StripExtraChar(pname);
 
-                    if (fieldList.Contains(cashreferencefield.ToUpper()))
+                if (AppUtilities.MergePaymentMode)
+                {
+                                       
+                    string txnreferencefield = $"{strippedName}Reference";
+                    string txnamountfield = $"{strippedName}Amount";
+                    string txnaccountfield = $"{strippedName}Account";
+                    decimal amt = billSettlement.Where(x => x.PaymentMethodId == paymentMethod).Sum(x => x.Amount);
+                   string reference = String.Join(",", billSettlement.Where(x => x.PaymentMethodId == paymentMethod).Select(x => x.Reference).ToList());
+
+                    int accountId = billSettlement.Where(x => x.PaymentMethodId == paymentMethod).FirstOrDefault().SelectedAccount;
+
+                    if (fieldList.Contains(txnreferencefield.ToUpper()))
                     {
                         string comma = qry.Length > 0 ? "," : "";
-                        qry += $"{comma}{cashreferencefield} = '{payment.Reference}'";
+                        qry += $"{comma}{txnreferencefield} = '{reference}'";
                     }
-                    if (fieldList.Contains(cashamountfield.ToUpper()))
+                    if (fieldList.Contains(txnamountfield.ToUpper()))
                     {
                         string comma = qry.Length > 0 ? "," : "";
-                        qry += $"{comma}{cashamountfield} = '{payment.Amount}'";
+                        qry += $"{comma}{txnamountfield} = '{amt}'";
                     }
-                    if (fieldList.Contains(cashaccountfield.ToUpper()))
+                    if (fieldList.Contains(txnaccountfield.ToUpper()))
                     {
                         string comma = qry.Length > 0 ? "," : "";
-                        qry += $"{comma}{cashaccountfield} = '{payment.SelectedAccount}'";
+                        qry += $"{comma}{txnaccountfield} = '{accountId}'";
                     }
                     ++i;
                 }
-                      
+                else
+                {
+                    var paymentList = billSettlement.Where(x => x.PaymentMethodId == paymentMethod).ToList();
+                    foreach (var payment in paymentList)
+                    {
+                        //string pname = DbCtx<string>.GetScalar(compid, $"select sName from mCore_paymenttype where imasterid = {payment.PaymentMethodId}");
+                        //string strippedName = AppUtilities.StripExtraChar(pname);
+                        string ext = extList[i];
+                        string cashreferencefield = $"{strippedName}Reference{ext}";
+                        string cashamountfield = $"{strippedName}Amount{ext}";
+                        string cashaccountfield = $"{strippedName}Account{ext}";
+
+                        if (fieldList.Contains(cashreferencefield.ToUpper()))
+                        {
+                            string comma = qry.Length > 0 ? "," : "";
+                            qry += $"{comma}{cashreferencefield} = '{payment.Reference}'";
+                        }
+                        if (fieldList.Contains(cashamountfield.ToUpper()))
+                        {
+                            string comma = qry.Length > 0 ? "," : "";
+                            qry += $"{comma}{cashamountfield} = '{payment.Amount}'";
+                        }
+                        if (fieldList.Contains(cashaccountfield.ToUpper()))
+                        {
+                            string comma = qry.Length > 0 ? "," : "";
+                            qry += $"{comma}{cashaccountfield} = '{payment.SelectedAccount}'";
+                        }
+                        ++i;
+                    }
+                }
+                                        
             }
             return qry;
         }

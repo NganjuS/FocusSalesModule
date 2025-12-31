@@ -451,6 +451,7 @@ var shadowItemList = [];
 var validRows = 0;
 var lineRequestsProcessed = [];
 var lineRequestId = 0;
+var curDocNo = "";
 function resetDefaults() {
 
     lineRequestsProcessed = [];
@@ -618,16 +619,16 @@ function getRma(response) {
         return;
     }
 
-    if (outletid == 0) {
+    //if (outletid == 0) {
 
-        showMessageAlert("Select outlet to continue !!! ","warning");
-        return;
-    }
-    if (memberid == 0) {
+    //    showMessageAlert("Select outlet to continue !!! ","warning");
+    //    return;
+    //}
+    //if (memberid == 0) {
 
-        showMessageAlert("Select member to continue !!! ", "warning");
-        return;
-    }
+    //    showMessageAlert("Select member to continue !!! ", "warning");
+    //    return;
+    //}
 
     searchRma(rmano, outletid, memberid)
 
@@ -660,12 +661,18 @@ async function searchRma(rmano, outletid,memberid)
            
             if (validRows == 0) {
                 
-                
+                curDocNo = dataObj.data.DocNo
                 setLineItemsToDoc(1, dataObj.data)
                 
             }
             else {
-                
+
+                if (curDocNo != dataObj.data.DocNo) {
+
+                    showMessageAlert("Cannot mismatch documents", "error");
+                    return;
+                }
+               
                 getExistingItems(dataObj.data)
             }
             
@@ -761,13 +768,13 @@ function getDocBodyData(response) {
 }
 function setHeaderDetails(item) {
     ++requestId;
-    Focus8WAPI.setFieldValue("afterLineAdded", ["POSDocNo"], [item.DocNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    Focus8WAPI.setFieldValue("afterLineAdded", ["CustomerAC", "Outlet", "Cost Center", "Member", "Employee", "POSDocNo"], [item.CustomerId, item.OutletId, item.CostCenterId, item.MemberId,item.EmployeeId,item.DocNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
 function setLineItemsToDoc(rowNo, item) {
 
     ++requestId;
     let gross = parseInt(item.Qty) * parseFloat(item.Price);
-    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "Rate", "Gross", "RMA", "VoucherCode", "Voucher Discount"], [item.ItemId, item.UnitId, item.Qty, item.Price, gross, item.RmaNo, item.VoucherCode, item.VoucherDiscount], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "Rate", "Gross", "RMA", "Discount","VoucherCode", "Voucher Discount"], [item.ItemId, item.UnitId, item.Qty, item.Price, gross, item.RmaNo, item.Discount,item.VoucherCode, item.VoucherDiscount], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
 }
 function afterHeaderAdded(response) {
     setRmaSearchFocus();
