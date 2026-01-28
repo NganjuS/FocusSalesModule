@@ -61,18 +61,37 @@ namespace FocusSalesModule.Controllers
             {
                 
 
-                //Check if another sales return has been done for this rma
-                //int rmacount = DbCtx<Int32>.GetObj(compid, ProductQueries.GetSalesReturnCount(rmano));
-
-                //if (rmacount > 0)
-                //{
-                //    hashData.result = -1;
-                //    hashData.message = "Another sales return has been done for this rma !! ";
-                //    return hashData;
-                //}
-                //Get voucher discount column
-
                 hashData.data = DbCtx<dynamic>.GetObj(compid, ProductQueries.GetSalesReturnRmaData(rmano));
+
+                if (hashData.data == null)
+                {
+                    hashData.result = -1;
+                    hashData.message = "Rma number is not valid or was not found ";
+                    return hashData;
+                }
+
+
+                hashData.result = 1;
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                hashData.result = -1;
+                hashData.message = ex.Message;
+            }
+            return hashData;
+        }
+        [HttpGet]
+        [Route("loadsalesdata")]
+        public HashData<dynamic> LoadSalesData(int compid, int vtype, string docnosearch)
+        {
+            HashData<dynamic> hashData = new HashData<dynamic>();
+            try
+            {
+
+
+                hashData.data = DbCtx<dynamic>.GetObj(compid, ProductQueries.GetSalesReturnRmaData(docnosearch));
 
                 if (hashData.data == null)
                 {
@@ -157,12 +176,12 @@ namespace FocusSalesModule.Controllers
             HashData<Product> hashData = new HashData<Product>();
             try
             {
-                
-                hashData.data = DbCtx<Product>.GetObj(compid, ProductQueries.GetBrStockIn(rmano));
-                if (hashData.data == null)
+                List<Product> products = DbCtx<Product>.GetObjList(compid, ProductQueries.GetBrStockIn(rmano));
+       
+                if (products.Count == 0)
                 {
                     hashData.result = -1;
-                    hashData.message = "Rma number is not valid";
+                    hashData.message = "Rma was not found";
                     return hashData;
                 }
                 //Check if already posted

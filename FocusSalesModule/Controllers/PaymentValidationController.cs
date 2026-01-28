@@ -57,7 +57,7 @@ namespace FocusSalesModule.Controllers
                 bool isTxnValid = true;
                 if (!SlowEquals(computedSignature, signature))
                 {
-                    Logger.writeLog($"Payment was invalid, received signature is {webhookId}, Computed signature is {computedSignature}");
+                    Logger.writeLog($"Payment was invalid, received signature is {signature}, Computed signature is {computedSignature}");
                     isTxnValid = false;
                     //return Unauthorized();
                 }

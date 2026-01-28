@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Screen</title>
+    <title>Advance Receipt</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="~/Content/select2.min.css" />
@@ -63,26 +63,22 @@
 
                             <div class="hstack gap-3" style="float: left;">
                                 <div>
-                                    <span class="fw-bold fs-5" style="color:#0073AA;" x-text="outstandingDesc"> </span>
+                                    <span class="fw-bold fs-5" style="color:#0073AA;" > Advance Amount</span>
                                     <br />
-                                    <span class="text-info fs-5 fw-bold" x-text="formatNum(outstandingAmt)">
+                                    <span class="text-info fs-5 fw-bold" x-text="formatNum(totalReceivedAmt)">
 
                                     </span>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <span class="fs-5 fw-bold" style="color:#0073AA;"> Paid Amt:</span>
+                            @*<span class="fs-5 fw-bold" style="color:#0073AA;"> Paid Amt:</span>
                             <br />
-                            <span class="text-primary fs-5 fw-bold" x-text="formatNum(totalPaid)"></span>
+                            <span class="text-primary fs-5 fw-bold" x-text="formatNum(totalInvoiceAmt)"></span>*@
                         </div>
-                        <div class="col-md-3">
-                            <span class="fs-5 fw-bold" style="color:#0073AA;"> Sale Amt:</span>
-                            <br />
-                            <span class="text-success fs-5 fw-bold" x-text="formatNum(totalInvoiceAmt)"></span>
-                        </div>
+                  
 
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <div class="hstack gap-1" style="float: right;">
                                 <button class="btn" @@click="saveTxn" :disabled="isDisabled">
                                     <span class="spinner-border spinner-border-sm" role="status" :hidden="!isDisabled" aria-hidden="true"></span>
@@ -91,7 +87,7 @@
                                         <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z" />
                                     </svg>
                                     <br />
-                                    Save
+                                    Load & Continue
                                 </button>
                                 <button class="btn" @@click="closePopup">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
@@ -123,7 +119,6 @@
                                 <template x-for="(paymentMode, index) in paymentModes" :key="index">
                                     <div class="tab-pane fade" :class="{'show active': index == 0}" :id="'v-pills-home'+index" role="tabpanel" aria-labelledby="v-pills-home-tab">
                                         @*<h3 x-text="paymentMode.PaymentType"></h3>*@
-                                        <!--Notification bar-->
                                         <div class="hstack gap-1" style="" x-show="paymentMode.DisplayMessage != null && paymentMode.DisplayMessage.length > 0">
                                             <div class="alert alert-primary fw-bold text-danger" role="alert" x-text="paymentMode.DisplayMessage" style="padding: 5px;"></div>
                                         </div>
@@ -134,32 +129,32 @@
                                             </div>
                                             <div class="row">
                                                 <div class="col-md-12 hstack gap-1">
-                                         
+
                                                     <div class="input-group flex-nowrap input-group-sm" style="margin-top: 8px; width: 400px;" x-show="paymentMode.TypeSelect == paymentTypes.Bank || paymentMode.TypeSelect == paymentTypes.Cash">
                                                         <span class="input-group-text" id="addon-wrapping">Amount</span>
-                                                        <input type="number" class="form-control" aria-label="Amount" aria-describedby="addon-wrapping" x-model.number="paymentMode.Amount" @@keyup="updateTotals(paymentMode)">
+                                                        <input type="number" class="form-control" aria-label="Amount" aria-describedby="addon-wrapping" x-model.number="paymentMode.Amount" @@keyup="setAdvancePaymentAmt(paymentMode , {})">
                                                     </div>
 
                                                     @*<button style="margin-top: 15px;" class="btn" x-show="paymentMode.TypeSelect == paymentTypes.Cash" @@click="setPendingAmount(paymentMode)">
-                                                    <i class="bi bi-hand-index-thumb"></i>
-                                                    Set
-                                                </button>*@
+                        <i class="bi bi-hand-index-thumb"></i>
+                        Set
+                    </button>*@
 
                                                     <div class="input-group flex-nowrap input-group-sm" x-show="paymentMode.ShowReference ||  paymentMode.TypeSelect ==  paymentTypes.Bank || paymentMode.ManualValidate" style="margin-top: 8px;">
                                                         <span class="input-group-text" id="addon-wrapping">Reference</span>
                                                         <input type="text" class="form-control" aria-label="Reference" x-model="paymentMode.Reference" aria-describedby="addon-wrapping">
                                                     </div>
-                                                    <button class="btn" x-show="paymentMode.TypeSelect == paymentTypes.Bank " @@click="updateOtherPayments(paymentMode,{ IsSelected : true})">
+                                                    <button class="btn" x-show="paymentMode.TypeSelect == paymentTypes.Bank " @@click="updateBankPayments(paymentMode,{ IsSelected : true})">
                                                         <i class="bi bi-plus-circle"></i>
                                                         <br />
                                                         Add
                                                     </button>
 
                                                     <button class="btn" x-show="paymentMode.TypeSelect == paymentTypes.Integration && paymentMode.ManualValidate == true" @@click="loadManualSearchPayments(paymentMode)">
-                                                    <i class="bi bi-cash"></i>
-                                                    <br />
-                                                    Load
-                                                        </button>
+                                                        <i class="bi bi-cash"></i>
+                                                        <br />
+                                                        Load
+                                                    </button>
                                                 </div>
 
                                             </div>
@@ -193,7 +188,7 @@
                                             </table>
                                             <!--End table-->
                                             <!--Discount Table -->
-                                            <table class="table table-bordered table-sm" x-show="paymentMode.TypeSelect == paymentTypes.DiscountVoucher || paymentMode.TypeSelect == paymentTypes.CreditNote || paymentMode.TypeSelect == paymentTypes.AdvancePayment">
+                                            <table class="table table-bordered table-sm" x-show="paymentMode.TypeSelect == paymentTypes.DiscountVoucher || paymentMode.TypeSelect == paymentTypes.CreditNote ">
                                                 <thead style="color: white; background-color: #0073AA;">
                                                     <tr>
                                                         <th style="width: 20px; color: white; background-color: #0073AA;">#</th>
@@ -201,7 +196,7 @@
                                                         <th style="color: white; background-color: #0073AA;">Voucher No</th>
                                                         <th style="color: white; background-color: #0073AA;">Amount</th>
                                                         <th style="color: white; background-color: #0073AA;">Orig. Amt</th>
-                                                        <th style="color: white; background-color: #0073AA;" x-show="paymentMode.TypeSelect == paymentTypes.CreditNote || paymentMode.TypeSelect == paymentTypes.AdvancePayment">Posted</th>
+                                                        <th style="color: white; background-color: #0073AA;" x-show="paymentMode.TypeSelect == paymentTypes.CreditNote">Posted</th>
 
                                                     </tr>
                                                 </thead>
@@ -210,12 +205,12 @@
                                                         <tr>
                                                             <td x-text="idx + 1"></td>
                                                             <td>
-                                                                <input type="checkbox" x-model="disc.IsSelected" @@change="addDiscountAmount(paymentMode,disc)" />
+                                                                <input type="checkbox" x-model="disc.IsSelected" @@change="addDiscCreditNoteAmt(paymentMode,disc)" />
                                                             </td>
                                                             <td scope="row" x-text="disc.Reference"></td>
                                                             <td scope="row" x-text="getAmount(disc.Amount)"></td>
                                                             <td scope="row" x-text="getAmount(disc.FullAmt)"></td>
-                                                            <td scope="row" x-text="getAmount(disc.PostedAmt)" x-show="paymentMode.TypeSelect == paymentTypes.CreditNote || paymentMode.TypeSelect == paymentTypes.AdvancePayment"></td>
+                                                            <td scope="row" x-text="getAmount(disc.PostedAmt)" x-show="paymentMode.TypeSelect == paymentTypes.CreditNote"></td>
                                                         </tr>
                                                     </template>
                                                 </tbody>
@@ -224,7 +219,7 @@
                                             <!--Online Payment -->
                                             <div x-show="paymentMode.TypeSelect == paymentTypes.Integration">
                                                 <div class="hstack gap-1">
-                                                    <input type="search" class="form-control" style="width: 180px;" placeholder="search ..." x-model="searchVal" @@input="debouncedInput(paymentMode)" x-show="paymentMode.PayList.length > 0 && !paymentMode.ManualValidate"/>
+                                                    <input type="search" class="form-control" style="width: 180px;" placeholder="search ..." x-model="searchVal" @@input="debouncedInput(paymentMode)" x-show="paymentMode.PayList.length > 0 && !paymentMode.ManualValidate" />
                                                     <button style="width: 30px;" class="btn" @@click="refreshData(paymentMode)" x-show="paymentMode.PayList.length > 0 && !paymentMode.ManualValidate">
                                                         <i class="bi bi-arrow-clockwise"></i>
                                                     </button>
@@ -277,13 +272,13 @@
                                                                 <th style="width: 150px; color: white; background-color: #0073AA;">Amount</th>
 
                                                                 <th style="width: 30px; color: white; background-color: #0073AA;" x-show="paymentMode.ManualValidate">##</th>
-</thead>
+                                                        </thead>
                                                         <tbody>
                                                             <template x-for="(onlinePay, idx) in paymentMode.PayList" :key="idx">
                                                                 <tr>
                                                                     <td x-text="((currentPage-1)*pagingData.pageSize)+idx+1"></td>
                                                                     <td>
-                                                                        <input type="checkbox" x-model="onlinePay.IsSelected" @@change="updateOtherPayments(paymentMode,onlinePay)" />
+                                                                        <input type="checkbox" x-model="onlinePay.IsSelected" @@change="addDiscCreditNoteAmt(paymentMode,onlinePay)" />
                                                                     </td>
                                                                     <td style="min-width: 300px;" scope="row" x-text="onlinePay.Reference" class="wrap"></td>
                                                                     <td style="width: 150px;" scope="row" x-text="new Date(onlinePay.TransactionTime).toLocaleString()"></td>
@@ -324,7 +319,7 @@
     <script src="~/Scripts/sweetalert2.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script defer src="~/Scripts/alpine.min.js"></script>
-    <script src="~/Scripts/pos/focusposscreenb4save.js?v=789974uis8j"></script>
+    <script src="~/Scripts/pos/advancereceipt.js?v=7899d55d400is8j"></script>
 
 </body>
 </html>

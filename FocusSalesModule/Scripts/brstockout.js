@@ -646,7 +646,7 @@ async function searchRma()
     try
     {
        
-        let url = `/focussalesmodule/api/sales/brstockinrma/?compid=${companyid}&outletid=${outletid}&rmano=${rmano}&stkout=`;
+        let url = `/focussalesmodule/api/sales/brstockinrma/?compid=${companyid}&outletid=${outletid}&rmano=${rmano}`;
         let response = await fetch(url);
 
         if (!response.ok) {

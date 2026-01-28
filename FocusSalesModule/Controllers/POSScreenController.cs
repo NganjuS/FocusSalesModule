@@ -53,6 +53,20 @@ namespace FocusSalesModule.Controllers
 
             return View();
         }
+        public ActionResult AdvanceReceiptBeforeSave(int compid, int vtype,  int memberid, string sessionid, string docno, int outletid)
+        {
+           
+
+            ViewBag.compid = compid;
+            ViewBag.sessionid = sessionid;
+            ViewBag.outletid = outletid;
+            ViewBag.memberid = memberid;
+            ViewBag.vtype = vtype;
+            ViewBag.docno = docno;
+            ViewBag.netamt = 0;
+
+            return View();
+        }
         public ActionResult PrintCashSaleByDocNo(string docNo, int compid = 72)
         {
             ViewBag.compid = compid;

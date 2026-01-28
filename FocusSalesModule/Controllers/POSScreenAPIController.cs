@@ -104,7 +104,34 @@ namespace FocusSalesModule.Controllers
             }
             return resp;
         }
-        
+        [HttpGet]
+        [Route("advancepaymenttypes")]
+        public HashData<dynamic> GetAdvancePaymentTypes(int compid, int vtype, int outletid)
+        {
+            HashData<dynamic> resp = new HashData<dynamic>();
+            try
+            {
+                POSInitData posInitData = new POSInitData();
+
+                posInitData.DiscountVouchers = DbCtx<DiscountModel>.GetObjList(compid, DiscountVoucherQry.GetDiscountVoucherQuery(
+                    "", vtype, PosReceiptScreenMain.GetReceiptVtype(compid)));
+
+                posInitData.PaymentTypes = DbCtx<dynamic>.GetObjList(compid, TxnQueries.GetAdvancedPaymentTypesQry(outletid));
+
+                resp.data = posInitData;
+                resp.result = 1;
+
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
+
         [HttpGet]
         [Route("discountvoucher")]
         public HashData<dynamic> GetDiscountVoucher(int compid,DateTime txnDate,string discVoucherNo)

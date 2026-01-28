@@ -235,9 +235,7 @@
         getAmount(num) {
             return isNaN(parseFloat(num)) ? 0.00 : parseFloat(num);
         },
-        formatNum(val) {
-            return (val).toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        },
+    
         closeWin() {
             Focus8WAPI.gotoHomePage();
         }

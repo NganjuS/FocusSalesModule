@@ -14,13 +14,14 @@ function posSystem() {
             onlinePaymentList : [],
             paymentTypes: {
 
-                Cash: 1, Bank: 2,  Integration :3,  DiscountVoucher : 4 ,  CreditNote : 5
+                Cash: 1, Bank: 2,  Integration :3,  DiscountVoucher : 4 ,  CreditNote : 5, AdvancePayment : 6
             },
             integrationTypes: {
-                None: 0,Moniepoint : 1, Easybuy : 2, Sentinal : 3
+
+                NONE: 0,MONIEPOINT : 1, EASYBUY : 2, SENTINAL : 3
             },
             allowedBankTableView: [],
-            allowedBankTableView: [],
+
             outstandingAmt: 0,
             searchVal: "",
             currentPage: 1,
@@ -50,7 +51,8 @@ function posSystem() {
                 Focus8WAPI.awakeSession();
                 this.sessionid = this.$refs.sessionid.value;
                 this.loadPaymentModes();
-                this.loadCreditNotes();
+                this.setupPrintJs();
+                
                 
                 console.log(window.parent.paymentHeaderObj); 
             },
@@ -135,9 +137,37 @@ function posSystem() {
             },
             setManualOnlineSearch(paymentMode) {
 
+                //this.allowManualValidation(paymentMode);
+
                 if (paymentMode.ManualValidate) {
 
+
+                    paymentMode.ManualValidate = true;
                     paymentMode.PayList = [];
+                    //Swal.fire({
+                    //    title: "Admin Verification",
+                    //    input: "password",
+                    //    showCancelButton: true
+                    //}).then(result => {
+                    //    if (result.isConfirmed) {
+                    //        if (result.value == 'admin12') {
+
+                    //            paymentMode.ManualValidate = true;
+                    //            paymentMode.PayList = [];
+                    //        }
+                    //        else {
+                    //            paymentMode.ManualValidate = false;
+                    //            this.showAlertMessage("Invalid Password !!", "warning");
+                    //        }
+
+                    //    }
+                    //    else if (result.isDismissed) {
+                    //        paymentMode.ManualValidate = false;
+                    //    }
+                    //});
+
+
+                  
                 }
                 else {
                     paymentMode.PayList = [];
@@ -208,7 +238,7 @@ function posSystem() {
                     //let outstandingAmt = this.totalInvoiceAmt - this.getOustandingAmt();
                     if (paymentMode.TypeSelect == this.paymentTypes.Integration) {
 
-                        if (!refreshMode && paymentMode.PayList.length > 0) {
+                        if ((!refreshMode && paymentMode.PayList.length > 0) || paymentMode.ManualValidate) {
                             return;
                         }
                         //console.log(paymentMode);
@@ -229,6 +259,7 @@ function posSystem() {
                                 nwPayList.push({
 
                                     Amount: amt,
+                                    OrigAmount: amt,
                                     IsSelected: false,
                                     Reference: dataList[i].TransactionReference,
                                     TransactionTime: dataList[i].TransactionTime
@@ -258,11 +289,33 @@ function posSystem() {
 
                             
             },
-            addDiscountAmount(paymentMode, discount) {
+            
+            addDiscountAmount(paymentMode, lineObj) {
 
                 let outstandingAmt = this.getOustandingAmt();
-                this.outstandingAmt = this.totalInvoiceAmt - outstandingAmt;
-                this.totalPaid = outstandingAmt;
+                console.log(`Current outstanding amount : ${outstandingAmt}`);
+                if (lineObj.IsSelected) {
+                    
+                    if (this.totalInvoiceAmt - outstandingAmt < 0 ) {
+
+                        let remainderAmt = this.totalInvoiceAmt - (outstandingAmt - lineObj.Amount);
+                        lineObj.Amount = remainderAmt;
+                    }
+
+                    outstandingAmt = this.getOustandingAmt(); 
+                    this.outstandingAmt = this.totalInvoiceAmt - outstandingAmt;
+                    this.totalPaid = outstandingAmt;
+                    debugger;
+                }
+                else {
+                    
+                    lineObj.Amount = lineObj.OrigAmount;
+                    this.totalPaid = outstandingAmt;
+                    this.outstandingAmt = this.totalInvoiceAmt - outstandingAmt;
+                    debugger;
+
+                }
+               
 
             },
             addOnlinePaymentAmt(paymentMode, onlinePay, payList) {
@@ -307,31 +360,33 @@ function posSystem() {
                 
             },
             allowManualValidation(paymentMode) {
+
                 if (paymentMode.ManualValidate) {
 
                     paymentMode.ManualValidate = false;
                     return;
                 }
-                Swal.fire({
-                    title: "Admin Verification",
-                    input: "password",
-                    showCancelButton: true
-                }).then(result => {
-                    if (result.isConfirmed) {
-                        if (result.value == 'admin12') {
 
-                            paymentMode.ManualValidate = true;
-                        }
-                        else {
-                            paymentMode.ManualValidate = false;
-                            this.showAlertMessage("Invalid Password !!", "warning");
-                        }
+                //Swal.fire({
+                //    title: "Admin Verification",
+                //    input: "password",
+                //    showCancelButton: true
+                //}).then(result => {
+                //    if (result.isConfirmed) {
+                //        if (result.value == 'admin12') {
+
+                //            paymentMode.ManualValidate = true;
+                //        }
+                //        else {
+                //            paymentMode.ManualValidate = false;
+                //            this.showAlertMessage("Invalid Password !!", "warning");
+                //        }
                         
-                    }
-                    else if (result.isDismissed) {
-                        paymentMode.ManualValidate = false;
-                    }
-                });
+                //    }
+                //    else if (result.isDismissed) {
+                //        paymentMode.ManualValidate = false;
+                //    }
+                //});
             },
             updateOtherPayments(paymentMode, tableLineData) {
 
@@ -411,6 +466,8 @@ function posSystem() {
                     }
                     else {
 
+
+
                         totalReceived += this.paymentModes[i].PayList.filter(obj => obj.IsSelected == true).reduce((sum, item) => sum + item.Amount, 0);
                     }
                    
@@ -450,7 +507,13 @@ function posSystem() {
                             this.paymentModes[i].PayList = [];
                             this.paymentModes[i].ManualValidate = false;
                         }
+
+                        if (this.paymentModes[0].TypeSelect == this.paymentTypes.Integration) {
+                            this.loadOnlinePayments(this.paymentModes[0], {}, false)
+                        }
+                        this.loadCreditNotes();
                         this.loadDiscounts();
+                        this.loadAdvanceReceipt();
                     }
                     else {
                         this.showAlertMessage(dataObj.message,"warning");
@@ -498,10 +561,14 @@ function posSystem() {
                         for (let i = 0; i < dataObj.datalist.length; i++) { 
                             
                             let nwOBj = {
+
                                 ItemId: dataObj.datalist[i].ItemId,
                                 IsSelected: false,
                                 Reference: dataObj.datalist[i].Name,
                                 Amount: this.getAmount(dataObj.datalist[i].DiscountValue),
+                                OrigAmount: this.getAmount(dataObj.datalist[i].DiscountValue),
+                                PostedAmt: this.getAmount(dataObj.datalist[i].PostedAmt),
+                                FullAmt: this.getAmount(dataObj.datalist[i].FullAmt),
                                 AccountId: dataObj.datalist[i].SelectedAccount
                             }
 
@@ -515,7 +582,7 @@ function posSystem() {
             },
             async loadCreditNotes() {
 
-                console.log(window.parent.postShadowItemList);
+               // console.log(window.parent.postShadowItemList);
                 let itemList = window.parent.postShadowItemList.flatMap(x => x.RMA.map(String));
                 
                 let postObj = {
@@ -538,23 +605,28 @@ function posSystem() {
                 }
 
                 let dataObj = await response.json();
-               
+                console.log(dataObj);
                 if (dataObj.result == 1) {
-
+                    
                     if (dataObj.datalist.length == 0) {
+                        debugger;
                         return;
                     }
                     var creditNoteObj = this.paymentModes.filter(obj => obj.TypeSelect == this.paymentTypes.CreditNote);
-
+                    debugger;
                     if (creditNoteObj.length > 0) {
-
+                        debugger;
                         for (let i = 0; i < dataObj.datalist.length; i++) {
 
-                            console.log(dataObj.datalist);
+                            //console.log(dataObj.datalist);
                             let nwOBj = {
+
                                 IsSelected: false,
                                 Reference: dataObj.datalist[i].Reference,
-                                Amount: this.getAmount(dataObj.datalist[i].Amount)
+                                Amount: this.getAmount(dataObj.datalist[i].Amount),
+                                OrigAmount: this.getAmount(dataObj.datalist[i].Amount),
+                                PostedAmt: this.getAmount(dataObj.datalist[i].PostedAmt),
+                                FullAmt: this.getAmount(dataObj.datalist[i].FullAmt)
                             }
 
                             creditNoteObj[0].PayList.push(nwOBj);
@@ -562,6 +634,63 @@ function posSystem() {
 
                     }
                     console.log(creditNoteObj[0]);
+
+                }
+            },
+            async loadAdvanceReceipt() {
+
+                // console.log(window.parent.postShadowItemList);
+                let itemList = window.parent.postShadowItemList.flatMap(x => x.RMA.map(String));
+
+                let postObj = {
+                    TxnDate: window.parent.paymentHeaderObj.DocDate,
+                    RmaNoList: itemList
+                };
+                console.log(postObj);
+                let url = `${posBaseUrl}api/salespayments/availableadvancereceipts/?compid=${this.compid}&vtype=${this.vtype}&outletid=${this.outletid}&memberid=${this.memberid}`;
+                console.log(url);
+                let response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(postObj)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                let dataObj = await response.json();
+                
+                if (dataObj.result == 1) {
+
+                    if (dataObj.datalist.length == 0) {
+                        debugger;
+                        return;
+                    }
+                    var advanceReceiptObj = this.paymentModes.filter(obj => obj.TypeSelect == this.paymentTypes.AdvancePayment);
+                    debugger;
+                    if (advanceReceiptObj.length > 0) {
+                        debugger;
+                        for (let i = 0; i < dataObj.datalist.length; i++) {
+
+                            //console.log(dataObj.datalist);
+                            let nwOBj = {
+
+                                IsSelected: false,
+                                Reference: dataObj.datalist[i].Reference,
+                                Amount: this.getAmount(dataObj.datalist[i].Amount),
+                                OrigAmount: this.getAmount(dataObj.datalist[i].Amount),
+                                PostedAmt: this.getAmount(dataObj.datalist[i].PostedAmt),
+                                FullAmt: this.getAmount(dataObj.datalist[i].FullAmt)
+                            }
+
+                            advanceReceiptObj[0].PayList.push(nwOBj);
+                        }
+
+                    }
+                    console.log(advanceReceiptObj[0]);
 
                 }
             },
@@ -707,7 +836,25 @@ function posSystem() {
                         return paymentMode.DefaultOnlineAccountName;
                     
                 }
-            }
+            },
+           setupPrintJs() {
 
+                    if (!document.querySelector('link[href$="print.min.css"]')) {
+                        const link = document.createElement("link");
+                        link.rel = "stylesheet";
+                        link.href = "/focussalesmodule/content/print.min.css";
+                        document.head.appendChild(link);
+                    }
+
+                    if (!document.querySelector('script[src$="print.min.js"]')) {
+                        const script = document.createElement("script");
+                        script.src = "/focussalesmodule/scripts/print.min.js";
+                        script.onload = () => {
+
+                        };
+                        document.body.appendChild(script);
+                    }
+        
+                }
    }
 }

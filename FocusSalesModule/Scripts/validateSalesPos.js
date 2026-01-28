@@ -207,7 +207,7 @@ function getGrandTotal(response) {
         return;
     }
 
-    let mainUrl = `${posBaseUrl}/posscreen/openposbeforesave/?compid=${paymentHeaderObj.CompId}&vtype=${paymentHeaderObj.Vtype}&outletid=${paymentHeaderObj.OutletId}&memberid=${paymentHeaderObj.MemberId}&sessionid=${paymentHeaderObj.SessionId}&docno=${paymentHeaderObj.CompId}&amount=${finalTotal}`
+    let mainUrl = `${posBaseUrl}/posscreen/openposbeforesave/?compid=${paymentHeaderObj.CompId}&vtype=${paymentHeaderObj.Vtype}&outletid=${paymentHeaderObj.OutletId}&memberid=${paymentHeaderObj.MemberId}&sessionid=${paymentHeaderObj.SessionId}&docno=${paymentHeaderObj.DocNo}&amount=${finalTotal}`
 
     discountVoucherList = [];
     Focus8WAPI.openPopup(mainUrl);

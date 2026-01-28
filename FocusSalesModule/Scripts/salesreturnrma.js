@@ -906,3 +906,63 @@ function showMessageAlert(mssg, status) {
                 }
             });
 }
+function initDocNoSearch(response)
+{
+    ++requestId;
+
+    Focus8WAPI.getFieldValue("populateScreenData", ["", "DocNo", "DocNoSearch"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+}
+function populateScreenData(response) {
+
+    if (isRequestProcessed(response.iRequestId)) {
+        return;
+    }
+    requestsProcessed.push(response.iRequestId);
+    let compid = response.data[0].CompanyId;
+    let sessid = response.data[0].SessionId;
+    let vttype = response.data[0].iVoucherType;
+    let docNo = response.data[1].FieldValue;
+    let docNoSearch = response.data[2].FieldValue;
+
+    if (docNoSearch.Trim().length == 0) {
+        return;
+    }
+
+    loadData(compid, vttype, docNoSearch)
+
+}
+function loadData(compid, vttype, docNoSearch) {
+    let url = `/focussalesmodule/api/sales/loadsalesdata/?compid=${compyid}&vtype=${vttype}&docnosearch=${docNoSearch}`;
+    debugger;
+    let response = await fetch(url);
+
+    let dataObj = await response.json();
+
+    if (dataObj.result == -1) {
+
+        alert(dataObj.message);
+        return;
+    }
+    else {
+
+        //setHeaderDetails(dataObj.data);
+
+        //if (validRows == 0) {
+
+        //    curDocNo = dataObj.data.DocNo
+        //    setLineItemsToDoc(1, dataObj.data)
+
+        //}
+        //else {
+
+        //    if (curDocNo != dataObj.data.DocNo) {
+
+        //        showMessageAlert("Cannot mismatch documents", "error");
+        //        return;
+        //    }
+
+        //    getExistingItems(dataObj.data)
+        //}
+
+    }
+}

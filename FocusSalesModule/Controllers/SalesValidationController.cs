@@ -60,7 +60,7 @@ namespace FocusSalesModule.Controllers
             try
             {
 
-                resp.datalist = DbCtx<OnlinePaymentDTO>.GetObjList(compid, PaymentDetailsQueries.GetManualSearchPayment(outletid, reference));
+                resp.datalist = DbCtx<OnlinePaymentDTO>.GetObjList(compid, PaymentDetailsQueries.GetManualSearchPayment(outletid, integrationtype,reference));
                 resp.result = 1;
 
             }
@@ -82,12 +82,11 @@ namespace FocusSalesModule.Controllers
             HashData<PagingStatus<OnlinePaymentDTO>> resp = new HashData<PagingStatus<OnlinePaymentDTO>>();
             try
             {
-                if(integrationtype == (Int32)IntegrationTypes.Moniepoint)
-                {
-                    resp.data = OnlinePaymentVM.GetPagedOnlinePayments(compid, outletid, maxmin,pageno, pagesize, searchval);
-                }
                
-                resp.result = 1;
+                    resp.data = OnlinePaymentVM.GetPagedOnlinePayments(compid, outletid, integrationtype, maxmin,pageno, pagesize, searchval);
+               
+
+                    resp.result = 1;
 
             }
             catch (Exception ex)
@@ -148,6 +147,28 @@ namespace FocusSalesModule.Controllers
             }
             return resp;
         }
+        [HttpPost]
+        [Route("availableadvancereceipts")]
+        public HashData<dynamic> GetAvailableAdvanceReceipts(int compid, int vtype, int outletid, int memberid, CreditNoteRequestDto requestDto)
+        {
+            HashData<dynamic> resp = new HashData<dynamic>();
+            try
+            {
+            
+                resp.datalist = DbCtx<dynamic>.GetObjList(compid, PaymentDetailsQueries.GetAdvanceReceipts(memberid));
+
+                resp.result = 1;
+
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
         [HttpGet]
         [Route("paymentdetails")]
         public HashData<dynamic> GetPaymentDetails(int compid, int outletid)
@@ -158,6 +179,50 @@ namespace FocusSalesModule.Controllers
 
                 resp.datalist = DbCtx<dynamic>.GetObjList(compid, PaymentDetailsQueries.GetDetails(outletid));
                 resp.result = 1;
+
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
+        [HttpGet]
+        [Route("updateadvancepayment")]
+        public HashData<string> GetUpdateAdvancePayment(int compid, string sessionid, string docno, int vtype)
+        {
+            HashData<string> resp = new HashData<string>();
+            try
+            {
+                DbCtx<Int32>.ExecuteNonQry(compid , AdvanceReceiptQueries.UpdateOnlinePaymentsStatus(vtype , docno, 1));
+                resp.result = 1;
+
+
+
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
+        [HttpGet]
+        [Route("advancepaymentafterdelete")]
+        public HashData<string> AdvancePaymentAfterDelete(int compid, string sessionid, string docno, int vtype)
+        {
+            HashData<string> resp = new HashData<string>();
+            try
+            {
+                DbCtx<Int32>.ExecuteNonQry(compid, AdvanceReceiptQueries.UpdateOnlinePaymentsStatus(vtype, docno,0));
+                resp.result = 1;
+
+
 
             }
             catch (Exception ex)
@@ -226,7 +291,7 @@ namespace FocusSalesModule.Controllers
 
                     string setpaymentisdone = $"update fsm_TemporaryPayments set IsValidated = 1  where DocumentTagId = '{docIdentifier}' ";
 
-                    string updateMoniePointQry = $"update MoniePointData set IsAllocatedToSale = 1 where TransactionReference in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
+                    string updateMoniePointQry = $"update fpl_OnlinePayments set IsAllocatedToSale = 1 where TransactionReference in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
 
                     DbCtx<Int32>.ExecuteNonQry(compid, setpaymentisdone);
                     DbCtx<Int32>.ExecuteNonQry(compid, updateMoniePointQry);
