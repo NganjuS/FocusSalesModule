@@ -39,14 +39,6 @@ function isPostLineRequestProcessed(iRequestId) {
 }
 
 function openPOS(response) {
-
-    console.log(isProcessing);
-    if (isProcessing) {
-        return;
-    }
-
-    isProcessing = true
-    resetUI();
    
     console.log(response)
     console.log("Called open pop up")

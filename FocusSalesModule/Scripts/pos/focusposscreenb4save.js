@@ -91,6 +91,7 @@ function posSystem() {
                     },
                     body: JSON.stringify(window.parent.paymentHeaderObj)
                 }).then(async response => {
+
                     this.hideProgress();
                     if (!response.ok) {
                         const errorText = await response.text();
@@ -120,8 +121,14 @@ function posSystem() {
                     }
                     else {
 
-                        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+                       
                         this.showAlertMessage(dataObj.message, "warning");
+                        setTimeout(() => {
+
+                            window.parent.onPosClosePopupStop();
+
+                        }, 2000)
+                       // 
                         //alert(dataObj.message);
                     }
 

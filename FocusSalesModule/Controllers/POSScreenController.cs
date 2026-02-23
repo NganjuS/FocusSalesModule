@@ -55,8 +55,8 @@ namespace FocusSalesModule.Controllers
         }
         public ActionResult AdvanceReceiptBeforeSave(int compid, int vtype,  int memberid, string sessionid, string docno, int outletid)
         {
-           
 
+            DbCtx<Int32>.ExecuteNonQry(compid, PaymentsTableQueries.CreateAdvancePaymentTable());
             ViewBag.compid = compid;
             ViewBag.sessionid = sessionid;
             ViewBag.outletid = outletid;

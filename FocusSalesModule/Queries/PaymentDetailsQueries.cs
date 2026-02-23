@@ -8,6 +8,10 @@ namespace FocusSalesModule.Queries
 {
     public class PaymentDetailsQueries
     {
+        public static string GetPaymentTypeQry(int paymentTypeId)
+        {
+            return $"select p.iMasterId Id, p.sCode  Code, p.sName Name,pty.TypeSelect, pty.IntegrationType from mCore_paymenttype p join muCore_paymenttype pty on pty.iMasterId = p.iMasterId where p.iMasterId <> 0 and p.iMasterId  = {paymentTypeId}";
+        }
         public static string GetCreditNotes(int memberId, string rmaList)
         {
             return $"select 0 IsSelected, Reference, Amount-PostedAmt Amount, PostedAmt,Amount FullAmt   from (select *, PostedAmt = isnull((select abs(sum(mAmount2)) from tCore_Data4100_0 dt join tCore_Data_0 d on d.iBodyId = dt.iBodyId  where dt.ReferenceNo = srtn.Reference),0) from (SELECT h.iHeaderId,h.idate, h.sVoucherNo Reference,abs(sum(ind.mGross))- sum(sd.mVal0)-sum(sd.mVal1)- max(ft.mVal0) Amount FROM tCore_Header_0 h JOIN tCore_Data_0 d ON h.iHeaderId = d.iHeaderId  JOIN tCore_Indta_0 ind  ON d.iBodyId = ind.iBodyId join mcore_product pr on pr.imasterid = ind.iProduct left join muCore_Product_Units uts on uts.iMasterId = pr.iMasterId left join mCore_Units muts on muts.iMasterId = uts.iDefaultSalesUnit left join tCore_Data_Tags_0 tg on tg.iBodyId = d.iBodyId left join  tCore_IndtaBodyScreenData_0 sd on sd.iBodyId = d.iBodyId left join mPos_Member mbr on mbr.iMasterId = tg.iTag1106  left join tCore_IndtaFooterScreenData_0 ft on ft.iHeaderId = h.iHeaderId\r\nWHERE   mbr.iMasterId = {memberId} and h.iVoucherType = 1793  group by h.iHeaderId, h.idate, h.sVoucherNo\r\n\r\n) srtn ) fndt where (Amount-PostedAmt ) > 0 order by idate desc";

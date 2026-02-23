@@ -25,7 +25,7 @@ namespace FocusSalesModule.Queries
         public static string GetOutlet(int outletid)
         {
 
-            return $"select outl.iMasterId Id, outl.sCode Code,outl.sName Name, outldet.sDescription Description, outldet.sAddress1 Address, outldet.sPhone Phone, outldet.sEmailID Email , outldet.DefaultCashAccount,outldet.DefaultBankAccount, outldet.DefaultOnlineAccount , outldet.DefaultCreditNoteAccount, outldet.DefaultDiscountAccount,outldet.DefaultCustomer , outldet.DefaultCostCenter,outldet.DefaultSalesAccount from mPos_Outlet outl join muPos_Outlet outldet on outldet.iMasterId = outl.iMasterId where outl.istatus = 0 and outl.bgroup = 0 and outl.iMasterId <> 0 and outl.iMasterId={outletid}";
+            return $"select outl.iMasterId Id, outl.sCode Code,outl.sName Name, outldet.sDescription Description, outldet.sAddress1 Address, outldet.sPhone Phone, outldet.sEmailID Email , outldet.DefaultCashAccount,outldet.DefaultBankAccount, outldet.DefaultOnlineAccount , outldet.DefaultCreditNoteAccount, outldet.DefaultDiscountAccount,outldet.DefaultCustomer , outldet.DefaultCostCenter,outldet.DefaultSalesAccount , AdvanceReceiptAccount DefaultAdvanceReceiptAccount, DefaultMoniepointAccount, DefaultEasyBuyAccount, DefaultSentinalAccount from mPos_Outlet outl join muPos_Outlet outldet on outldet.iMasterId = outl.iMasterId where outl.istatus = 0 and outl.bgroup = 0 and outl.iMasterId <> 0 and outl.iMasterId={outletid}";
         }
         public static string GetAllowedCostCenters(int loginid)
         {

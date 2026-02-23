@@ -6,21 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Web;
+using static FocusSalesModule.Config.AppDefaults;
 
 namespace FocusSalesModule.Helpers
 {
     public class AppUtilities
     {
-        public enum PaymentTypes { Cash = 1, Bank = 2, Integration = 3, DiscountVoucher = 4, CreditNote = 5 }
-        public enum IntegrationTypes
-        {
-            None = 0, Moniepoint =1, Easybuy = 2, Sentinal = 3
-        }
         public const bool MergePaymentMode = true;
-        public enum FieldTypes
-        {
-            Discount = 1
-        }
         public static string GetScreenName(int compid, int vtype)
         {
             string voucherQry = $"select sname from cCore_Vouchers_0 where iVoucherType = {vtype} ";
@@ -163,11 +155,50 @@ namespace FocusSalesModule.Helpers
             }
             return qry;
         }
+        public static string GetClearDataFieldsQry(int compid, int vtype)
+        {
+            string fieldlistqry = $"SELECT upper(COLUMN_NAME) COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'tCore_HeaderData{vtype}_0'  ";
+            List<string> fieldList = DbCtx<String>.GetObjList(compid, fieldlistqry);
+            string[] extList = { "", "A", "B", "C", "D", "E", "F", "G" };
+           
+
+            List<string> filteredFieldList = new List<string>();
+
+            List<string> pNameList = DbCtx<string>.GetObjList(compid, $"select sName from mCore_paymenttype where imasterid <> 0 ");
+            foreach (string pname in pNameList)
+            {
+                string strippedName = AppUtilities.StripExtraChar(pname);
+                string txnreferencefield = $"{strippedName}Reference";
+                string txnamountfield = $"{strippedName}Amount";
+                string txnaccountfield = $"{strippedName}Account";
+
+                if(fieldList.Contains(txnreferencefield.ToUpper()))
+                {                   
+                    filteredFieldList.Add($" {txnreferencefield.ToUpper()} = '' ");
+
+                }
+                if (fieldList.Contains(txnamountfield.ToUpper()))
+                {
+                    filteredFieldList.Add($" {txnamountfield.ToUpper()} = 0 ");
+
+                }
+                if (fieldList.Contains(txnaccountfield.ToUpper()))
+                {
+                    filteredFieldList.Add( $" {txnaccountfield.ToUpper()} = '' " );
+
+                }
+
+            }
+           
+            return  String.Join(",", filteredFieldList);
+
+        }
         public static string GetQueryUpdate(int compid, int vtype, List<TemporaryPaymentDataDto> billSettlement)
         {
             string fieldlistqry = $"SELECT upper(COLUMN_NAME) COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'tCore_HeaderData{vtype}_0'";
             List<string> fieldList = DbCtx<String>.GetObjList(compid, fieldlistqry);
             string qry = "";
+            
             var paymentMethodList = billSettlement.Select(x => x.PaymentMethodId).Distinct().ToList();
             foreach (var paymentMethod in paymentMethodList)
             {
@@ -185,6 +216,7 @@ namespace FocusSalesModule.Helpers
                     string txnamountfield = $"{strippedName}Amount";
                     string txnaccountfield = $"{strippedName}Account";
                     decimal amt = billSettlement.Where(x => x.PaymentMethodId == paymentMethod).Sum(x => x.Amount);
+
                    string reference = String.Join(",", billSettlement.Where(x => x.PaymentMethodId == paymentMethod).Select(x => x.Reference).ToList());
 
                     int accountId = billSettlement.Where(x => x.PaymentMethodId == paymentMethod).FirstOrDefault().SelectedAccount;
@@ -193,16 +225,19 @@ namespace FocusSalesModule.Helpers
                     {
                         string comma = qry.Length > 0 ? "," : "";
                         qry += $"{comma}{txnreferencefield} = '{reference}'";
+                       
                     }
                     if (fieldList.Contains(txnamountfield.ToUpper()))
                     {
                         string comma = qry.Length > 0 ? "," : "";
                         qry += $"{comma}{txnamountfield} = '{amt}'";
+                        
                     }
                     if (fieldList.Contains(txnaccountfield.ToUpper()))
                     {
                         string comma = qry.Length > 0 ? "," : "";
                         qry += $"{comma}{txnaccountfield} = '{accountId}'";
+                       
                     }
                     ++i;
                 }

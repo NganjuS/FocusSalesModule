@@ -241,14 +241,14 @@ function posSystem() {
 
                     if (dataObj.result == 1 && dataObj.datalist.length > 0) {
 
-                        let currentAmt = this.getOustandingAmt();
+                        //let currentAmt = this.getOustandingAmt();
                         let amount = this.getAmount(dataObj.datalist[0].Amount);
-                        let selectrec = currentAmt + amount < this.totalInvoiceAmt;
+                        //let selectrec = currentAmt + amount < this.totalInvoiceAmt;
 
                         let nwPayList = dataObj.datalist.map(x => ({
 
                             Amount: amount,
-                            IsSelected: selectrec,
+                            IsSelected: true,
                             Reference: x.TransactionReference,
                             TransactionTime: x.TransactionTime
 

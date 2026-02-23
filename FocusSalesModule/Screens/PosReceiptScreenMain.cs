@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.UI.WebControls;
+using static FocusSalesModule.Config.AppDefaults;
 using static FocusSalesModule.Helpers.AppUtilities;
 using static FocusSalesModule.Screens.POSSales;
 
@@ -26,16 +27,21 @@ namespace FocusSalesModule.Screens
             return DbCtx<int>.GetObj(compid, $"select count(*) from tCore_HeaderData{vtype}_0 where posdocno = '{docno}'") > 0;
 
         }
-        public static bool IsDefaultAccountsNotSet(List<BillSettlement> billSettlement)
+        public static int GetReceiptHeaderid(int compid, string docno)
         {
-            foreach (var bill in billSettlement)
-            {
-                if(bill.DefaultBankAccount == 0 || bill.DefaultCashAccount == 0 || bill.DefaultOnlineAccount == 0 || bill.DefaultCreditNoteAccount == 0 || bill.DefaultDiscountAccount == 0 || bill.DefaultMoniepointAccount == 0 || bill.DefaultEasyBuyAccount == 0 || bill.DefaultSentinalAccount == 0)
-                return true;
-            }
-            return false;
-            
+            int vtype = GetReceiptVtype(compid);
+
+            return DbCtx<Int32>.GetScalar(compid, $"select top 1 h.iheaderid from tcore_header_0 h join tCore_HeaderData{vtype}_0 h1 on h1.iheaderid = h.iheaderid where h1.posdocno = '{docno}'");
+
         }
+        public static string GetReceiptDocNo(int compid, string docno)
+        {
+            int vtype = GetReceiptVtype(compid);
+
+            return DbCtx<string>.GetScalar(compid, $"select top 1 h.svoucherno from tcore_header_0 h join tCore_HeaderData{vtype}_0 h1 on h1.iheaderid = h.iheaderid where h1.posdocno = '{docno}'");
+
+        }
+        
        
         public static int GetReceiptVtype(int compid)
         {

@@ -556,7 +556,7 @@ function onSearch(response) {
 function initRmaSearchProcess() {
     ++requestId;
    
-    Focus8WAPI.getFieldValue("getRma", ["", "DocNo", "RmaSearch", "Outlet"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    Focus8WAPI.getFieldValue("getRma", ["", "DocNo", "RmaSearch", "Outlet","StockOutDocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 
 }
 
@@ -608,6 +608,7 @@ function setRmaSearchFocus() {
 }
 var rmano = "";
 var outletid = 0;
+var stockoutdocno = "";
 function getRma(response) {
     if (isRequestProcessed(response.iRequestId)) {
         return;
@@ -626,6 +627,8 @@ function getRma(response) {
     docno = response.data[1].FieldValue;
     rmano = response.data[2].FieldValue;
     outletid = response.data[3].FieldValue;
+    stockoutdocno = response.data[4].FieldValue;
+
     if (rmano.trim().length == 0) {
 
       
@@ -646,7 +649,7 @@ async function searchRma()
     try
     {
        
-        let url = `/focussalesmodule/api/sales/brstockinrma/?compid=${companyid}&outletid=${outletid}&rmano=${rmano}&stkout=`;
+        let url = `/focussalesmodule/api/sales/brstockinrma/?compid=${companyid}&outletid=${outletid}&rmano=${rmano}&stkoutdocno=${stockoutdocno}`;
         let response = await fetch(url);
 
         if (!response.ok) {

@@ -76,6 +76,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Focus.DataLayer.dll</HintPath>
     </Reference>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <HintPath>packages\log4net.1.2.10\lib\2.0\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.9.0.1\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
@@ -204,6 +207,7 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Config\AppDefaults.cs" />
+    <Compile Include="Config\AppValidation.cs" />
     <Compile Include="Controllers\DiscountVoucherController.cs" />
     <Compile Include="Controllers\ExternalPaymentsAPIController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -217,10 +221,13 @@
     <Compile Include="Controllers\TransactionManagerController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Data\DbCtx.cs" />
+    <Compile Include="DTO\AdvanceReceiptBeforeSave.cs" />
+    <Compile Include="DTO\AdvanceReceiptDelLine.cs" />
     <Compile Include="DTO\CreditNoteRequestDto.cs" />
     <Compile Include="DTO\DiscountRequestDto.cs" />
     <Compile Include="DTO\MoniepointTxnDto.cs" />
     <Compile Include="DTO\OnlinePaymentDTO.cs" />
+    <Compile Include="DTO\PaymentTypeDto.cs" />
     <Compile Include="DTO\PosBeforeSaveDto.cs" />
     <Compile Include="DTO\PrintDocumentDto.cs" />
     <Compile Include="DTO\TemporaryPaymentDataDto.cs" />
@@ -266,6 +273,7 @@
     <Compile Include="Queries\PaymentDetailsQueries.cs" />
     <Compile Include="Queries\PaymentsTableQueries.cs" />
     <Compile Include="Queries\ProductQueries.cs" />
+    <Compile Include="Queries\SalesReturnQueries.cs" />
     <Compile Include="Queries\TxnQueries.cs" />
     <Compile Include="Screens\AdvanceReceipt.cs" />
     <Compile Include="Screens\PagingStatus.cs" />
@@ -327,6 +335,7 @@
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
+    <Content Include="Scripts\stocktransferin.js" />
     <Content Include="Scripts\brstockout.js" />
     <Content Include="Scripts\FClient.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
@@ -337,7 +346,7 @@
     <Content Include="Scripts\onlinepaymentpagination.js" />
     <Content Include="Scripts\openPOS.js" />
     <Content Include="Scripts\pos\advancereceipt.js" />
-    <Content Include="Scripts\pos\advanceReceiptAfterDelete.js" />
+    <Content Include="Scripts\pos\advanceReceiptDelete.js" />
     <Content Include="Scripts\pos\advanceReceiptAfterSave.js" />
     <Content Include="Scripts\pos\focusposscreen.js" />
     <Content Include="Scripts\pos\focusposscreenb4save.js" />
@@ -349,7 +358,10 @@
     <Content Include="Scripts\print.min.js" />
     <Content Include="Scripts\brstockin.js" />
     <Content Include="Scripts\possalerma.js" />
+    <Content Include="Scripts\salesreturnbeforesave.js" />
     <Content Include="Scripts\salesreturnrma.js" />
+    <Content Include="Scripts\salesreturnrmaold.js" />
+    <Content Include="Scripts\stockouttransfer.js" />
     <Content Include="Scripts\stockin.js" />
     <Content Include="Scripts\searchitem - Copy.js" />
     <Content Include="Scripts\searchitem.js" />

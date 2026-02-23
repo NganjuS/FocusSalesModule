@@ -22,6 +22,10 @@ namespace FocusSalesModule.Models
         public int DefaultOnlineAccount { get; set; } = 0;
         public int DefaultCreditNoteAccount { get; set; } = 0;
         public int DefaultDiscountAccount { get; set; } = 0;
+        public int DefaultAdvanceReceiptAccount { get; set; } = 0;
+        public int DefaultMoniepointAccount { get; set; } = 0;
+        public int DefaultEasyBuyAccount { get; set; } = 0;
+        public int DefaultSentinalAccount { get; set; } = 0;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
     }
 }

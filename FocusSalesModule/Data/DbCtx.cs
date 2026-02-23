@@ -45,6 +45,14 @@ namespace FocusSalesModule.Data
                 return ctx.Execute(query);
             }
         }
+        public static int ExecuteNonQry(int compid, string query, Object data)
+        {
+            BuildConnectionStr(compid);
+            using (var ctx = new SqlConnection(connstr))
+            {
+                return ctx.Execute(query, data);
+            }
+        }
         public static T GetScalar(int compid, string query)
         {
             BuildConnectionStr(compid);

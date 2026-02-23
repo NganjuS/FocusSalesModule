@@ -1,4 +1,5 @@
 ﻿using Focus.Common.DataStructs;
+using FocusSalesModule.Config;
 using FocusSalesModule.Data;
 using FocusSalesModule.DTO;
 using FocusSalesModule.Helpers;
@@ -167,10 +168,10 @@ namespace FocusSalesModule.Controllers
             try
             {
 
-                if (PosReceiptScreenMain.IsDefaultAccountsNotSet(beforeSaveDto.BillSettlement))
+                if (AppValidation.IsDefaultAccountsNotSet(beforeSaveDto.BillSettlement))
                 {
                     resp.result = -1;
-                    resp.message = "All outlet accounts have not been set !!";
+                    resp.message = "All outlet accounts have not been set, cannot proceed !!";
                     return resp;
                 }
 
@@ -196,31 +197,34 @@ namespace FocusSalesModule.Controllers
                // string receiptScreenName = "";
                 string baseUrl = WebConfigurationManager.AppSettings["Server_API_IP"];
 
-                if(PosReceiptScreenMain.IsDefaultAccountsNotSet(billSettlement))
+                if(AppValidation.IsDefaultAccountsNotSet(billSettlement))
                 {
                     resp.result = -1;
                     resp.message = "Outlet accounts have not been set";
                     return resp;
                 }
-
-                if(PosReceiptScreenMain.IsReceiptPosted(compid, docno))
+                int headerid = 0;
+                if (PosReceiptScreenMain.IsReceiptPosted(compid, docno))
                 {
-                    resp.result = -1;
-                    resp.message = "Payment already posted for this sale";
-                    return resp;
+                    headerid = PosReceiptScreenMain.GetReceiptHeaderid(compid, docno);
+                    //resp.result = -1;
+                    //resp.message = "Payment already posted for this sale";
+                    //return resp;
                 }
-
-
-               
-
                 //Post to payment screen
-               
+                //Retrieve the sale details
                 string wUrl = $"{baseUrl}/screen/transactions/{AppUtilities.GetScreenName(compid, vtype)}/{docno.Replace("/","~~")}";
+
                 HashDataFocus response = APIManager.getData(sessionid, wUrl);
                 Hashtable docheader = JsonConvert.DeserializeObject<Hashtable>(response.data[0]["Header"].ToString());
                 List<Hashtable> docbody = JsonConvert.DeserializeObject<List<Hashtable>>(response.data[0]["Body"].ToString());
+
                 Hashtable header = PosReceiptScreenMain.BuildReceiptHeader(docheader);
                 List<Hashtable> doclines = PosReceiptScreenMain.BuildReceiptLines(docbody, billSettlement);
+                if(headerid != 0)
+                {
+                    header["HeaderId"] = headerid;
+                }
 
                 HashDataFocus objHashRequest = new HashDataFocus();
                 Hashtable objHash = new Hashtable();
@@ -233,8 +237,10 @@ namespace FocusSalesModule.Controllers
                HashDataFocus hashDataFocus = APIManager.postData(objHashRequest, sessionid, url);
 
                 resp.result = hashDataFocus.result;
-                resp.message = hashDataFocus.result != 1 ? hashDataFocus.message  : "Payment Posted successfully";
-                if(hashDataFocus.result == 1) 
+                string mssg =  headerid == 0 ?  "Payment Posted successfully" : "Payment Updated  successfully";
+
+                resp.message = hashDataFocus.result != 1 ? hashDataFocus.message : mssg;
+                if (hashDataFocus.result == 1) 
                 {
                     //Update pos header
                     string qry = AppUtilities.GetQueryUpdate(compid, vtype, billSettlement);
@@ -267,7 +273,7 @@ namespace FocusSalesModule.Controllers
               
                 //Get Cash Customer 
                 Outlet outlet = DbCtx<Outlet>.GetObj(compid, MasterQueries.GetOutlet(posDTO.OutletId));
-                if (outlet.DefaultCustomer == 0 || outlet.DefaultSalesAccount == 0 || outlet.DefaultCostCenter == 0 || outlet.DefaultBankAccount == 0 || outlet.DefaultCashAccount == 0 || outlet.DefaultOnlineAccount == 0 || outlet.DefaultCreditNoteAccount == 0 || outlet.DefaultDiscountAccount == 0)
+                if (outlet.DefaultCustomer == 0 || outlet.DefaultSalesAccount == 0 || outlet.DefaultCostCenter == 0 || outlet.DefaultBankAccount == 0 || outlet.DefaultCashAccount == 0 || outlet.DefaultOnlineAccount == 0 || outlet.DefaultCreditNoteAccount == 0 || outlet.DefaultDiscountAccount == 0 ||  outlet.DefaultAdvanceReceiptAccount == 0 || outlet.DefaultMoniepointAccount == 0 || outlet.DefaultEasyBuyAccount == 0)
                 {
                     throw new Exception("Set default accounts in outlet to continue !!!");
                 }
@@ -277,7 +283,7 @@ namespace FocusSalesModule.Controllers
                 posDTO.MemberId = 1;
                 //posDTO.OutletId = 42;
                 //posDTO.CostCenterId = 6;
-                posDTO.Narration = "Test Posting";
+                posDTO.Narration = "";
                 Hashtable header = POSSales.GetHeader(posDTO, outlet);
                 List<Hashtable> doclines = POSSales.GetLines(posDTO.Items);
 

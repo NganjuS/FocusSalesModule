@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using static FocusSalesModule.Config.AppDefaults;
 using static FocusSalesModule.Helpers.AppUtilities;
 using static FocusSalesModule.Screens.POSSales;
 
@@ -35,15 +36,16 @@ namespace FocusSalesModule.Screens
                 foreach (var payment in posDTO.Payments)
                 {
                     int selectType = Convert.ToInt32(payment.TypeSelect.ToString());
+                    int integrationType = Convert.ToInt32(payment.IntegrationType.ToString());
 
-                    int accountId = GetAccountId(selectType, outlet);
+                    int accountId = GetAccountId(selectType, integrationType, outlet);
                     if (selectType == (Int32)PaymentTypes.Cash)
                     {
                         var cashPayment = new Hashtable
                         {
-                            {"Account__Id",  accountId },
+                            { "Account__Id",  accountId },
                             { "Amount" , payment.Amount.ToString()},
-                            {   "POSPaymentType__Id", selectType },
+                            { "POSPaymentType__Id", selectType },
                             { "ReferenceNo",  payment.Reference}
 
                         };
@@ -79,7 +81,7 @@ namespace FocusSalesModule.Screens
             return payLines;
         
         }
-        static int GetAccountId(int typeSelect, Outlet outlet)
+        static int GetAccountId(int typeSelect, int integrationType,Outlet outlet)
         {
             
 
@@ -89,6 +91,18 @@ namespace FocusSalesModule.Screens
             }
             else if (typeSelect == (int)PaymentTypes.Integration)
             {
+                if (integrationType == (int)IntegrationTypes.Moniepoint)
+                {
+                    return outlet.DefaultMoniepointAccount;
+                }
+                else if (integrationType == (int)IntegrationTypes.Easybuy)
+                {
+                    return outlet.DefaultEasyBuyAccount;
+                }
+                else if (integrationType == (int)IntegrationTypes.Sentinal)
+                {
+                    return outlet.DefaultSentinalAccount;
+                }
                 return outlet.DefaultOnlineAccount;
             }
             else if (typeSelect == (int)PaymentTypes.DiscountVoucher)
@@ -98,6 +112,10 @@ namespace FocusSalesModule.Screens
             else if(typeSelect == (int)PaymentTypes.CreditNote)
             {
                 return outlet.DefaultCreditNoteAccount;
+            }
+            else if (typeSelect == (int)PaymentTypes.AdvanceReceipt)
+            {
+                return outlet.DefaultAdvanceReceiptAccount;
             }
             else
             {

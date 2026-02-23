@@ -21,6 +21,7 @@ namespace FocusSalesModule.Models
         public int DefaultSentinalAccount { get; set; }
         public int DefaultMoniepointAccount { get; set; }
         public int DefaultCreditNoteAccount { get; set; }
+        public int DefaultAdvanceReceiptAccount { get; set; }
         public int DefaultDiscountAccount { get; set; }
         public int TypeSelect { get; set; }
         public int IntegrationType { get; set; }

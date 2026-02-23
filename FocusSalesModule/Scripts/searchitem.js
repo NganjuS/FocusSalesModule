@@ -598,7 +598,7 @@ function getRma(response) {
     if (isRequestProcessed(response.iRequestId)) {
         return;
     }
- 
+    console.log(response);
     requestsProcessed.push(response.iRequestId);
 
     validRows = response.data[0].RowsInfo.iValidRows;

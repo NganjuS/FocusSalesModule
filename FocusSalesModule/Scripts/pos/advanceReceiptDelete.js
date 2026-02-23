@@ -1,4 +1,5 @@
-﻿var Focus8WAPI = {
+﻿/// <reference path="advancereceiptaftersave.js" />
+var Focus8WAPI = {
     ENUMS: {
         MODULE_TYPE: {
             MASTER: 1,
@@ -442,6 +443,10 @@ window.addEventListener('message', Focus8WAPI.PRIVATE.onReceiveMessage);
 
 var requestId = 0;
 var requestsProcessed = [];
+var lineRequestsProcessed = [];
+var headerData = {};
+var docLines = [];
+var validRows = 0;
 function isRequestProcessed(iRequestId) {
 
     for (let i = 0; i < requestsProcessed.length; i++) {
@@ -450,90 +455,88 @@ function isRequestProcessed(iRequestId) {
         }
     } return false;
 }
-function updatePayment(response) {
+function isLineRequestProcessed(iRequestId) {
+
+    for (let i = 0; i < lineRequestsProcessed.length; i++) {
+        if (lineRequestsProcessed[i] == iRequestId) {
+            return true;
+        }
+    } return false;
+}
+function updateBeforeDelete(response) {
+
     ++requestId;
-    Focus8WAPI.getFieldValue("getDocumentDetails", ["", "DocNo", "DocumentTagId"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    Focus8WAPI.getFieldValue("getDocumentDetails", ["", "DocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+}
+function updateAfterDelete(response) {
+    //++requestId;
+    console.log(docLines);
+    updateTxnStatus()
 }
 function getDocumentDetails(response) {
     if (isRequestProcessed(response.iRequestId)) {
         return;
     }
     requestsProcessed.push(response.iRequestId);
-    let compId = response.data[0].CompanyId;
-    let sessionId = response.data[0].SessionId;
-    let vtype = response.data[0].iVoucherType;
-    let docNo = response.data[1].FieldValue;
-    let docIdentifier = response.data[2].FieldValue;
+    headerData.CompanyId = response.data[0].CompanyId;
+    headerData.SessionId = response.data[0].SessionId;
+    headerData.Vtype = response.data[0].iVoucherType;
+    headerData.DocNo = response.data[1].FieldValue;
+    validRows = response.data[0].RowsInfo.iValidRows
 
-    if (docIdentifier.trim().length == 0) {
-        alert("Document payment details are invalid !!");
-        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+    console.log("Logging update to server...")
+    /* updateSavedData(compId, sessionId, docNo, vtype)*/
+    for (i = 0; i < validRows; i++) {
+
+        Focus8WAPI.getBodyFieldValue("getDocumentLines", ["", "Payment Type", "Account", "Amount", "ReferenceNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i+1);
+        //After last row
+      
+
+    }
+}
+function getDocumentLines(response) {
+
+    if (isLineRequestProcessed(response.iRequestId)) {
         return;
     }
+    lineRequestsProcessed.push(response.iRequestId);
 
-    updateSavedData(compId, sessionId, docNo, vtype, docIdentifier)
-}
-async function updateSavedData(compId, sessionId, docNo,vtype ,docIdentifier) {
-    try {
 
-        let url = `/focussalesmodule/api/salespayments/updatepaymentdetails/?compid=${compId}&sessionid=${sessionId}&docno=${docNo}&vtype=${vtype}&docIdentifier=${docIdentifier}`;
-        console.log(url);
-        let response = await fetch(url);
+    let dtObj = {
 
-        if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
-        }
-
-        let dataObj = await response.json();
-        if (dataObj.result == 1) {
-
-            Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
-            setupPrintJs(compId, sessionId, docNo, vtype)
-            return;
-        }
-        else {
-            Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
-        }
-        alert(dataObj.message);
-        console.log(dataObj);
+        "CompanyId": headerData.CompanyId,
+        "SessionId": headerData.SessionId,
+        "Vtype": response.data[0].iVoucherType,
+        "DocNo": headerData.DocNo,
+        "PaymentType": response.data[1].FieldValue,
+        "Account": response.data[2].FieldValue,
+        "Amount": response.data[3].FieldValue,
+        "ReferenceNo": response.data[4].FieldValue
     }
-    catch (err) {
 
-        console.log(err);
-        alert("Error when running post save process: ");
-        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+    docLines.push(dtObj);
+    if (response.iRequestId == validRows) {
 
-    }
-    finally {
-
+        console.log("All lines fetched");
+        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
     }
 }
-function setupPrintJs(compId, sessionId, docNo, vtype) {
+async function updateTxnStatus() {
 
-    if (!document.querySelector('link[href$="print.min.css"]')) {
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = "/focussalesmodule/content/print.min.css";
-        document.head.appendChild(link);
+    if (docLines.length > 0) {
+
+        let url = `/focussalesmodule/api/salespayments/updatepaymentstatus`;
+        let response = await fetch(url, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(docLines)
+        });
+
+        let reponseData = await response.json();
+        console.log(reponseData);
     }
-
-    if (!document.querySelector('script[src$="print.min.js"]')) {
-        const script = document.createElement("script");
-        script.src = "/focussalesmodule/scripts/print.min.js";
-        script.onload = () => {
-
-            initPrintDocument(compId, sessionId, docNo, vtype)
-        };
-        document.body.appendChild(script);
-    }
-    else {
-        initPrintDocument(compId, sessionId, docNo, vtype);
-    }
-}
-function initPrintDocument(compId, sessionId, docNo, vtype) {
-    //compId, sessionId, docNo,vtype
-    let printUrl = `/focussalesmodule/printdocument/?compid=${compId}&vtype=${vtype}&sessionid=${sessionId}&docno=${docNo}`;
-    console.log('Printing document', printUrl);
-
-    printJS({ printable: printUrl, type: 'pdf', showModal: true })
+  
+    Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
 }

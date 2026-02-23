@@ -1,4 +1,4 @@
-ï»¿var Focus8WAPI = {
+var Focus8WAPI = {
     ENUMS: {
         MODULE_TYPE: {
             MASTER: 1,
@@ -439,13 +439,35 @@
 
 }
 window.addEventListener('message', Focus8WAPI.PRIVATE.onReceiveMessage);
-
-var requestId = 0;
+var initialRequestId = 0;
 var requestsProcessed = [];
-var headerDataEdit = {};
-var docLinesEdit = [];
+var requestId = 0;
+var companyid = 0;
+var sessionid = "";
+var vtype = 0;
+var docno = "";
+var totalRows = 0;
+var shadowItemList = [];
+var linksItemList = [];
 var validRows = 0;
-var editRequestsProcessed = [];
+var linkValidRows = 0;
+var lineRequestsProcessed = [];
+var linkLineRequestsProcessed = [];
+var lineRequestId = 0;
+function resetDefaults() {
+
+    lineRequestsProcessed = [];
+    shadowItemList = [];
+    linksItemList = [];
+    requestId = 0;
+    companyid = 0;
+    sessionid = "";
+    vtype = 0;
+    docno = "";
+    totalRows = 0;
+    shadowItemList = [];
+    validRows = 0;
+}
 function isRequestProcessed(iRequestId) {
 
     for (let i = 0; i < requestsProcessed.length; i++) {
@@ -454,159 +476,493 @@ function isRequestProcessed(iRequestId) {
         }
     } return false;
 }
-function isEditRequestProcessed(iRequestId) {
 
-    for (let i = 0; i < editRequestsProcessed.length; i++) {
-        if (editRequestsProcessed[i] == iRequestId) {
+function isLineRequestProcessed(iRequestId) {
+
+    for (let i = 0; i < lineRequestsProcessed.length; i++) {
+        if (lineRequestsProcessed[i] == iRequestId) {
             return true;
         }
     } return false;
 }
-function updateBeforeSave(response) {
-    setupSweetAlert();
-    ++requestId;
-    Focus8WAPI.getFieldValue("getEditDocumentDetails", ["", "DocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+function isLinkLineRequestProcessed(iRequestId) {
+
+    for (let i = 0; i < linkLineRequestsProcessed.length; i++) {
+        if (linkLineRequestsProcessed[i] == iRequestId) {
+            return true;
+        }
+    } return false;
 }
-function updateAfterSave() {
-    //++requestId;
-    setupSweetAlert();
-    console.log(headerDataEdit);
-    console.log("Call update after save");
-    ++requestId;
-    Focus8WAPI.getFieldValue("getAfterSaveDetails", ["", "DocNo","DocumentTagId"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+function initRmaSearch(response) {
+
     
-    //Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
-}
-//function updatePayment(response) {
-//    ++requestId;
-//    Focus8WAPI.getFieldValue("getDocumentDetails", ["", "DocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
-//}
-function getEditDocumentDetails(response) {
-
-    console.log("Called before save !!")
-    if (isRequestProcessed(response.iRequestId)) {
-        return;
-    }
-    requestsProcessed.push(response.iRequestId);
-    headerDataEdit.CompanyId = response.data[0].CompanyId;
-    headerDataEdit.SessionId = response.data[0].SessionId;
-    headerDataEdit.Vtype = response.data[0].iVoucherType;
-    headerDataEdit.DocNo = response.data[1].FieldValue;
-    headerDataEdit.DocumentTagId = "";
-
-    validRows = response.data[0].RowsInfo.iValidRows
-    preSaveData();
-    //console.log("Logging update to server...")
-    ///* updateSavedData(compId, sessionId, docNo, vtype)*/
-    //for (i = 0; i < validRows; i++) {
-
-    //    Focus8WAPI.getBodyFieldValue("getEditDocumentLines", ["", "Payment Type", "Account", "Amount", "ReferenceNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
-    //    //After last row
-
-
+    //if (initialRequestId != 0) {
+    //    resetDefaults()
     //}
+    //initialRequestId = response.iRequestId;
+    //resetDefaults();
+    setupSweetAlert();
+    onSearch(response);
+    ++requestId;
+
+    
 }
-//function getEditDocumentLines(response) {
+function onSearch(response) {
 
-//    if (isEditRequestProcessed(response.iRequestId)) {
-//        return;
-//    }
+    const label = Array.from(document.querySelectorAll("label"))
+        .find(l => l.textContent.trim().toLowerCase() === "rma search" || l.textContent.trim().toLowerCase() === "rmasearch");
 
-//    editRequestsProcessed.push(response.iRequestId);
+    if (label) {
+        // Try to find the input connected to the label
+        let input = null;
+    
+        // Case 1: label has 'for' attribute
+        const forId = label.getAttribute("for");
+        if (forId) {
+            input = document.getElementById(forId);
+        }
+
+        // Case 2: label is next to input in same container
+        if (!input) {
+        
+            input = label.parentElement.querySelector("input");
+        }
 
 
-//    let dtObj = {
+        // Focus input if found
+        if (input) {
+            console.log("Setting focus !!!");
 
-//        "CompanyId": headerData.CompanyId,
-//        "SessionId": headerData.SessionId,
-//        "Vtype": response.data[0].iVoucherType,
-//        "DocNo": headerData.DocNo,
-//        "PaymentType": response.data[1].FieldValue,
-//        "Account": response.data[2].FieldValue,
-//        "Amount": response.data[3].FieldValue,
-//        "ReferenceNo": response.data[4].FieldValue
-//    }
+            if (!input.hasKeyListener) {
 
-    //docLinesEdit.push(dtObj);
-//    if (response.iRequestId == validRows) {
+                input.addEventListener("keydown", function (event) {
+                    if ((event.key === "Enter" || event.keyCode === 13) && !Swal.isVisible()) {
+                        event.preventDefault(); // optional — stops form submission
 
-//        preSaveData();
-//        console.log("All lines fetched");
-//        //Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
-//    }
-//}
-async function preSaveData() {
+                        initRmaSearchProcess();
 
+
+                        // your custom action here
+                    }
+                });
+
+                input.hasKeyListener = true; // custom flag
+            }
+
+            input.focus();
+        }
+    }
+}
+function initRmaSearchProcess() {
+    ++requestId;
    
+    Focus8WAPI.getFieldValue("getRma", ["", "DocNo", "RmaSearch", "InvTag2","StockOutDocNo","InvTag"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 
-        let url = `/focussalesmodule/api/salespayments/savetempadvancepayment`;
-        let response = await fetch(url, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(headerDataEdit)
-        });
-
-        let reponseData = await response.json();
-    if (reponseData.result == 1) {
-
-
-        headerDataEdit.DocumentTagId = reponseData.data;
-        ++requestId;
-
-        Focus8WAPI.setFieldValue("afterIdentifierAdded", ["DocumentTagId"], [reponseData.data], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
-        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
-
-    }
-    else if (reponseData.result == -1) {
-
-        showMessageAlert(reponseData.message);
-        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
-    }
-    else {
-
-        console.log(reponseData.message);
-        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
-
-    }
 }
-function getAfterSaveDetails(response) {
 
+
+function clearSearchField(clearField)
+{
+    ++requestId;
+
+    Focus8WAPI.setFieldValue("afterLineAdded", [clearField], [""], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    if (clearField == "RmaSearch") {
+
+        setRmaSearchFocus();
+    }
+   
+}
+function setRmaSearchFocus() {
+   
+    // Find the label with text "Rma Search"
+    const label = Array.from(document.querySelectorAll("label"))
+        .find(l => l.textContent.trim().toLowerCase() === "rma search" || l.textContent.trim().toLowerCase() === "rmasearch");
+
+    if (label) {
+        // Try to find the input connected to the label
+        let input = null;
+       
+        // Case 1: label has 'for' attribute
+        const forId = label.getAttribute("for");
+        if (forId) {
+            input = document.getElementById(forId);
+        }
+
+        // Case 2: label is next to input in same container
+        if (!input) {
+         
+            input = label.parentElement.querySelector("input");
+        }
+
+        // Focus input if found
+        if (input) {
+         
+            input.focus();
+            if (Swal.isVisible()) {
+
+                Swal.getConfirmButton().focus();
+            }
+        }
+    }
+
+}
+var rmano = "";
+var outletid = 0;
+var stockoutdocno = "";
+function getRma(response) {
     if (isRequestProcessed(response.iRequestId)) {
         return;
     }
-    console.log("Get after save details called");
+ 
     requestsProcessed.push(response.iRequestId);
-    headerDataEdit.CompanyId = response.data[0].CompanyId;
-    headerDataEdit.SessionId = response.data[0].SessionId;
-    headerDataEdit.Vtype = response.data[0].iVoucherType;
-    headerDataEdit.DocNo = response.data[1].FieldValue;
-    headerDataEdit.DocNo = response.data[1].FieldValue;
-    headerDataEdit.DocumentTagId = response.data[2].FieldValue;
-    validRows = response.data[0].RowsInfo.iValidRows
-    updateSavedData();
-}
-async function updateSavedData() {
+
+    validRows = response.data[0].RowsInfo.iValidRows;
     
+    shadowItemList = [];
+    lineRequestsProcessed = [];
+    
+    companyid = response.data[0].CompanyId;
+    sessionid = response.data[0].SessionId;
+    vtype = response.data[0].iVoucherType;
+    docno = response.data[1].FieldValue;
+    rmano = response.data[2].FieldValue;
+    outletid = response.data[3].FieldValue;
+    stockoutdocno = response.data[4].FieldValue;
+
+    if (rmano.trim().length == 0) {
+
+      
+        return;
+    }
+
+    if (outletid == 0) {
+
+        showMessageAlert("Select outlet to continue !!! ","warning");
+        return;
+    }
+    validateLoadedLinks()
+    
+
+}
+async function searchRma()
+{
+    try
+    {
+       
+        let url = `/focussalesmodule/api/sales/stocktransferinrma/?compid=${companyid}&outletid=${outletid}&rmano=${rmano}&stkoutdocno=${stockoutdocno}`;
+        let response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+
+        let dataObj = await response.json();
+
+       
+        clearSearchField("RmaSearch");
+        if (dataObj.result == -1) {
+            showMessageAlert(dataObj.message, "error");
+            
+            return;
+        }
+        else {
+          
+           
+            if (validRows == 0) {
+                
+                showMessageAlert("Load items to continue !!", "warning");
+               // setLineItemsToDoc(1, dataObj.data)
+                
+            }
+            else {
+                
+                getExistingItems(dataObj.data)
+            }
+            
+        }
+
+
+        }
+        catch (err) {
+
+        showMessageAlert("Error when searching Rma: " + err,"error");
+    
+        }
+        finally {
+            
+        }
+
+}
+var loadedItem = null;
+var isLinksValid = false;
+function validateLoadedLinks() {
+    linksItemList = [];
+    linkLineRequestsProcessed = [];
+    if (validRows == 0) {
+        showMessageAlert("Link items to continue !!", "warning")
+        clearSearchField("RmaSearch");
+        return;
+    }
+    for (i = 0; i < validRows; i++) {
+
+        Focus8WAPI.getBodyFieldValue("getValidateLinkData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross", "L-STOCK TRANSFER OUT"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
+        //After last row
+       
+
+    }
+}
+function getValidateLinkData(response) {
+    if (isLinkLineRequestProcessed(response.iRequestId)) {
+
+        return;
+    }
+
+    linkLineRequestsProcessed.push(response.iRequestId);
+
+    var docNo = response.data[1].FieldValue;
+    var companyid = response.data[0].CompanyId;
+    var sessid = response.data[0].SessionId;
+    var vtype = response.data[0].iVoucherType;
+    console.log(response.data[7].FieldValue);
+    let payload = {
+
+        "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docNo, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue, "Link": response.data[7].FieldValue
+    };
+    linksItemList.push(payload); //linkValidRows
+    console.log("Links loaded :" + linksItemList.length);
+    if (response.iRequestId == validRows) {
+        console.log("Links complete")
+        var linkDocs = linksItemList.map(x => x.Link.VoucherNo);
+        const uniqueVoucher = [...new Set(linkDocs)];
+
+        
+        if (uniqueVoucher.length == 1) {
+            searchRma()
+        }
+        else {
+
+            showMessageAlert("You cannot mix different documents, create a new document for each item !!!", "warning")
+        }
+    }
+}
+function getExistingItems(item) {
+    loadedItem = item;
+    lineRequestsProcessed = [];
+    
+    for (i = 0; i < validRows; i++) {
+        
+        Focus8WAPI.getBodyFieldValue("getDocBodyData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross","L-STOCK TRANSFER OUT"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
+        //After last row
+        //problem area
+        
+    }
+}
+function getDocBodyData(response) {
+
    
-    let url = `/focussalesmodule/api/salespayments/updateadvancepayment`;
-    debugger;
-    let response = await fetch(url, {
-        method: "POST",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(headerDataEdit)
-    });
+    if (isLineRequestProcessed(response.iRequestId)) {
+       
+        return;
+    }
 
-    let reponseData = await response.json();
-    console.log(reponseData);
-    
+    lineRequestsProcessed.push(response.iRequestId);
+   
+    var docNo = response.data[1].FieldValue;
+    var companyid = response.data[0].CompanyId;
+    var sessid = response.data[0].SessionId;
+    var vtype = response.data[0].iVoucherType;
+    console.log(response.data[7].FieldValue);
+    //"Item", "Unit", "RMA", "Quantity", "Rate", "Gross"
+    let payload = {
 
-    Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
+        "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docNo, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue, "Link": response.data[7].FieldValue
+    };
+    shadowItemList.push(payload);
+   
+    if (response.iRequestId == validRows) {
+
+
+        //Find link
+        let linkExists = shadowItemList.some(x => x.Link.VoucherNo == loadedItem.LinkVoucherNo);
+        if (!linkExists) {
+            showMessageAlert("You cannot mix different documents, create a new document for this item !!!", "warning")
+            return;
+        }
+
+            //check if rma exists
+            // let rmaExists = false;
+             //Find Item in shadow list
+      
+        let itemExists = shadowItemList.find(x => x.Item == loadedItem.ItemId);
+        if (itemExists) {
+
+                let rmaExists = itemExists.RMA.find(x => x == loadedItem.RmaNo);
+                console.log("Item exists", rmaExists);
+
+                let rowNo = shadowItemList.indexOf(itemExists) + 1;
+
+                if (rmaExists) {
+                    
+                    showMessageAlert("RMA already exists !!","warning")
+                   
+                    let newQty = itemExists.RMA.length;
+                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity", "L-STOCK TRANSFER OUT"], [itemExists.RMA, newQty, itemExists.Link], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+                    //clearSearchField();
+                    return;
+                }
+                else {
+                    //clearSearchField();
+                   
+                    ++requestId;
+                   /* itemExists.Link.UsedValue = parseInt(itemExists.Link.UsedValue) + 1;*/
+                    //let linkData = {
+
+                    //    "LinkId": item.LinkId,
+                    //    "RefId": item.RefId,
+                    //    "UsedValue": "1",
+                    //    "Value": item.LinkVoucherNo,
+                    //    "VoucherNo": item.LinkVoucherNo,
+                    //    "VoucherType": item.LinkVoucherType
+
+                    //}
+                    itemExists.RMA.push(loadedItem.RmaNo);
+                    let newQty = itemExists.RMA.length;
+                    Focus8WAPI.setBodyFieldValue("afterBrLineAdded", ["RMA", "Quantity", "Link"], [itemExists.RMA, newQty, ], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+
+                }
+
+            }
+            else {
+                showMessageAlert("Rma item not found  !!", "warning")
+                
+                //let lastRowNo = validRows + 1;
+                //setLineItemsToDoc(lastRowNo, loadedItem);
+                //Reupdate existing
+                
+            }
+
+       
+    }
+
 }
-function afterIdentifierAdded(response) {
+function afterBrLineAdded(response) {
+    reUpdateExistingLines();
+
+}
+function reUpdateExistingLines() {
+
+    for (let i = 0; i < shadowItemList.length; i++) {
+        ++requestId;
+        let newQty = shadowItemList[i].RMA.length;
+        Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "RMA", "Quantity", "L-STOCK TRANSFER OUT"], [shadowItemList[i].Item, shadowItemList[i].RMA, newQty, shadowItemList[i].Link], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, requestId);
+    }
+
+}
+//function setLineItemsToDoc(rowNo, item) {
+   
+//    ++requestId;
+//    let gross = parseInt(item.Qty) * parseFloat(item.Price);
+//    let linkData = {
+
+//        "LinkId": item.LinkId,
+//        "RefId": item.RefId,
+//        "UsedValue": "1",
+//        "Value": item.LinkVoucherNo,
+//        "VoucherNo": item.LinkVoucherNo,
+//        "VoucherType": item.LinkVoucherType
+        
+//    }
+//    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "RMA", "L-STOCK-OUT"], [item.ItemId, item.UnitId, item.Qty, item.RmaNo, linkData], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+//    }
+function afterLineAdded(response) {
+    setRmaSearchFocus();
+
+    if (Swal.isVisible()) {
+
+        Swal.getConfirmButton().focus();
+    }
+}
+//Remove item RMA
+var validRemovalRows = 0;
+var removalRmaNo = "";
+var removalRequestsProcessed = [];
+var removalRequestId = 0;
+
+function initRemoveRma(response) {
+
+    
+    ++removalRequestId;
+
+    Focus8WAPI.getFieldValue("getRemoveRmaList", ["", "DocNo", "RemoveRma", "InvTag"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, removalRequestId);
+}
+
+function isRemoveRequestProcessed(iRequestId) {
+
+    for (let i = 0; i < removalRequestsProcessed.length; i++) {
+        if (removalRequestsProcessed[i] == iRequestId) {
+            return true;
+        }
+    } return false;
+}
+function getRemoveRmaList(response) {
+
+    if (isRemoveRequestProcessed(response.iRequestId)) {
+        return;
+    }
+    validRemovalRows = response.data[0].RowsInfo.iValidRows;
+    removalRequestsProcessed = [];
+    companyid = response.data[0].CompanyId;
+    sessionid = response.data[0].SessionId;
+    vtype = response.data[0].iVoucherType;
+    docno = response.data[1].FieldValue;
+    let rmano = response.data[2].FieldValue;
+    let outletid = response.data[3].FieldValue;
+    if (rmano.trim().length == 0 || validRemovalRows == 0) {
+
+    
+        return;
+    }
+    getRemovalItems(rmano)
+}
+function getRemovalItems(rmano) {
+    removalRmaNo = rmano;
+    for (i = 0; i < validRows; i++) {
+        
+        Focus8WAPI.getBodyFieldValue("removeRmaData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
+        //After last row
+        //problem area
+
+    }
+}
+
+
+function removeRmaData(response) {
+
+    
+    if (isRemoveRequestProcessed(response.iRequestId)) {
+       
+        return;
+    }
+
+    removalRequestsProcessed.push(response.iRequestId);
+    let rmaList = response.data[3].FieldValue; 
+    rmaExists = rmaList.find(x => x == removalRmaNo);
+    if (rmaExists) {
+   
+        rmaList = rmaList.filter(x => x != removalRmaNo);
+        ++requestId;
+        let newQty = rmaList.length;
+        if (rmaList.length == 0) {
+          
+            Focus8WAPI.setBodyFieldValue("afterLineAdded", [ "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], ["0","0",[],0,0,0], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, response.iRequestId, requestId);
+        }
+        else {
+
+            Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity"], [rmaList, newQty], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, response.iRequestId, requestId);
+        }
+       
+    }
+    clearSearchField("RemoveRma");
 }
 function setupSweetAlert() {
 

@@ -450,90 +450,65 @@ function isRequestProcessed(iRequestId) {
         }
     } return false;
 }
-function updatePayment(response) {
+function validateBeforeSave(response) {
+    setupSweetAlert();
     ++requestId;
-    Focus8WAPI.getFieldValue("getDocumentDetails", ["", "DocNo", "DocumentTagId"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    Focus8WAPI.getFieldValue("getEditDocumentDetails", ["", "DocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
-function getDocumentDetails(response) {
+
+function getEditDocumentDetails(response) {
+
+    console.log("Called before save !!")
     if (isRequestProcessed(response.iRequestId)) {
         return;
     }
     requestsProcessed.push(response.iRequestId);
-    let compId = response.data[0].CompanyId;
-    let sessionId = response.data[0].SessionId;
-    let vtype = response.data[0].iVoucherType;
-    let docNo = response.data[1].FieldValue;
-    let docIdentifier = response.data[2].FieldValue;
-
-    if (docIdentifier.trim().length == 0) {
-        alert("Document payment details are invalid !!");
-        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
-        return;
-    }
-
-    updateSavedData(compId, sessionId, docNo, vtype, docIdentifier)
+    checkReturnUsed(response.data[0].CompanyId, response.data[0].iVoucherType, response.data[1].FieldValue)
 }
-async function updateSavedData(compId, sessionId, docNo,vtype ,docIdentifier) {
-    try {
+async function checkReturnUsed(compid, vtype, docno) {
 
-        let url = `/focussalesmodule/api/salespayments/updatepaymentdetails/?compid=${compId}&sessionid=${sessionId}&docno=${docNo}&vtype=${vtype}&docIdentifier=${docIdentifier}`;
-        console.log(url);
-        let response = await fetch(url);
+    let url = `/focussalesmodule/api/salespayments/checkreturnused?compid=${compid}&vtype=${vtype}&docno=${docno}`;
 
-        if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
-        }
+    let response = await fetch(url);
+    let data = await response.json();
+    if (data.result == 1) {
 
-        let dataObj = await response.json();
-        if (dataObj.result == 1) {
-
-            Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
-            setupPrintJs(compId, sessionId, docNo, vtype)
-            return;
-        }
-        else {
-            Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
-        }
-        alert(dataObj.message);
-        console.log(dataObj);
+        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
     }
-    catch (err) {
+    else {
 
-        console.log(err);
-        alert("Error when running post save process: ");
+        showMessageAlert("This sales return has already been used in another transaction. You cannot edit this Sales Return.", "warning");
         Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
-
-    }
-    finally {
-
     }
 }
-function setupPrintJs(compId, sessionId, docNo, vtype) {
+function setupSweetAlert() {
 
-    if (!document.querySelector('link[href$="print.min.css"]')) {
+    if (!document.querySelector('link[href$="sweetalert2.min.css"]')) {
         const link = document.createElement("link");
         link.rel = "stylesheet";
-        link.href = "/focussalesmodule/content/print.min.css";
+        link.href = "/focussalesmodule/content/sweetalert2.min.css";
         document.head.appendChild(link);
     }
 
-    if (!document.querySelector('script[src$="print.min.js"]')) {
+    if (!document.querySelector('script[src$="sweetalert2.all.min.js"]')) {
         const script = document.createElement("script");
-        script.src = "/focussalesmodule/scripts/print.min.js";
+        script.src = "/focussalesmodule/scripts/sweetalert2.all.min.js";
         script.onload = () => {
 
-            initPrintDocument(compId, sessionId, docNo, vtype)
+            isAlertActive = true;
         };
         document.body.appendChild(script);
     }
-    else {
-        initPrintDocument(compId, sessionId, docNo, vtype);
-    }
 }
-function initPrintDocument(compId, sessionId, docNo, vtype) {
-    //compId, sessionId, docNo,vtype
-    let printUrl = `/focussalesmodule/printdocument/?compid=${compId}&vtype=${vtype}&sessionid=${sessionId}&docno=${docNo}`;
-    console.log('Printing document', printUrl);
-
-    printJS({ printable: printUrl, type: 'pdf', showModal: true })
+function showMessageAlert(mssg, status) {
+    //Status 'success', 'error', 'warning', 'info', 'question'
+    if (isAlertActive)
+        Swal.fire(
+            {
+                title: 'Message', text: mssg, icon: status, didOpen: () => {
+                    Swal.getConfirmButton().focus();
+                }, didClose: () => {
+                    setRmaSearchFocus();
+                }
+            });
 }

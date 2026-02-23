@@ -14,6 +14,11 @@ namespace FocusSalesModule.Helpers
         public static HashDataFocus postData(HashDataFocus hdt, string sess, string url)
         {
             string sContent = JsonConvert.SerializeObject(hdt);
+
+            Logger.writeLog(url);
+            Logger.writeLog(sess);
+            Logger.writeLog(sContent);
+
             using (var client = new WebClient())
             {
                 client.Headers.Add("fSessionId", sess);
@@ -50,7 +55,22 @@ namespace FocusSalesModule.Helpers
                 Logger.writeLog(sess);
                 string sUrl = url;
                 string strResponse = client.DownloadString(sUrl);
+                Logger.writeLog(strResponse);
+                return JsonConvert.DeserializeObject<HashDataFocus>(strResponse);
 
+            }
+        }
+        public static HashDataFocus delDocument(string sess, string url)
+        {
+            //string sContent = JsonConvert.SerializeObject(hdt);
+            using (var client = new WebClient())
+            {
+                client.Headers.Add("fSessionId", sess);
+                client.Headers.Add("Content-Type", "application/json");
+                Logger.writeLog(url);
+                Logger.writeLog(sess);
+                string strResponse = client.UploadString(url, "DELETE", "");
+                Logger.writeLog(strResponse);
                 return JsonConvert.DeserializeObject<HashDataFocus>(strResponse);
 
             }

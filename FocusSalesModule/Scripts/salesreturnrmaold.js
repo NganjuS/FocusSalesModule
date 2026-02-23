@@ -452,6 +452,10 @@ var validRows = 0;
 var lineRequestsProcessed = [];
 var lineRequestId = 0;
 var curDocNo = "";
+var lineRequestId = 0;
+var linksItemList = [];
+var linkLineRequestsProcessed = [];
+var linkValidRows = 0;
 function resetDefaults() {
 
     lineRequestsProcessed = [];
@@ -482,12 +486,13 @@ function isLineRequestProcessed(iRequestId) {
         }
     } return false;
 }
-var docNoSearch = "";
-function initDocNoSearch(response) {
+function isLinkLineRequestProcessed(iRequestId) {
 
-    setupSweetAlert();
-    onDocNoSearch(response)
-
+    for (let i = 0; i < linkLineRequestsProcessed.length; i++) {
+        if (linkLineRequestsProcessed[i] == iRequestId) {
+            return true;
+        }
+    } return false;
 }
 function initRmaSearch(response) {
 
@@ -552,7 +557,7 @@ function onSearch(response) {
 function initRmaSearchProcess() {
     ++requestId;
    
-    Focus8WAPI.getFieldValue("getRma", ["", "DocNo", "RmaSearch", "Outlet", "Member", "POS Sale No"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    Focus8WAPI.getFieldValue("getRma", ["", "DocNo", "RmaSearch", "Outlet", "Member","POSDocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 
 }
 function clearSearchField(clearField)
@@ -601,11 +606,17 @@ function setRmaSearchFocus() {
     }
 
 }
+var rmano = "";
+var outletid = 0;
+var memberid = 0;
+var posdocno = "";
+var loadedItem = null;
+var isLinksValid = false;
 function getRma(response) {
     if (isRequestProcessed(response.iRequestId)) {
         return;
     }
- 
+    console.log("Getting rma ...");
     requestsProcessed.push(response.iRequestId);
 
     validRows = response.data[0].RowsInfo.iValidRows;
@@ -617,15 +628,17 @@ function getRma(response) {
     sessionid = response.data[0].SessionId;
     vtype = response.data[0].iVoucherType;
     docno = response.data[1].FieldValue;
-    let rmano = response.data[2].FieldValue;
-    let outletid = response.data[3].FieldValue;
-    let memberid = response.data[4].FieldValue;
+    rmano = response.data[2].FieldValue;
+    //outletid = response.data[3].FieldValue;
+    //memberid = response.data[4].FieldValue;
+   
+
     if (rmano.trim().length == 0) {
 
       
         return;
     }
-
+    
     //if (outletid == 0) {
 
     //    showMessageAlert("Select outlet to continue !!! ","warning");
@@ -640,12 +653,66 @@ function getRma(response) {
     searchRma(rmano, outletid, memberid)
 
 }
-async function searchRma(rmano, outletid,memberid)
+function validateLoadedLinks() {
+    linksItemList = [];
+    linkLineRequestsProcessed = [];
+    if (validRows == 0) {
+
+        showMessageAlert("Link items to continue !!", "warning")
+        clearSearchField("RmaSearch");
+        return;
+    }
+    for (i = 0; i < validRows; i++) {
+
+        Focus8WAPI.getBodyFieldValue("getValidateLinkData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross", "L-CHECKOUT"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
+        //After last row
+
+
+    }
+}
+function getValidateLinkData(response) {
+
+    if (isLinkLineRequestProcessed(response.iRequestId)) {
+
+        return;
+    }
+
+    linkLineRequestsProcessed.push(response.iRequestId);
+
+    var docNo = response.data[1].FieldValue;
+    var companyid = response.data[0].CompanyId;
+    var sessid = response.data[0].SessionId;
+    var vtype = response.data[0].iVoucherType;
+    console.log(response.data[7].FieldValue);
+    let payload = {
+
+        "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docNo, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue, "Link": response.data[7].FieldValue
+    };
+
+    linksItemList.push(payload); //linkValidRows
+    console.log("Links loaded :" + linksItemList.length);
+    if (response.iRequestId == validRows) {
+        console.log("Links complete")
+
+        var linkDocs = linksItemList.map(x => x.Link.VoucherNo);
+        const uniqueVoucher = [...new Set(linkDocs)];
+        console.log("Unique links :" , linkDocs);
+        
+        if (uniqueVoucher.length == 1) {
+            searchRma()
+        }
+        else {
+
+            showMessageAlert("You cannot mix different documents, create a new document for each item !!!", "warning")
+        }
+    }
+}
+async function searchRma()
 {
     try
     {
-       
-        let url = `/focussalesmodule/api/sales/salesreturnrma/?compid=${companyid}&vtype=${vtype}&outletid=${outletid}&memberid=${memberid}&rmano=${rmano}&posdocno=`;
+        //&posdocno=${posdocno}
+        let url = `/focussalesmodule/api/sales/salesreturnrma/?compid=${companyid}&vtype=${vtype}&rmano=${rmano}`;
         debugger;
         let response = await fetch(url);
 
@@ -664,24 +731,25 @@ async function searchRma(rmano, outletid,memberid)
         }
         else {
 
-            setHeaderDetails(dataObj.data);
-           
-            if (validRows == 0) {
-                
-                curDocNo = dataObj.data.DocNo
-                setLineItemsToDoc(1, dataObj.data)
-                
-            }
-            else {
+                //setHeaderDetails(dataObj.data);
+                console.log(curDocNo);
+                console.log(dataObj.data);
 
-                if (curDocNo != dataObj.data.DocNo) {
-
-                    showMessageAlert("Cannot mismatch documents", "error");
-                    return;
+                if (validRows == 0) {
+                
+                    showMessageAlert("Load items to continue !!", "warning");
+                
                 }
+                else {
+
+                    //if (curDocNo != dataObj.data.DocNo) {
+
+                    //    showMessageAlert("Cannot mismatch documents", "error");
+                    //    return;
+                    //}
                
-                getExistingItems(dataObj.data)
-            }
+                    getExistingItems(dataObj.data)
+                }
             
         }
 
@@ -696,7 +764,7 @@ async function searchRma(rmano, outletid,memberid)
         }
 
 }
-var loadedItem = null;
+
 
 function getExistingItems(item) {
     loadedItem = item;
@@ -773,9 +841,10 @@ function getDocBodyData(response) {
     }
 
 }
+
 function setHeaderDetails(item) {
     ++requestId;
-    Focus8WAPI.setFieldValue("afterLineAdded", ["CustomerAC",  "Member", "Employee", "POSDocNo"], [item.CustomerId,  item.MemberId,item.EmployeeId,item.DocNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    Focus8WAPI.setFieldValue("afterLineAdded", ["CustomerAC", "Outlet", "Cost Center", "Member", "Employee", "POSDocNo","DocNoSearch"], [item.CustomerId, item.OutletId, item.CostCenterId, item.MemberId,item.EmployeeId,item.DocNo,""], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
 function setLineItemsToDoc(rowNo, item) {
 
@@ -882,11 +951,49 @@ function removeRmaData(response) {
     }
     clearSearchField("RemoveRma");
 }
+function setupSweetAlert() {
 
+    if (!document.querySelector('link[href$="sweetalert2.min.css"]')) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "/focussalesmodule/content/sweetalert2.min.css";
+        document.head.appendChild(link);
+    }
+
+    if (!document.querySelector('script[src$="sweetalert2.all.min.js"]')) {
+        const script = document.createElement("script");
+        script.src = "/focussalesmodule/scripts/sweetalert2.all.min.js";
+        script.onload = () => {
+
+            isAlertActive = true;
+        };
+        document.body.appendChild(script);
+    }
+}
+function showMessageAlert(mssg, status) {
+    //Status 'success', 'error', 'warning', 'info', 'question'
+    if (isAlertActive)
+        Swal.fire(
+            {
+                title: 'Message', text: mssg, icon: status, didOpen: () => {
+                    Swal.getConfirmButton().focus();
+                }, didClose: () => {
+                    setRmaSearchFocus();
+                }
+            });
+}
+var docNoSearch = "";
+function initDocNoSearch(response)
+{
+
+    setupSweetAlert();
+    onDocNoSearch(response)
+   
+}
 function initPopulateProcess() {
     console.log("Populating screen data...");
     ++requestId;
-    Focus8WAPI.getFieldValue("populateScreenData", ["", "DocNo", "InvoiceNoSearch"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    Focus8WAPI.getFieldValue("populateScreenData", ["", "DocNo", "POSSaleNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
 function populateScreenData(response) {
 
@@ -930,13 +1037,11 @@ async function loadData(compid, vttype) {
     let response = await fetch(url);
 
     let dataObj = await response.json();
-    console.log(dataObj);
     ClearDocNoSearchField();
     if (dataObj.result == -1) {
 
-        showMessageAlert(dataObj.message);
-
-        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+        alert(dataObj.message);
+       
         return;
     }
     else {
@@ -947,25 +1052,24 @@ async function loadData(compid, vttype) {
             setHeaderDetails(item)
             for (let rowNo = 1; rowNo <= dataObj.datalist.length; rowNo++) {
 
-                setLineItemsToDoc(rowNo, dataObj.datalist[rowNo - 1])
+                setLineItemsToDoc(rowNo, dataObj.datalist[rowNo-1]) 
             }
-
+           
         }
-
+      
 
     }
 }
 
-
 function ClearDocNoSearchField() {
 
     ++requestId;
-    Focus8WAPI.setFieldValue("afterLineAdded", ["InvoiceNoSearch"], [""], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    Focus8WAPI.setFieldValue("afterLineAdded", [ "POSSaleNo"], [ ""], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
 function onDocNoSearch(response) {
 
     const label = Array.from(document.querySelectorAll("label"))
-        .find(l => l.textContent.trim().toLowerCase() === "invoice no search" || l.textContent.trim().toLowerCase() === "invoicenosearch");
+        .find(l => l.textContent.trim().toLowerCase() === "pos sale no" || l.textContent.trim().toLowerCase() === "possaleno");
 
 
     if (label) {
@@ -1008,36 +1112,4 @@ function onDocNoSearch(response) {
             input.focus();
         }
     }
-}
-
-function setupSweetAlert() {
-
-    if (!document.querySelector('link[href$="sweetalert2.min.css"]')) {
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = "/focussalesmodule/content/sweetalert2.min.css";
-        document.head.appendChild(link);
-    }
-
-    if (!document.querySelector('script[src$="sweetalert2.all.min.js"]')) {
-        const script = document.createElement("script");
-        script.src = "/focussalesmodule/scripts/sweetalert2.all.min.js";
-        script.onload = () => {
-
-            isAlertActive = true;
-        };
-        document.body.appendChild(script);
-    }
-}
-function showMessageAlert(mssg, status) {
-    //Status 'success', 'error', 'warning', 'info', 'question'
-    if (isAlertActive)
-        Swal.fire(
-            {
-                title: 'Message', text: mssg, icon: status, didOpen: () => {
-                    Swal.getConfirmButton().focus();
-                }, didClose: () => {
-                    setRmaSearchFocus();
-                }
-            });
 }
