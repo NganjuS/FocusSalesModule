@@ -704,7 +704,7 @@ function getExistingItems(item) {
     
     for (i = 0; i < validRows; i++) {
         
-        Focus8WAPI.getBodyFieldValue("getDocBodyData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
+        Focus8WAPI.getBodyFieldValue("getDocBodyData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross", "Taxable Value", "Vat"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
         //After last row
         //problem area
         
@@ -727,7 +727,7 @@ function getDocBodyData(response) {
     //"Item", "Unit", "RMA", "Quantity", "Rate", "Gross"
     let payload = {
 
-        "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docNo, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue
+        "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docNo, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue, TaxableAmt: response.data[7].FieldValue, VatAmt: response.data[8].FieldValue
     };
     shadowItemList.push(payload);
    
@@ -747,7 +747,14 @@ function getDocBodyData(response) {
                     showMessageAlert("RMA already exists !!","warning")
                    
                     let newQty = itemExists.RMA.length;
-                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity"], [itemExists.RMA, newQty], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+                    let gross = parseInt(newQty) * parseFloat(itemExists.Rate);
+
+                    let vatrate = parseFloat(loadedItem.VAT);
+                    let vatratecalc = vatrate > 0 ? vatrate / 100 : 0;
+                    let taxableValue = gross / (1 + vatratecalc);
+                    let vatamt = taxableValue * vatratecalc;
+
+                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity", "Gross", "Taxable Value", "Vat"], [itemExists.RMA, newQty, gross, taxableValue, vatamt], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
                     //clearSearchField();
                     return;
                 }
@@ -758,7 +765,14 @@ function getDocBodyData(response) {
                     
                     itemExists.RMA.push(loadedItem.RmaNo);
                     let newQty = itemExists.RMA.length;
-                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity"], [itemExists.RMA, newQty], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+                    let gross = parseInt(newQty) * parseFloat(itemExists.Rate);
+
+                    let vatrate = parseFloat(loadedItem.VAT);
+                    let vatratecalc = vatrate > 0 ? vatrate / 100 : 0;
+                    let taxableValue = gross / (1 + vatratecalc);
+                    let vatamt = taxableValue * vatratecalc;
+
+                    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["RMA", "Quantity", "Gross", "Taxable Value", "Vat"], [itemExists.RMA, newQty, gross, taxableValue, vatamt], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
 
 
                 }
@@ -774,6 +788,7 @@ function getDocBodyData(response) {
 
 }
 function setHeaderDetails(item) {
+
     ++requestId;
     Focus8WAPI.setFieldValue("afterLineAdded", ["CustomerAC",  "Member", "Employee", "POSDocNo"], [item.CustomerId,  item.MemberId,item.EmployeeId,item.DocNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
@@ -781,7 +796,12 @@ function setLineItemsToDoc(rowNo, item) {
 
     ++requestId;
     let gross = parseInt(item.Qty) * parseFloat(item.Price);
-    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "Rate", "Gross", "RMA", "Discount","VoucherCode", "Voucher Discount"], [item.ItemId, item.UnitId, item.Qty, item.Price, gross, item.RmaNo, item.Discount,item.VoucherCode, item.VoucherDiscount], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+    let vatrate = parseFloat(item.VAT);
+    let vatratecalc = vatrate > 0 ? vatrate / 100 : 0;
+    let taxableValue = gross / (1 + vatratecalc);
+    let vatamt = taxableValue * vatratecalc;
+
+    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "Rate", "Gross", "RMA", "Discount", "VoucherCode", "Voucher Discount", "Taxable Value", "Vat"], [item.ItemId, item.UnitId, item.Qty, item.Price, gross, item.RmaNo, item.Discount, item.VoucherCode, item.VoucherDiscount, taxableValue, vatamt], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
 }
 function afterHeaderAdded(response) {
     setRmaSearchFocus();

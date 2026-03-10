@@ -252,6 +252,30 @@ namespace FocusSalesModule.Controllers
             }
             return resp;
         }
+        [HttpGet]
+        [Route("issalesreturnposted")]
+        public HashData<String> IsSalesReturnPosted(int compid, string docno)
+        {
+            HashData<String> resp = new HashData<String>();
+            try
+            {
+                string qry = $"select count(POSDocNo) from tCore_HeaderData1793_0 where POSDocNo='{docno}'";
+                int reccount = DbCtx<Int32>.GetScalar(compid, qry);
+                resp.result = reccount == 0 ? 1 : -1;
+                resp.message = reccount > 0 ? "Sales return has been posted for this checkout" : "Sales return has not been posted for this document";
+
+
+            }
+            catch(Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
+
         // For Editing copy the original details
         [HttpPost]
         [Route("savetempadvancepayment")]

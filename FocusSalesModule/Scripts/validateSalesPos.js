@@ -182,7 +182,7 @@ function getDocPostData(response) {
     //}
 
 }
-function getGrandTotal(response) {
+async function getGrandTotal(response) {
 
     if (isPostRequestProcessed(response.iRequestId)) {
         return;
@@ -206,11 +206,38 @@ function getGrandTotal(response) {
         Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
         return;
     }
+    try {
 
-    let mainUrl = `${posBaseUrl}/posscreen/openposbeforesave/?compid=${paymentHeaderObj.CompId}&vtype=${paymentHeaderObj.Vtype}&outletid=${paymentHeaderObj.OutletId}&memberid=${paymentHeaderObj.MemberId}&sessionid=${paymentHeaderObj.SessionId}&docno=${paymentHeaderObj.DocNo}&amount=${finalTotal}`
+        let isReversed = await checkIfReversed(paymentHeaderObj.CompId, paymentHeaderObj.DocNo);
 
-    discountVoucherList = [];
-    Focus8WAPI.openPopup(mainUrl);
+        if (isReversed.result == 1) {
+            console.log("Opening sales popup");
+            let mainUrl = `${posBaseUrl}/posscreen/openposbeforesave/?compid=${paymentHeaderObj.CompId}&vtype=${paymentHeaderObj.Vtype}&outletid=${paymentHeaderObj.OutletId}&memberid=${paymentHeaderObj.MemberId}&sessionid=${paymentHeaderObj.SessionId}&docno=${paymentHeaderObj.DocNo}&amount=${finalTotal}`
+
+            discountVoucherList = [];
+            Focus8WAPI.openPopup(mainUrl);
+        }
+        else {
+
+            alert(isReversed.message);
+            Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+        }
+    }
+    catch {
+
+        alert("Error validating sales return status, cannot proceed!!!");
+        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+    }
+    
+
+  
+}
+async function checkIfReversed(compid, docno) {
+
+    let url = `${posBaseUrl}/api/salespayments/issalesreturnposted/?compid=${compid}&docno=${docno}`;
+    let response = await fetch(url);
+    let dataObj = await response.json();
+    return dataObj;
 }
 function setDocumentIdentifier(strval) {
     ++postRequestId;

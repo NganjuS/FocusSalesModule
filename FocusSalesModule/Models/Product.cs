@@ -25,6 +25,7 @@ namespace FocusSalesModule.Models
         public decimal Qty { get; set; } = 1;
         public decimal Gross { get; set; }
         public decimal Stock { get; set; }
+        public decimal VAT { get; set; }
         public decimal DiscountPct { get; set; } = 0m;
         public decimal FixedDiscountAmt { get; set; } = 0m;
         public bool IsPriceExcl { get; set; } = false;
