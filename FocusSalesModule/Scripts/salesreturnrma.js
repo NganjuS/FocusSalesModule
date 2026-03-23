@@ -720,14 +720,13 @@ function getDocBodyData(response) {
 
     lineRequestsProcessed.push(response.iRequestId);
    
-    var docNo = response.data[1].FieldValue;
     var companyid = response.data[0].CompanyId;
     var sessid = response.data[0].SessionId;
     var vtype = response.data[0].iVoucherType;
     //"Item", "Unit", "RMA", "Quantity", "Rate", "Gross"
     let payload = {
 
-        "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docNo, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue, TaxableAmt: response.data[7].FieldValue, VatAmt: response.data[8].FieldValue
+        "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docno, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue, TaxableAmt: response.data[7].FieldValue, VatAmt: response.data[8].FieldValue
     };
     shadowItemList.push(payload);
    

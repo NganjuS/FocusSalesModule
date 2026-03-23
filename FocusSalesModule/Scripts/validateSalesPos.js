@@ -211,6 +211,7 @@ async function getGrandTotal(response) {
         let isReversed = await checkIfReversed(paymentHeaderObj.CompId, paymentHeaderObj.DocNo);
 
         if (isReversed.result == 1) {
+
             console.log("Opening sales popup");
             let mainUrl = `${posBaseUrl}/posscreen/openposbeforesave/?compid=${paymentHeaderObj.CompId}&vtype=${paymentHeaderObj.Vtype}&outletid=${paymentHeaderObj.OutletId}&memberid=${paymentHeaderObj.MemberId}&sessionid=${paymentHeaderObj.SessionId}&docno=${paymentHeaderObj.DocNo}&amount=${finalTotal}`
 
@@ -239,10 +240,24 @@ async function checkIfReversed(compid, docno) {
     let dataObj = await response.json();
     return dataObj;
 }
-function setDocumentIdentifier(strval) {
+function setDocumentIdentifier(dataObj) {
     ++postRequestId;
 
-    Focus8WAPI.setFieldValue("afterIdentifierAdded", ["DocumentTagId"], [strval], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, postRequestId);
+    let labelList = [];
+    labelList.push("DocumentTagId");
+    let valList = [];
+    valList.push(dataObj.docIdentifier);
+
+    for (const [key, value] of Object.entries(dataObj.fieldData)) {
+
+        labelList.push(key);
+        valList.push(value);
+    }
+    console.log(labelList);
+    console.log(valList);
+
+    Focus8WAPI.setFieldValue("afterIdentifierAdded", labelList, valList, Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, postRequestId);
+
     if (discountVoucherList.length > 0) {
 
         for (let i = 0; i < postShadowItemList.length; i++) {
@@ -283,8 +298,7 @@ function onPosClosePopupContinue() {
     ++postRequestId;
     Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
     Focus8WAPI.closePopup();
-    
-    
+       
 
 }
 

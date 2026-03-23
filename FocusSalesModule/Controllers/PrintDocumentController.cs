@@ -1,4 +1,5 @@
-﻿using FocusSalesModule.DTO;
+﻿using FocusSalesModule.Data;
+using FocusSalesModule.DTO;
 using FocusSalesModule.Helpers;
 using FocusSalesModule.Models;
 using Newtonsoft.Json;
@@ -19,6 +20,10 @@ namespace FocusSalesModule.Controllers
         // GET: PrintDocument
         public ActionResult Index(int compid,int vtype, string sessionid, string docno)
         {
+            int authStatus = DbCtx<Int32>.GetScalar(compid, $"select iAuth from tCore_Header_0 where sVoucherNo = '{docno}' and  iVoucherType = {vtype}");
+
+            if(authStatus != 1)
+                throw new Exception("Not allowed to print.");
 
             int saleLayoutId = Convert.ToInt32(WebConfigurationManager.AppSettings["SaleLayoutId"].ToString());
             Hashtable reportParams = new Hashtable();
@@ -39,6 +44,10 @@ namespace FocusSalesModule.Controllers
             byte[] pdfBytes = Array.Empty<byte>();
             if (resp.result == 1)
             {
+
+                int printCount = DbCtx<Int32>.GetScalar(compid, $"select iPrintCount from tCore_Header_0 where sVoucherNo = '{docno}' and  iVoucherType = {vtype}");
+
+                DbCtx<Int32>.ExecuteNonQry(compid, $"update tCore_Header_0 set iPrintCount={printCount + 1}  where sVoucherNo = '{docno}' and  iVoucherType = {vtype}");
 
                 var filePath = $@"C:\\Windows\\Temp\\{filename}.pdf";
                 var contentType = "application/pdf";

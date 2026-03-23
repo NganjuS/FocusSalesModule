@@ -380,9 +380,9 @@ namespace FocusSalesModule.Controllers
         }
         [HttpGet]
         [Route("updatepaymentdetails")]
-        public HashData<string> GetUpdatePaymentDetails(int compid,string sessionid,string docno,int vtype,string docIdentifier)
+        public HashData<dynamic> GetUpdatePaymentDetails(int compid,string sessionid,string docno,int vtype,string docIdentifier)
         {
-            HashData<string> resp = new HashData<string>();
+            HashData<dynamic> resp = new HashData<dynamic>();
             try
             {
                 string baseUrl = WebConfigurationManager.AppSettings["Server_API_IP"];
@@ -469,7 +469,9 @@ namespace FocusSalesModule.Controllers
                 {
                     //Update pos header
                     string qry = AppUtilities.GetQueryUpdate(compid, vtype, paymentList);
+
                     string clearFieldsQry = GetClearDataFieldsQry(compid, vtype);
+
                     string clrUpdateFieldsQry = clearFieldsQry.Trim().Length > 0 ? $"update tCore_HeaderData{vtype}_0 set {clearFieldsQry} where iheaderid = (select top 1 iheaderid from tcore_header_0 where sVoucherNo = '{docno}' and ivouchertype ={vtype})  " : "";
 
 

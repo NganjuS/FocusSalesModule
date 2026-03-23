@@ -80,6 +80,7 @@ function posSystem() {
 
                     postPaymentObject[i].PayList = postPaymentObject[i].PayList.filter(obj => obj.IsSelected == true);
                 }
+
                 console.log(postPaymentObject);
                 window.parent.paymentHeaderObj.BillSettlement = postPaymentObject;
 
@@ -113,6 +114,7 @@ function posSystem() {
 
                                 window.parent.discountVoucherList = discountType[0].PayList;
                             }
+
                             window.parent.setDocumentIdentifier(dataObj.data);
                             
                             window.parent.onPosClosePopupContinue();

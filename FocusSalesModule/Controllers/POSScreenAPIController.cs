@@ -16,6 +16,7 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using System.Runtime.Remoting.Messaging;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Web.Configuration;
@@ -162,9 +163,9 @@ namespace FocusSalesModule.Controllers
         }
         [HttpPost]
         [Route("savetemppayment")]
-        public HashData<String> SaveTempPayment(PosBeforeSaveDto beforeSaveDto)
+        public HashData<dynamic> SaveTempPayment(PosBeforeSaveDto beforeSaveDto)
         {
-            HashData<String> resp = new HashData<String>();
+            HashData<dynamic> resp = new HashData<dynamic>();
             try
             {
 
@@ -174,8 +175,21 @@ namespace FocusSalesModule.Controllers
                     resp.message = "All outlet accounts have not been set, cannot proceed !!";
                     return resp;
                 }
+                int compid = beforeSaveDto.CompId;
+                int vtype = beforeSaveDto.Vtype;
 
-                resp.data = PaymentManager.PreProcessPayment(beforeSaveDto);
+                string docIdentifier  =  PaymentManager.PreProcessPayment(beforeSaveDto);
+
+                List<TemporaryPaymentDataDto> paymentList = DbCtx<TemporaryPaymentDataDto>.GetObjList(compid, $"select * from fsm_TemporaryPayments where DocumentTagId = '{docIdentifier}'");
+
+             
+                Hashtable fieldData = AppUtilities.GetScreenFields(compid, vtype, paymentList);
+
+                   resp.data = new
+                   {
+                        fieldData,
+                        docIdentifier
+                   };
                 resp.result = 1;
             }
             catch (Exception ex)

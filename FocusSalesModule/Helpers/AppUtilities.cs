@@ -2,6 +2,7 @@
 using FocusSalesModule.DTO;
 using FocusSalesModule.Models;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
@@ -192,6 +193,56 @@ namespace FocusSalesModule.Helpers
            
             return  String.Join(",", filteredFieldList);
 
+        }
+        public static Hashtable GetScreenFields(int compid, int vtype, List<TemporaryPaymentDataDto> billSettlement)
+        {
+            Hashtable hashtable = new Hashtable();
+
+            string fieldlistqry = $"SELECT upper(COLUMN_NAME) COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'tCore_HeaderData{vtype}_0'";
+            List<string> fieldList = DbCtx<String>.GetObjList(compid, fieldlistqry);
+            var paymentMethodList = billSettlement.Select(x => x.PaymentMethodId).Distinct().ToList();
+
+            foreach (var paymentMethod in paymentMethodList)
+            {
+              
+                string[] extList = { "", "A", "B", "C", "D", "E", "F", "G" };
+                string pname = DbCtx<string>.GetScalar(compid, $"select sName from mCore_paymenttype where imasterid = {paymentMethod}");
+                string strippedName = AppUtilities.StripExtraChar(pname);
+
+
+                string txnreferencefield = $"{strippedName}Reference";
+                string txnamountfield = $"{strippedName}Amount";
+                string txnaccountfield = $"{strippedName}Account";
+                decimal amt = billSettlement.Where(x => x.PaymentMethodId == paymentMethod).Sum(x => x.Amount);
+
+                string reference = String.Join(",", billSettlement.Where(x => x.PaymentMethodId == paymentMethod).Select(x => x.Reference).ToList());
+
+                int accountId = billSettlement.Where(x => x.PaymentMethodId == paymentMethod).FirstOrDefault().SelectedAccount;
+
+                if (fieldList.Contains(txnreferencefield.ToUpper()))
+                {
+
+                    hashtable[txnreferencefield] = reference;
+
+                }
+                if (fieldList.Contains(txnamountfield.ToUpper()))
+                {
+
+                    hashtable[txnamountfield] = amt;
+
+                }
+                if (fieldList.Contains(txnaccountfield.ToUpper()))
+                {
+
+                    hashtable[txnaccountfield] = accountId;
+
+                }
+                
+
+
+            }
+
+            return hashtable;
         }
         public static string GetQueryUpdate(int compid, int vtype, List<TemporaryPaymentDataDto> billSettlement)
         {

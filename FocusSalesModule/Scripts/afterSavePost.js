@@ -450,6 +450,7 @@ function isRequestProcessed(iRequestId) {
         }
     } return false;
 }
+
 function updatePayment(response) {
     ++requestId;
     Focus8WAPI.getFieldValue("getDocumentDetails", ["", "DocNo", "DocumentTagId"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
@@ -527,6 +528,7 @@ function setupPrintJs(compId, sessionId, docNo, vtype) {
         document.body.appendChild(script);
     }
     else {
+
         initPrintDocument(compId, sessionId, docNo, vtype);
     }
 }
