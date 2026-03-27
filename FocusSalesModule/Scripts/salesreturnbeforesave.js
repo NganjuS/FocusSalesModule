@@ -477,7 +477,7 @@ async function checkReturnUsed(compid, vtype, docno) {
     }
     else {
 
-        showMessageAlert("This sales return has already been used in another transaction. You cannot edit this Sales Return.", "warning");
+        showMessageAlert("This sales return has already been used in another transaction. You cannot edit or delete this sales return.", "warning");
         Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
     }
 }

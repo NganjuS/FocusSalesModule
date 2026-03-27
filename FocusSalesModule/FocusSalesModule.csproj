@@ -221,6 +221,7 @@
     <Compile Include="Controllers\TransactionManagerController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Data\DbCtx.cs" />
+    <Compile Include="DTO\AdvanceReceiptAfterSave.cs" />
     <Compile Include="DTO\AdvanceReceiptBeforeSave.cs" />
     <Compile Include="DTO\AdvanceReceiptDelLine.cs" />
     <Compile Include="DTO\CreditNoteRequestDto.cs" />

@@ -506,38 +506,9 @@ function getEditDocumentDetails(response) {
 
     //}
 }
-//function getEditDocumentLines(response) {
 
-//    if (isEditRequestProcessed(response.iRequestId)) {
-//        return;
-//    }
-
-//    editRequestsProcessed.push(response.iRequestId);
-
-
-//    let dtObj = {
-
-//        "CompanyId": headerData.CompanyId,
-//        "SessionId": headerData.SessionId,
-//        "Vtype": response.data[0].iVoucherType,
-//        "DocNo": headerData.DocNo,
-//        "PaymentType": response.data[1].FieldValue,
-//        "Account": response.data[2].FieldValue,
-//        "Amount": response.data[3].FieldValue,
-//        "ReferenceNo": response.data[4].FieldValue
-//    }
-
-    //docLinesEdit.push(dtObj);
-//    if (response.iRequestId == validRows) {
-
-//        preSaveData();
-//        console.log("All lines fetched");
-//        //Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
-//    }
-//}
+var prevSavedReferences = [];
 async function preSaveData() {
-
-   
 
         let url = `/focussalesmodule/api/salespayments/savetempadvancepayment`;
         let response = await fetch(url, {
@@ -552,10 +523,11 @@ async function preSaveData() {
     if (reponseData.result == 1) {
 
 
-        headerDataEdit.DocumentTagId = reponseData.data;
+        headerDataEdit.DocumentTagId = reponseData.data.docIdentifier;
+        prevSavedReferences = reponseData.data.refList;
         ++requestId;
 
-        Focus8WAPI.setFieldValue("afterIdentifierAdded", ["DocumentTagId"], [reponseData.data], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+        Focus8WAPI.setFieldValue("afterIdentifierAdded", ["DocumentTagId"], [reponseData.data.docIdentifier], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
         Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
 
     }
@@ -592,12 +564,18 @@ async function updateSavedData() {
    
     let url = `/focussalesmodule/api/salespayments/updateadvancepayment`;
     debugger;
+
+    let postObj = {
+
+        AdvanceReceipt: headerDataEdit,
+        References: prevSavedReferences
+    }
     let response = await fetch(url, {
         method: "POST",
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(headerDataEdit)
+        body: JSON.stringify(postObj)
     });
 
     let reponseData = await response.json();

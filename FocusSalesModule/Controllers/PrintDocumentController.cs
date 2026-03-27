@@ -46,6 +46,8 @@ namespace FocusSalesModule.Controllers
             {
 
                 int printCount = DbCtx<Int32>.GetScalar(compid, $"select iPrintCount from tCore_Header_0 where sVoucherNo = '{docno}' and  iVoucherType = {vtype}");
+                if(printCount > 0)
+                    throw new Exception("Max print count already utilised !!! ");
 
                 DbCtx<Int32>.ExecuteNonQry(compid, $"update tCore_Header_0 set iPrintCount={printCount + 1}  where sVoucherNo = '{docno}' and  iVoucherType = {vtype}");
 

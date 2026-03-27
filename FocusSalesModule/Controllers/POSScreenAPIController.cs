@@ -87,11 +87,17 @@ namespace FocusSalesModule.Controllers
             try
             {
                 POSInitData posInitData = new POSInitData();
+                string discqry = DiscountVoucherQry.GetDiscountVoucherQuery(
+                    "", vtype, PosReceiptScreenMain.GetReceiptVtype(compid));
+                Logger.writeLog("Discount Qry");
+                Logger.writeLog(discqry);
 
-                posInitData.DiscountVouchers = DbCtx<DiscountModel>.GetObjList(compid, DiscountVoucherQry.GetDiscountVoucherQuery(
-                    "", vtype, PosReceiptScreenMain.GetReceiptVtype(compid)));
-                
-                posInitData.PaymentTypes = DbCtx<dynamic>.GetObjList(compid, TxnQueries.GetOutletPaymentTypesQry(outletid));
+                posInitData.DiscountVouchers = DbCtx<DiscountModel>.GetObjList(compid, discqry);
+                string txnQry = TxnQueries.GetOutletPaymentTypesQry(outletid);
+
+                Logger.writeLog("Payments Qry");
+                Logger.writeLog(txnQry);
+                posInitData.PaymentTypes = DbCtx<dynamic>.GetObjList(compid, txnQry);
 
                 resp.data = posInitData;
                 resp.result = 1;

@@ -491,7 +491,6 @@ function getDocumentDetails(response) {
         Focus8WAPI.getBodyFieldValue("getDocumentLines", ["", "Payment Type", "Account", "Amount", "ReferenceNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i+1);
         //After last row
       
-
     }
 }
 function getDocumentLines(response) {

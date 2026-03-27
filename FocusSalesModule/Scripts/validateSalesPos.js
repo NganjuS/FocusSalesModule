@@ -170,7 +170,7 @@ function getDocPostData(response) {
             }
         }
         ++postRequestId
-        Focus8WAPI.getBodyFieldValue("getGrandTotal", ["", "GRAND TOTAL", "Additional Charges","Additional Discount"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, -1, postRequestId);
+        Focus8WAPI.getBodyFieldValue("getGrandTotal", ["", "GRAND TOTAL", "Additional Charges", "Additional Discount", "BUY NOW PAY LATER"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, -1, postRequestId);
         
     }
     //else {
@@ -196,8 +196,9 @@ async function getGrandTotal(response) {
     let grandTotal = validateDecimal(response.data[1].OutputValue);
     let additionalCharges = validateDecimal(response.data[2].OutputValue);
     let additionalDisc = validateDecimal(response.data[3].OutputValue);
+    let buyNowPayLater = validateDecimal(response.data[4].OutputValue);
 
-    let finalTotal = grossAmt - discAmt + additionalCharges - additionalDisc;
+    let finalTotal = grossAmt - discAmt + additionalCharges - additionalDisc - buyNowPayLater;
 
     if (finalTotal <= 0) {
 
@@ -240,6 +241,66 @@ async function checkIfReversed(compid, docno) {
     let dataObj = await response.json();
     return dataObj;
 }
+function validateBeforeDelete(response)
+{
+    ++postRequestId;
+    Focus8WAPI.getFieldValue("deleteCheck", ["", "DocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, postRequestId);
+   
+}
+async function deleteCheck(response) {
+    
+    if (isPostRequestProcessed(response.iRequestId)) {
+        return;
+    }
+    postRequestsProcessed.push(response.iRequestId);
+
+    let loginId = response.data[0].LoginId;
+    let vtype = response.data[0].iVoucherType;
+    let compId = response.data[0].CompanyId;
+    let sessionId = response.data[0].SessionId;
+    let docNo = response.data[1].FieldValue;
+
+    let isReversed = await checkIfReversed(compId, docNo);
+
+    if (isReversed.result == 1) {
+
+        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
+    }
+    else {
+
+        alert(isReversed.message);
+        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+    }
+}
+
+function validateAfterDelete(response) {
+
+    ++postRequestId;
+    Focus8WAPI.getFieldValue("deletePosReceipt", ["", "DocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, postRequestId);
+
+}
+async function deletePosReceipt(response) {
+
+    if (isPostRequestProcessed(response.iRequestId)) {
+        return;
+    }
+    postRequestsProcessed.push(response.iRequestId);
+
+    let compId = response.data[0].CompanyId;
+    let docNo = response.data[1].FieldValue;
+    let sessionId = response.data[0].SessionId;
+
+    let url = `${posBaseUrl}/api/salespayments/delposreceipt/?compid=${compId}&sessionid=${sessionId}&docno=${docNo}`;
+    let req = await fetch(url);
+    let dataObj = await req.json();
+    if (dataObj.result != 1) {
+
+        alert(dataObj.message);
+    }
+
+    Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
+
+}
 function setDocumentIdentifier(dataObj) {
     ++postRequestId;
 
@@ -253,8 +314,7 @@ function setDocumentIdentifier(dataObj) {
         labelList.push(key);
         valList.push(value);
     }
-    console.log(labelList);
-    console.log(valList);
+
 
     Focus8WAPI.setFieldValue("afterIdentifierAdded", labelList, valList, Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, postRequestId);
 

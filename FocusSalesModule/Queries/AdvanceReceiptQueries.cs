@@ -11,13 +11,17 @@ namespace FocusSalesModule.Queries
         {
             return $"select count(dt.iBodyId) from tCore_Data4100_0 dt join tCore_Data_0 d on d.iBodyId = dt.iBodyId left join  tCore_Data_Tags_0 tg on tg.iBodyId = d.iBodyId left join mCore_paymenttype ptyp on ptyp.iMasterId = tg.itag3012 left join muCore_paymenttype putyp on putyp.iMasterId = ptyp.iMasterId  where dt.ReferenceNo = '{refno}'  and putyp.TypeSelect = 6";
         }
-        public static string AdvanceReceiptExistsQry(string docno)
+        public static string GetReferenceQry(string docno, int vtype)
         {
-            return $"select count(h.iHeaderId) from tCore_Header_0 h  where h.iVoucherType = 4611 and h.sVoucherNo = '{docno}'";
+            return $"select dt.ReferenceNo from tCore_Header_0 h join tcore_data_0 d on d.iheaderid = h.iheaderid join tcore_data{vtype}_0 dt on dt.ibodyid = d.ibodyid  where h.iVoucherType = {vtype} and h.sVoucherNo = '{docno}'";
+        }
+        public static string AdvanceReceiptExistsQry(string docno, int vtype)
+        {
+            return $"select count(h.iHeaderId) from tCore_Header_0 h  where h.iVoucherType = {vtype} and h.sVoucherNo = '{docno}'";
         }
         public static string GetAdvanceReceiptReferenceNo(int vtype, string docno)
         {
-            return $"select dd.ReferenceNo from tCore_Header_0 h join tCore_Data_0 d on d.iHeaderId = h.iHeaderId left join tCore_Data4611_0 dd on dd.iBodyId = d.iBodyId left join  tCore_Data_Tags_0 tg on tg.iBodyId = d.iBodyId left join muCore_paymenttype pyu on pyu.imasterid = py.imasterid where  pyu.TypeSelect = 3 and h.iVoucherType = 4611 and h.sVoucherNo = '{docno}' ";
+            return $"select dd.ReferenceNo from tCore_Header_0 h join tCore_Data_0 d on d.iHeaderId = h.iHeaderId left join tCore_Data{vtype}_0 dd on dd.iBodyId = d.iBodyId left join  tCore_Data_Tags_0 tg on tg.iBodyId = d.iBodyId left join mCore_paymenttype py on py.iMasterId = tg.iTag3012 left join muCore_paymenttype pyu on pyu.imasterid = py.imasterid where  pyu.TypeSelect = 3 and h.iVoucherType = {vtype} and h.sVoucherNo = '{docno}' ";
         }
         public static string UpdateOnlinePaymentsStatus(int vtype, string docno, int status)
         {

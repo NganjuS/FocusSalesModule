@@ -196,20 +196,39 @@ namespace FocusSalesModule.Controllers
         }
         [HttpPost]
         [Route("updateadvancepayment")]
-        public HashData<string> GetUpdateAdvancePayment(AdvanceReceiptBeforeSave advance)
+        public HashData<string> GetUpdateAdvancePayment(AdvanceReceiptAfterSave aftersaveadvance)
         {
+            var advance = aftersaveadvance.AdvanceReceipt;
+
             HashData<string> resp = new HashData<string>();
             try
             {
-
-                if(!String.IsNullOrEmpty(advance.DocumentTagId))
+                //Clear references for previous transaction
+                if(aftersaveadvance.References.Count > 0)
                 {
-                    string qry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 0  where TransactionReference in (select ReferenceNo from fsm_TemporaryAdvancePayments where DocumentTagId= '{advance.DocumentTagId}')";
+                    string refFilterList = String.Join(",", aftersaveadvance.References.Select(r => $"'{r}'"));
+
+                    string qry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 0  where TransactionReference in ({refFilterList})";
                     DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, qry);
 
-
                 }
-                DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, AdvanceReceiptQueries.UpdateOnlinePaymentsStatus(advance.Vtype , advance.DocNo, 1));
+
+                //if(!String.IsNullOrEmpty(advance.DocumentTagId))
+                //{
+
+                //    string qry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 0  where TransactionReference in (select ReferenceNo from fsm_TemporaryAdvancePayments where DocumentTagId= '{advance.DocumentTagId}')";
+                //    DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, qry);
+
+
+                //}
+
+                //Check if document is deleted
+                int docCount = DbCtx<Int32>.GetScalar(advance.CompanyId, AdvanceReceiptQueries.AdvanceReceiptExistsQry(advance.DocNo, advance.Vtype));
+
+                if(docCount > 0)
+                {
+                    DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, AdvanceReceiptQueries.UpdateOnlinePaymentsStatus(advance.Vtype, advance.DocNo, 1));
+                }
                 resp.result = 1;
 
 
@@ -262,7 +281,7 @@ namespace FocusSalesModule.Controllers
                 string qry = $"select count(POSDocNo) from tCore_HeaderData1793_0 where POSDocNo='{docno}'";
                 int reccount = DbCtx<Int32>.GetScalar(compid, qry);
                 resp.result = reccount == 0 ? 1 : -1;
-                resp.message = reccount > 0 ? "Sales return has been posted for this checkout" : "Sales return has not been posted for this document";
+                resp.message = reccount > 0 ? "Sales return has been posted for this checkout, it cannot be editted or deleted" : "Sales return has not been posted for this document";
 
 
             }
@@ -276,21 +295,74 @@ namespace FocusSalesModule.Controllers
             return resp;
         }
 
-        // For Editing copy the original details
-        [HttpPost]
-        [Route("savetempadvancepayment")]
-        public HashData<String> SaveTempAdvancePayment(AdvanceReceiptBeforeSave advanceBeforeSave)
+        [HttpGet]
+        [Route("delposreceipt")]
+        public HashData<String> DelPosReceipt(int compid, string sessionid,string docno)
         {
             HashData<String> resp = new HashData<String>();
             try
             {
+                string qry = $"select h.sVoucherNo from tCore_HeaderData4100_0 he join tCore_Header_0 h on h.iHeaderId = he.iHeaderId where he.POSDocNo = '{docno}'";
 
-                int docCount = DbCtx<Int32>.GetScalar(advanceBeforeSave.CompanyId, AdvanceReceiptQueries.AdvanceReceiptExistsQry(advanceBeforeSave.DocNo));
+                string bnkqry = $"select pl.ReferenceNo from tCore_HeaderData4100_0 he join tCore_Header_0 h on h.iHeaderId = he.iHeaderId left join tCore_Data_0 dd on dd.iHeaderId = h.iHeaderId left join tCore_Data4100_0 pl on pl.iBodyId = dd.iBodyId left join tCore_Data_Tags_0 tg on tg.iBodyId = pl.iBodyId left join mCore_paymenttype pyt on pyt.iMasterId = tg.iTag3012 left join muCore_paymenttype pyte on pyte.iMasterId = pyt.iMasterId  where  pyte.TypeSelect =  3 and  he.POSDocNo = '{docno}'";
+                List<string> txnRefList = DbCtx<string>.GetObjList(compid, bnkqry);
+
+                string reptno = DbCtx<string>.GetScalar(compid, qry);
+                if(!String.IsNullOrEmpty(reptno))
+                {
+                    string baseUrl = WebConfigurationManager.AppSettings["Server_API_IP"];
+                    string delUrl = $"{baseUrl}/Transactions/FBI POS Receipt/{reptno.Replace("/", "~~")}";
+
+                    HashDataFocus delResp = APIManager.delDocument(sessionid, delUrl);
+
+                    //if (delResp.result < 1)
+                    //{
+                    //    resp.result = -1;
+                    //    resp.message = "Error in updating payment. Check User Rights: " + delResp.message;
+                       
+                    //}
+                    if(delResp.result > 0 && txnRefList.Count > 0)
+                    {
+                        string filterParam = String.Join(",",txnRefList.Select(x => $"'{x}'").ToArray());
+
+                        DbCtx<Int32>.ExecuteNonQry(compid, $"update  fpl_OnlinePayments set IsAllocatedToSale = 0 where TransactionReference  in ({filterParam})");
+                    }
+
+                    resp.result= delResp.result;                  
+                    resp.message = delResp.message;
+                    return resp;
+
+                }
+                resp.result = 1;
+
+
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
+        // For Editing copy the original details
+        [HttpPost]
+        [Route("savetempadvancepayment")]
+        public HashData<dynamic> SaveTempAdvancePayment(AdvanceReceiptBeforeSave advanceBeforeSave)
+        {
+            HashData<dynamic> resp = new HashData<dynamic>();
+            try
+            {
+
+                int docCount = DbCtx<Int32>.GetScalar(advanceBeforeSave.CompanyId, AdvanceReceiptQueries.AdvanceReceiptExistsQry(advanceBeforeSave.DocNo, advanceBeforeSave.Vtype));
+
                 if(docCount == 0)
                 {
                     resp.result = 2;
                     resp.message = "Advance Receipt was not created.";
                     return resp;
+
                 }
 
                 int usedcount = DbCtx<Int32>.GetScalar(advanceBeforeSave.CompanyId, AdvanceReceiptQueries.CheckIfAdvancedReceiptUsed(advanceBeforeSave.DocNo));   
@@ -301,7 +373,14 @@ namespace FocusSalesModule.Controllers
                     return resp;
                 }
 
-                resp.data = PaymentManager.PreProcessAdvancePayment(advanceBeforeSave);
+                string docIdentifier = PaymentManager.PreProcessAdvancePayment(advanceBeforeSave);
+                List<string> refList = DbCtx<string>.GetObjList(advanceBeforeSave.CompanyId, AdvanceReceiptQueries.GetAdvanceReceiptReferenceNo(advanceBeforeSave.Vtype, advanceBeforeSave.DocNo));
+
+                resp.data =  new
+                {
+                    docIdentifier,
+                    refList 
+                };          
 
                 resp.result = 1;
             }

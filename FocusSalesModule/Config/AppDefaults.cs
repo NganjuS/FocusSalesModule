@@ -7,7 +7,7 @@ namespace FocusSalesModule.Config
 {
     public class AppDefaults
     {
-
+        public const int AdvanceReceiptVType = 4867;
         public enum PaymentGateway
         {
             Moniepoint = 1,
