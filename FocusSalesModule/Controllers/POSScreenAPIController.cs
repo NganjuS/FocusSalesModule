@@ -239,7 +239,7 @@ namespace FocusSalesModule.Controllers
                 Hashtable docheader = JsonConvert.DeserializeObject<Hashtable>(response.data[0]["Header"].ToString());
                 List<Hashtable> docbody = JsonConvert.DeserializeObject<List<Hashtable>>(response.data[0]["Body"].ToString());
 
-                Hashtable header = PosReceiptScreenMain.BuildReceiptHeader(docheader);
+                Hashtable header = PosReceiptScreenMain.BuildReceiptHeader(docheader,true);
                 List<Hashtable> doclines = PosReceiptScreenMain.BuildReceiptLines(docbody, billSettlement);
                 if(headerid != 0)
                 {

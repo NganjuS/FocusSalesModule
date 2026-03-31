@@ -47,15 +47,18 @@ namespace FocusSalesModule.Screens
         {
             return DbCtx<int>.GetObj(compid, $"select iVoucherType from cCore_Vouchers_0 where sName = '{screenName}'");
         }
-        public static Hashtable BuildReceiptHeader(Hashtable docheader)
+        public static Hashtable BuildReceiptHeader(Hashtable docheader, bool isApproved)
         {
+            var flags = new Hashtable();
+            flags["Suspended"] = !isApproved;
             return new Hashtable()
             {
                 { "Account__Id" , docheader["CustomerAC__Id"].ToString()},
                 { "Cost Center__Id" , docheader["Cost Center__Id"].ToString()},
                 { "Outlet__Id" , docheader["Outlet__Id"].ToString()},
                 { "Member__Id" , docheader["Member__Id"].ToString()},
-                { "POSDocNo" , docheader["DocNo"].ToString()}
+                { "POSDocNo" , docheader["DocNo"].ToString()},
+                { "Flags" , flags }
             };
         }
         public static List<Hashtable> BuildReceiptLines(List<Hashtable> datalist, List<BillSettlement> billSettlements)

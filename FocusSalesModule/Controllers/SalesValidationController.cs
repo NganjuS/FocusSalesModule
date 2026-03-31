@@ -1,5 +1,4 @@
-﻿using Focus.Common.DataStructs;
-using FocusSalesModule.Config;
+﻿using FocusSalesModule.Config;
 using FocusSalesModule.Data;
 using FocusSalesModule.DTO;
 using FocusSalesModule.Helpers;
@@ -14,10 +13,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Runtime.Remoting.Messaging;
-using System.Runtime.Remoting.Metadata.W3cXsd2001;
+
 using System.Web.Configuration;
 using System.Web.Http;
 using System.Web.UI.WebControls;
@@ -458,6 +454,30 @@ namespace FocusSalesModule.Controllers
             return resp;
         }
         [HttpGet]
+        [Route("updatereceiptstatus")]
+        public HashData<string> UpdateReceiptStatus(int compid, string sessionid, int vtype, string docno )
+        {
+            HashData<string> resp = new HashData<string>();
+            try
+            {
+                int headerid = DbCtx<Int32>.GetScalar(compid, $"select h.iHeaderId from tCore_Header_0 h join tCore_HeaderData4100_0 he on he.iHeaderId = h.iHeaderId where he.POSDocNo = '{docno}'");
+
+                DbCtx<Int32>.ExecuteNonQry(compid, $"update tCore_Header_0 set bSuspended = 0 where iHeaderId = {headerid}");
+                resp.result = 1;
+
+
+
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
+        [HttpGet]
         [Route("updatepaymentdetails")]
         public HashData<dynamic> GetUpdatePaymentDetails(int compid,string sessionid,string docno,int vtype,string docIdentifier)
         {
@@ -491,9 +511,22 @@ namespace FocusSalesModule.Controllers
 
                 string wUrl = $"{baseUrl}/screen/transactions/{AppUtilities.GetScreenName(compid, vtype)}/{docno.Replace("/", "~~")}";
                 HashDataFocus response = APIManager.getData(sessionid, wUrl);
+                if(response.result <= 0)
+                {
+                    resp.result = response.result;
+                    resp.message = response.message;
+                    return resp;
+
+                }
                 Hashtable docheader = JsonConvert.DeserializeObject<Hashtable>(response.data[0]["Header"].ToString());
+                Hashtable flagDetails = JsonConvert.DeserializeObject<Hashtable>(docheader["Flags"].ToString());
+                bool isApproved = Convert.ToBoolean(flagDetails["Approved"]);
+               
+
                 List<Hashtable> docbody = JsonConvert.DeserializeObject<List<Hashtable>>(response.data[0]["Body"].ToString());
-                Hashtable header = PosReceiptScreenMain.BuildReceiptHeader(docheader);
+
+
+                Hashtable header = PosReceiptScreenMain.BuildReceiptHeader(docheader, isApproved);
                 List<Hashtable> doclines = PosReceiptScreenMain.PaymentBuildReceiptLines(docbody, paymentList);
 
 

@@ -204,7 +204,7 @@ async function getGrandTotal(response) {
 
         alert("Total amount is less or equal zero,cannot proceed!!!");
         isProcessing = false;
-        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
         return;
     }
     try {
