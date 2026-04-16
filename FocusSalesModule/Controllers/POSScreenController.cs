@@ -41,9 +41,9 @@ namespace FocusSalesModule.Controllers
         }
         public ActionResult OpenPOSBeforeSave(int compid, int vtype, int outletid, int memberid, string sessionid, string docno, decimal amount)
         {
-            ExecuteCreateTable.RunQueries(compid);
+            //ExecuteCreateTable.RunQueries(compid);
             //Check if credit note has been done against the invoice
-            string qry = ""; 
+
             ViewBag.compid = compid;
             ViewBag.sessionid = sessionid;
             ViewBag.outletid = outletid;
@@ -57,7 +57,7 @@ namespace FocusSalesModule.Controllers
         public ActionResult AdvanceReceiptBeforeSave(int compid, int vtype,  int memberid, string sessionid, string docno, int outletid)
         {
 
-            DbCtx<Int32>.ExecuteNonQry(compid, PaymentsTableQueries.CreateAdvancePaymentTable());
+            //DbCtx<Int32>.ExecuteNonQry(compid, PaymentsTableQueries.CreateAdvancePaymentTable());
             ViewBag.compid = compid;
             ViewBag.sessionid = sessionid;
             ViewBag.outletid = outletid;

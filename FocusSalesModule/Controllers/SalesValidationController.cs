@@ -223,7 +223,8 @@ namespace FocusSalesModule.Controllers
 
                 if(docCount > 0)
                 {
-                    DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, AdvanceReceiptQueries.UpdateOnlinePaymentsStatus(advance.Vtype, advance.DocNo, 1));
+                    string onlineqry = AdvanceReceiptQueries.UpdateOnlinePaymentsStatus(advance.Vtype, advance.DocNo, 1);
+                    DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, onlineqry);
                 }
                 resp.result = 1;
 
@@ -369,7 +370,9 @@ namespace FocusSalesModule.Controllers
                     return resp;
                 }
 
+
                 string docIdentifier = PaymentManager.PreProcessAdvancePayment(advanceBeforeSave);
+
                 List<string> refList = DbCtx<string>.GetObjList(advanceBeforeSave.CompanyId, AdvanceReceiptQueries.GetAdvanceReceiptReferenceNo(advanceBeforeSave.Vtype, advanceBeforeSave.DocNo));
 
                 resp.data =  new
@@ -460,9 +463,56 @@ namespace FocusSalesModule.Controllers
             HashData<string> resp = new HashData<string>();
             try
             {
-                int headerid = DbCtx<Int32>.GetScalar(compid, $"select h.iHeaderId from tCore_Header_0 h join tCore_HeaderData4100_0 he on he.iHeaderId = h.iHeaderId where he.POSDocNo = '{docno}'");
+                string rcptdocno = DbCtx<string>.GetScalar(compid, $"select h.svoucherno from tCore_Header_0 h join tCore_HeaderData4100_0 he on he.iHeaderId = h.iHeaderId where he.POSDocNo = '{docno.Trim()}'");
 
-                DbCtx<Int32>.ExecuteNonQry(compid, $"update tCore_Header_0 set bSuspended = 0 where iHeaderId = {headerid}");
+                string baseUrl = WebConfigurationManager.AppSettings["Server_API_IP"];
+
+                string wUrl = $"{baseUrl}/screen/transactions/{PosReceiptScreenMain.screenName}/{rcptdocno.Replace("/", "~~")}";
+
+                HashDataFocus response = APIManager.getData(sessionid, wUrl);
+                if (response.result <= 0)
+                {
+                    resp.result = response.result;
+                    resp.message = response.message;
+                    return resp;
+
+                }
+                Hashtable docheader = JsonConvert.DeserializeObject<Hashtable>(response.data[0]["Header"].ToString());
+
+
+                docheader.Remove("Flags");
+                docheader.Remove("Time");
+                docheader.Remove("Net");
+                docheader.Remove("TransactionNet");
+                docheader["Flags"] = new Hashtable() { { "Suspended", false } };
+
+                //Hashtable flagDetails = JsonConvert.DeserializeObject<Hashtable>(docheader["Flags"].ToString());
+
+                List<Hashtable> doclines = JsonConvert.DeserializeObject<List<Hashtable>>(response.data[0]["Body"].ToString());
+
+
+                QuickFuncs.RemoveExtraMasterFields(docheader);
+
+                foreach(var line in doclines)
+                {
+                    QuickFuncs.RemoveExtraMasterFields(line);
+                    line.Remove("BodyFlags");
+                }
+
+               // bool isApproved = Convert.ToBoolean(flagDetails["Approved"]);
+
+
+
+                HashDataFocus objHashRequest = new HashDataFocus();
+                Hashtable objHash = new Hashtable();
+                objHash.Add("Header", docheader);
+                objHash.Add("Body", doclines);
+                List<Hashtable> lstHash = new List<Hashtable>();
+                lstHash.Add(objHash);
+                objHashRequest.data = lstHash;
+                string url = $"{baseUrl}/Transactions/{PosReceiptScreenMain.screenName}";
+                HashDataFocus hashDataFocus = APIManager.postData(objHashRequest, sessionid, url);
+                //DbCtx<Int32>.ExecuteNonQry(compid, $"update tCore_Header_0 set bSuspended = 0 where iHeaderId = {headerid}");
                 resp.result = 1;
 
 

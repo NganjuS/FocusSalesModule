@@ -86,6 +86,7 @@ namespace FocusSalesModule.Controllers
         [Route("loadsalesdata")]
         public HashData<dynamic> LoadSalesData(int compid, int vtype, string docnosearch)
         {
+            //Sales data for Sales return
             HashData<dynamic> hashData = new HashData<dynamic>();
             try
             {

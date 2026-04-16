@@ -125,11 +125,11 @@ function posSystem() {
 
                        
                         this.showAlertMessage(dataObj.message, "warning");
-                        setTimeout(() => {
+                        //setTimeout(() => {
 
-                            window.parent.onPosClosePopupStop();
+                        //    //window.parent.onPosClosePopupStop();
 
-                        }, 2000)
+                        //}, 2000)
                        // 
                         //alert(dataObj.message);
                     }

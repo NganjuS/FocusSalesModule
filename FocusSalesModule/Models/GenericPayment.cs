@@ -11,6 +11,8 @@ namespace FocusSalesModule.Models
         public int AccountId { get; set; }
         public string Reference { get; set; }
         public decimal Amount { get; set; }
+        public decimal PostedAmt { get; set; }
+        public decimal FullAmt { get; set; }
         public bool IsSelected { get; set; }
     }
 }

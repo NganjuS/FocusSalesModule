@@ -18,7 +18,7 @@ namespace FocusSalesModule.Manager
         {
             Guid id = Guid.NewGuid();
 
-            string qry = $"select dd.ReferenceNo from tCore_Header_0 h join tCore_Data_0 d on d.iHeaderId = h.iHeaderId left join tCore_Data4611_0 dd on dd.iBodyId = d.iBodyId left join  tCore_Data_Tags_0 tg on tg.iBodyId = d.iBodyId left join mCore_paymenttype py on py.iMasterId = tg.iTag3012 left join muCore_paymenttype pyu on pyu.imasterid = py.imasterid where h.iVoucherType = 4611 and h.sVoucherNo = '{beforeSaveDto.DocNo}'  and pyu.TypeSelect = 3";
+            string qry = $"select dd.ReferenceNo from tCore_Header_0 h join tCore_Data_0 d on d.iHeaderId = h.iHeaderId left join tCore_Data{beforeSaveDto.Vtype}_0 dd on dd.iBodyId = d.iBodyId left join  tCore_Data_Tags_0 tg on tg.iBodyId = d.iBodyId left join mCore_paymenttype py on py.iMasterId = tg.iTag3012 left join muCore_paymenttype pyu on pyu.imasterid = py.imasterid where h.iVoucherType = {beforeSaveDto.Vtype} and h.sVoucherNo = '{beforeSaveDto.DocNo}'  and pyu.TypeSelect = 3";
 
             List<string> refList = DbCtx<string>.GetObjList(beforeSaveDto.CompanyId , qry);
 

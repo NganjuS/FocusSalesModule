@@ -22,6 +22,7 @@ using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Web.Configuration;
 using System.Web.Http;
 using System.Xml.Linq;
+using static FocusSalesModule.Config.AppDefaults;
 using static FocusSalesModule.Helpers.AppUtilities;
 
 namespace FocusSalesModule.Controllers
@@ -181,10 +182,26 @@ namespace FocusSalesModule.Controllers
                     resp.message = "All outlet accounts have not been set, cannot proceed !!";
                     return resp;
                 }
+                
+                //Find if payment has been utilised
+                foreach (var settlement in beforeSaveDto.BillSettlement)
+                {
+                    
+                    PaymentValidation.ValidateDiscounts(beforeSaveDto.CompId, beforeSaveDto.DocDate, settlement);
+
+                    PaymentValidation.ValidateOnlinePayments(beforeSaveDto.CompId, settlement);
+
+                    PaymentValidation.ValidateCreditNotes(beforeSaveDto.CompId, settlement);
+
+                    PaymentValidation.ValidateAdvancePayments(beforeSaveDto.CompId, settlement);
+
+                }
+
                 int compid = beforeSaveDto.CompId;
                 int vtype = beforeSaveDto.Vtype;
 
                 string docIdentifier  =  PaymentManager.PreProcessPayment(beforeSaveDto);
+
 
                 List<TemporaryPaymentDataDto> paymentList = DbCtx<TemporaryPaymentDataDto>.GetObjList(compid, $"select * from fsm_TemporaryPayments where DocumentTagId = '{docIdentifier}'");
 
@@ -196,6 +213,7 @@ namespace FocusSalesModule.Controllers
                         fieldData,
                         docIdentifier
                    };
+
                 resp.result = 1;
             }
             catch (Exception ex)

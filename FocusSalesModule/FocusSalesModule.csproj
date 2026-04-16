@@ -240,9 +240,11 @@
     <Compile Include="Helpers\DocUtilities.cs" />
     <Compile Include="Helpers\ExecuteCreateTable.cs" />
     <Compile Include="Helpers\GeneralUtils.cs" />
+    <Compile Include="Helpers\QuickFuncs.cs" />
     <Compile Include="Helpers\UtilFuncs.cs" />
     <Compile Include="Logs\Logger.cs" />
     <Compile Include="Manager\PaymentManager.cs" />
+    <Compile Include="Manager\PaymentValidation.cs" />
     <Compile Include="Manager\ReportManager.cs" />
     <Compile Include="Models\AdvancedPaymentDTO.cs" />
     <Compile Include="Models\BankPaymentDTO.cs" />
