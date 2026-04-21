@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FocusSalesModule.Screens;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +14,7 @@ namespace FocusSalesModule.Models
         public string url { get; set; }
         public T data { get; set; }
         public List<T> datalist { get; set; }
+        public PagingStatusMain pagingStatus { get; set; }
 
 
     }

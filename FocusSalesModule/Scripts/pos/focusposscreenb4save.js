@@ -338,8 +338,14 @@ function posSystem() {
             ,
             updateTotals(paymentMode) {
                 
-
+                
                 if (paymentMode.TypeSelect == this.paymentTypes.Cash) {
+                    if (paymentMode.Amount < 0) {
+
+                        this.showAlertMessage("Amount cannot be negative !!!", "warning");
+                        paymentMode.Amount = '';
+                        return;
+                    }
 
                     let totalReceived = 0;
                     for (let i = 0; i < this.paymentModes.length; i++) {
@@ -349,6 +355,8 @@ function posSystem() {
                     }
                     
                     let curAmount = this.getAmount(paymentMode.Amount);
+                   
+
 
                     if (totalReceived + curAmount > this.totalInvoiceAmt) {
                         this.showAlertMessage("Amount will exceed document total !!", "warning");
@@ -821,7 +829,7 @@ function posSystem() {
                     case 1:
                         return paymentMode.DefaultCashAccountName;
                     case 2:
-                        return paymentMode.DefaultBankAccountName;
+                        return paymentMode.DefaultOnlineAccountName;
                     case 3:
                         return this.getOnlineAccountsName(paymentMode);
                     case 4:

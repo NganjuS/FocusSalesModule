@@ -12,5 +12,6 @@ namespace FocusSalesModule.Screens
         public int totalPages { get; set; } = 1;
         public List<T> data { get; set; }
 
+
     }
 }

@@ -28,7 +28,7 @@ namespace FocusSalesModule.Config
                 case (int)PaymentTypes.Cash:
                     return billSettlement.DefaultCashAccount;
                 case (int)PaymentTypes.Bank:
-                    return billSettlement.DefaultBankAccount;
+                    return billSettlement.DefaultOnlineAccount;
                 case (int)PaymentTypes.Integration:
                     return GetOnlineAccountsId(billSettlement);
                 case (int)PaymentTypes.DiscountVoucher:

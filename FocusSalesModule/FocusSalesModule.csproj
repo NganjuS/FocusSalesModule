@@ -214,6 +214,8 @@
     <Compile Include="Controllers\PaymentValidationController.cs" />
     <Compile Include="Controllers\POSScreenController.cs" />
     <Compile Include="Controllers\POSScreenAPIController.cs" />
+    <Compile Include="Controllers\PreOrderSaleAPIController.cs" />
+    <Compile Include="Controllers\PreOrderSalesController.cs" />
     <Compile Include="Controllers\PrintDocumentController.cs" />
     <Compile Include="Controllers\RmaItemAPIController.cs" />
     <Compile Include="Controllers\SalesValidationController.cs" />
@@ -251,13 +253,17 @@
     <Compile Include="Models\BillSettlement.cs" />
     <Compile Include="Models\DiscountModel.cs" />
     <Compile Include="Models\DiscountVoucher.cs" />
+    <Compile Include="Models\GenericMaster.cs" />
     <Compile Include="Models\GenericPayment.cs" />
     <Compile Include="Models\HashData.cs" />
     <Compile Include="Models\HashDataFocus.cs" />
+    <Compile Include="Models\ItemSet.cs" />
+    <Compile Include="Models\ItemSetLine.cs" />
     <Compile Include="Models\MasterDTO.cs" />
     <Compile Include="Models\MemberDTO.cs" />
     <Compile Include="Models\MoniePoint\MoniePointRequestDTO.cs" />
     <Compile Include="Models\Outlet.cs" />
+    <Compile Include="Models\PagingStatusMain.cs" />
     <Compile Include="Models\PaymentDTO.cs" />
     <Compile Include="Models\POSDTO.cs" />
     <Compile Include="Models\POSInitData.cs" />
@@ -279,7 +285,7 @@
     <Compile Include="Queries\SalesReturnQueries.cs" />
     <Compile Include="Queries\TxnQueries.cs" />
     <Compile Include="Screens\AdvanceReceipt.cs" />
-    <Compile Include="Screens\PagingStatus.cs" />
+    <Compile Include="Models\PagingStatus.cs" />
     <Compile Include="Screens\PosReceiptScreenMain.cs" />
     <Compile Include="Screens\PosReceiptScreen.cs" />
     <Compile Include="Screens\POSSales.cs" />
@@ -310,6 +316,7 @@
     <Content Include="Content\waitMe.min.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
+    <Content Include="Scripts\addtoorder.js" />
     <Content Include="Scripts\afterSavePost.js" />
     <Content Include="Scripts\alpine.min.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />
@@ -338,7 +345,9 @@
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
+    <Content Include="Scripts\loaditemsets.js" />
     <Content Include="Scripts\pos\checkoutapproval.js" />
+    <Content Include="Scripts\itemsetspopup.js" />
     <Content Include="Scripts\stocktransferin.js" />
     <Content Include="Scripts\brstockout.js" />
     <Content Include="Scripts\FClient.js" />
@@ -397,6 +406,7 @@
     <Content Include="Views\POSScreen\OpenPOSBeforeSave.cshtml" />
     <Content Include="Views\TransactionManager\Index.cshtml" />
     <Content Include="Views\POSScreen\AdvanceReceiptBeforeSave.cshtml" />
+    <Content Include="Views\PreOrderSales\ItemSets.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
