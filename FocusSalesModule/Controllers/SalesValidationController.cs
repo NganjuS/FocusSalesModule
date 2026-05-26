@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
 using System.Linq;
 
 using System.Web.Configuration;
@@ -96,6 +97,39 @@ namespace FocusSalesModule.Controllers
     
                 resp.result = -1;
                 resp.message = ex.Message;
+            }
+            return resp;
+        }
+        [Route("validateadvancepaymentadd")]
+        public HashData<dynamic> ValidateAdvancePaymentAdd(PosBeforeSaveDto beforeSaveDto)
+        {
+            HashData<dynamic> resp = new HashData<dynamic>();
+            try
+            {
+                // Perform validation logic here
+                // If validation fails, set resp.result = -1 and resp.message accordingly
+
+
+                //Validate if two transactions are not being processed at the same time for the same document
+                Logger.writeLog("Processing advanced payments ...");
+               
+                //Find if payment has been utilised
+
+                PaymentValidation.ValidateAllPayments(beforeSaveDto);
+                PaymentValidation.SetOnlineTransactionStatusAsUsed(beforeSaveDto);
+
+                resp.result = 1;
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            finally
+            {
+                PaymentValidation.RemoveTxnFromProcessingQueue(beforeSaveDto);
             }
             return resp;
         }
@@ -199,15 +233,21 @@ namespace FocusSalesModule.Controllers
             HashData<string> resp = new HashData<string>();
             try
             {
-                //Clear references for previous transaction
-                if(aftersaveadvance.References.Count > 0)
-                {
-                    string refFilterList = String.Join(",", aftersaveadvance.References.Select(r => $"'{r}'"));
 
-                    string qry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 0  where TransactionReference in ({refFilterList})";
-                    DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, qry);
+                
+                //Clear references for previous transaction
+                if (aftersaveadvance.AdvanceReceipt.DocLines.Count > 0)
+                {
+                    string refFilterList = String.Join(",", aftersaveadvance.AdvanceReceipt.DocLines.Select(r => $"'{r}'"));
+                   
+
+
+                    string qry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 0 , TxnDocNo='', Vtype=0 where TransactionReference in ({refFilterList})";
+                    DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, qry);                    
 
                 }
+
+
 
                 //if(!String.IsNullOrEmpty(advance.DocumentTagId))
                 //{
@@ -220,10 +260,17 @@ namespace FocusSalesModule.Controllers
 
                 //Check if document is deleted
                 int docCount = DbCtx<Int32>.GetScalar(advance.CompanyId, AdvanceReceiptQueries.AdvanceReceiptExistsQry(advance.DocNo, advance.Vtype));
-
+                Logger.writeLog($"Document is deleted : {docCount}");
                 if(docCount > 0)
                 {
                     string onlineqry = AdvanceReceiptQueries.UpdateOnlinePaymentsStatus(advance.Vtype, advance.DocNo, 1);
+                  
+                    DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, onlineqry);
+                }
+                else
+                {
+                    string onlineqry = AdvanceReceiptQueries.ClearPaymentsStatusAfterDel( advance.DocNo, advance.Vtype);
+                 
                     DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, onlineqry);
                 }
                 resp.result = 1;
@@ -241,14 +288,14 @@ namespace FocusSalesModule.Controllers
             return resp;
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("checkreturnused")]
-        public HashData<String> CheckReturnedUsed(int compid, int vtype, string docno)
+        public HashData<String> CheckReturnedUsed(TxnVoucherData salesrtndata)
         {
             HashData<String> resp = new HashData<String>();
             try
             {
-                int usedcount = DbCtx<Int32>.GetScalar(compid, SalesReturnQueries.CheckIfSalesReurnUsed(docno));
+                int usedcount = DbCtx<Int32>.GetScalar(salesrtndata.CompanyId, SalesReturnQueries.CheckIfSalesReturnUsed(salesrtndata.DocNo));
                 if (usedcount > 0)
                 {
                     resp.result = -1;
@@ -256,7 +303,21 @@ namespace FocusSalesModule.Controllers
                     return resp;
                 }
 
-            
+                foreach(var line in salesrtndata.DocItemLines)
+                {
+                    foreach(var rma in line.RMA)
+                    {
+                        var hashData = DbCtx<dynamic>.GetObj(salesrtndata.CompanyId, ProductQueries.GetSalesReturnRmaData(rma));
+
+                        if (hashData == null)
+                        {
+                            throw new Exception($"RMA {rma} has been utilised or not valid !!!");
+                        }
+
+                    }
+                }
+
+
                 resp.result = 1;
             }
             catch (Exception ex)
@@ -343,14 +404,48 @@ namespace FocusSalesModule.Controllers
             }
             return resp;
         }
+
+        //[HttpGet]
+        //[Route("deladvancepayment")]
+        //public HashData<String> DelAdvancePayment(int compid, int vtype, string docno)
+        //{
+        //    HashData<String> resp = new HashData<String>();
+        //    try
+        //    {
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Logger.writeLog(ex.Message);
+        //        Logger.writeLog(ex.StackTrace);
+        //        resp.result = -1;
+        //        resp.message = ex.Message;
+        //    }
+        //    return resp;
+        //}
         // For Editing copy the original details
         [HttpPost]
         [Route("savetempadvancepayment")]
-        public HashData<dynamic> SaveTempAdvancePayment(AdvanceReceiptBeforeSave advanceBeforeSave)
+        public HashData<dynamic> SaveTempAdvancePayment(TxnVoucherData advanceBeforeSave)
         {
             HashData<dynamic> resp = new HashData<dynamic>();
             try
             {
+
+                //Check if reference is used in another transaction
+                if (advanceBeforeSave.DocLines != null)
+                {
+                    string refFilterList = String.Join(",", advanceBeforeSave.DocLines.Select(r => $"'{r.ReferenceNo}'"));
+                    //Check if payment reference if used in another transaction
+                    string rt = $"select count(Id) from fpl_OnlinePayments where  TransactionReference in ({refFilterList}) and IsAllocatedToSale = 1 and TxnDocNo <> '{advanceBeforeSave.DocNo}' ";
+                    int count = DbCtx<Int32>.GetScalar(advanceBeforeSave.CompanyId, rt);
+                    if (count > 0)
+                    {
+                        resp.result = -1;
+                        resp.message = "One or more of the payment references have been used in another transaction. Please check and try again.";
+                        return resp;
+                    }
+                }
 
                 int docCount = DbCtx<Int32>.GetScalar(advanceBeforeSave.CompanyId, AdvanceReceiptQueries.AdvanceReceiptExistsQry(advanceBeforeSave.DocNo, advanceBeforeSave.Vtype));
 
@@ -369,6 +464,9 @@ namespace FocusSalesModule.Controllers
                     resp.message = "Advance receipt has been used in a sale !!";
                     return resp;
                 }
+
+               
+
 
 
                 string docIdentifier = PaymentManager.PreProcessAdvancePayment(advanceBeforeSave);
@@ -434,14 +532,31 @@ namespace FocusSalesModule.Controllers
             }
             return resp;
         }
-        [HttpGet]
+        [HttpPost]
         [Route("advancepaymentafterdelete")]
-        public HashData<string> AdvancePaymentAfterDelete(int compid, string sessionid, string docno, int vtype)
+        public HashData<string> AdvancedPaymentAfterDel(List<AdvanceReceiptDelLine> receiptDelLine)
         {
+            //For advance payments
             HashData<string> resp = new HashData<string>();
             try
             {
-                DbCtx<Int32>.ExecuteNonQry(compid, AdvanceReceiptQueries.UpdateOnlinePaymentsStatus(vtype, docno,0));
+
+                var headerObj = receiptDelLine.FirstOrDefault();
+                foreach (var dataObj in receiptDelLine)
+                {
+
+                    var paymentPaymentDto = DbCtx<PaymentTypeDto>.GetObj(headerObj.CompanyId, PaymentDetailsQueries.GetPaymentTypeQry(dataObj.PaymentType));
+
+                    if (paymentPaymentDto.TypeSelect == (Int32)AppDefaults.PaymentTypes.Integration)
+                    {
+                        DbCtx<Int32>.ExecuteNonQry(headerObj.CompanyId, AdvanceReceiptQueries.AdvancedUpdatePaymentsStatus(dataObj.ReferenceNo));
+                    }
+
+
+                }
+
+
+
                 resp.result = 1;
 
 
@@ -587,9 +702,9 @@ namespace FocusSalesModule.Controllers
                     List<string> refList = DbCtx<string>.GetObjList(compid, listOfRefs);
                     string refs = String.Join(",", refList.Select(r => $"'{r}'"));
 
-                    string qry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 0 where TransactionReference in  ({refs})";
+                    string qry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 0, TxnDocNo='', Vtype=0 where TransactionReference in  ({refs})";
 
-
+                    string wemaqry = $"update  fpl_WemaBankTxns set IsAllocatedToSale = 0, TxnDocNo='', Vtype=0 where transactionId in  ({refs})";
 
                     //Delete existing receipt to update with new payment details
                     string delUrl = $"{baseUrl}/Transactions/{PosReceiptScreenMain.screenName}/{deldocno.Replace("/", "~~")}";
@@ -604,6 +719,7 @@ namespace FocusSalesModule.Controllers
                     else
                     {
                         DbCtx<Int32>.ExecuteNonQry(compid, qry);
+                        DbCtx<Int32>.ExecuteNonQry(compid, wemaqry);
                     }
 
                     
@@ -641,11 +757,14 @@ namespace FocusSalesModule.Controllers
 
                     string setpaymentisdone = $"update fsm_TemporaryPayments set IsValidated = 1  where DocumentTagId = '{docIdentifier}' ";
 
-                    string updateMoniePointQry = $"update fpl_OnlinePayments set IsAllocatedToSale = 1 where TransactionReference in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
+                    string updateMoniePointQry = $"update fpl_OnlinePayments set IsAllocatedToSale = 1, TxnDocNo='{docno}', Vtype={vtype} where TransactionReference in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
 
-                    
+                    string updateWemaBankQry = $"update fpl_WemaBankTxns set IsAllocatedToSale = 1, TxnDocNo='{docno}', Vtype={vtype} where transactionId in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
+
+
                     DbCtx<Int32>.ExecuteNonQry(compid, setpaymentisdone);
                     DbCtx<Int32>.ExecuteNonQry(compid, updateMoniePointQry);
+                    DbCtx<Int32>.ExecuteNonQry(compid, updateWemaBankQry);
 
                     if (updateQry.Trim().Length > 0)
                     {

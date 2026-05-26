@@ -446,6 +446,31 @@ var headerDataEdit = {};
 var docLinesEdit = [];
 var validRows = 0;
 var editRequestsProcessed = [];
+var linepostRequestsProcessed = [];
+var shadowRowList = [];
+var isProcessing = false; 
+
+function resetUI() {
+
+    requestId = 0;
+    requestsProcessed = [];
+    validRows = 0;
+    editRequestsProcessed = [];
+    linepostRequestsProcessed = [];
+    shadowRowList = [];
+}
+
+
+function isPostLineRequestProcessed(iRequestId) {
+
+    for (let i = 0; i < linepostRequestsProcessed.length; i++) {
+        if (linepostRequestsProcessed[i] == iRequestId) {
+            return true;
+        }
+    } return false;
+}
+
+
 function isRequestProcessed(iRequestId) {
 
     for (let i = 0; i < requestsProcessed.length; i++) {
@@ -463,7 +488,14 @@ function isEditRequestProcessed(iRequestId) {
     } return false;
 }
 function updateBeforeSave(response) {
+    console.log(isProcessing);
+    if (isProcessing) {
+        return;
+    }
+    isProcessing = true
+
     setupSweetAlert();
+    resetUI();
     ++requestId;
     Focus8WAPI.getFieldValue("getEditDocumentDetails", ["", "DocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
@@ -477,6 +509,32 @@ function updateAfterSave() {
     
     //Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
 }
+function afterDelete(response) {
+
+    ++requestId;
+    Focus8WAPI.getFieldValue("getDeletedDetails", ["", "DocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+}
+function getDeletedDetails(response) {
+
+    console.log("Called before save !!")
+    if (isRequestProcessed(response.iRequestId)) {
+        return;
+    }
+    requestsProcessed.push(response.iRequestId);
+    updateDeletedPayments(response.data[0].CompanyId, response.data[0].iVoucherType, response.data[1].FieldValue)
+
+}
+async function updateDeletedPayments(compid, vtype, docno) {
+
+
+    let url = `/focussalesmodule/api/salespayments/deladvancepayment?compid=${compid}&vtype=${vtype}&docno=${docno}`;
+    let response = await fetch(url);
+    let dataObj = await response.json();
+    
+
+    Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
+}
+
 //function updatePayment(response) {
 //    ++requestId;
 //    Focus8WAPI.getFieldValue("getDocumentDetails", ["", "DocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
@@ -495,31 +553,33 @@ function getEditDocumentDetails(response) {
     headerDataEdit.DocumentTagId = "";
 
     validRows = response.data[0].RowsInfo.iValidRows
-    preSaveData();
+    for (i = 0; i < validRows; i++) {
+
+        Focus8WAPI.getBodyFieldValue("getDocumentRows", ["", "Payment Type", "Account", "Amount", "ReferenceNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
+    }
+  
+    
     //console.log("Logging update to server...")
     ///* updateSavedData(compId, sessionId, docNo, vtype)*/
-    //for (i = 0; i < validRows; i++) {
-
-    //    Focus8WAPI.getBodyFieldValue("getEditDocumentLines", ["", "Payment Type", "Account", "Amount", "ReferenceNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
-    //    //After last row
-
-
-    //}
+    
 }
 
 var prevSavedReferences = [];
 async function preSaveData() {
 
-        let url = `/focussalesmodule/api/salespayments/savetempadvancepayment`;
-        let response = await fetch(url, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(headerDataEdit)
-        });
+    console.log(shadowRowList);
+    headerDataEdit.DocLines = shadowRowList;
+    let url = `/focussalesmodule/api/salespayments/savetempadvancepayment`;
+    let response = await fetch(url, {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(headerDataEdit)
+    });
 
-        let reponseData = await response.json();
+    let reponseData = await response.json();
+
     if (reponseData.result == 1) {
 
 
@@ -542,6 +602,7 @@ async function preSaveData() {
         Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
 
     }
+    isProcessing = false;
 }
 function getAfterSaveDetails(response) {
 
@@ -558,7 +619,32 @@ function getAfterSaveDetails(response) {
     headerDataEdit.DocumentTagId = response.data[2].FieldValue;
     validRows = response.data[0].RowsInfo.iValidRows
     updateSavedData();
+  
+
+
+    
 }
+function getDocumentRows(response) {
+    if (isPostLineRequestProcessed(response.iRequestId)) {
+        return;
+    }
+    linepostRequestsProcessed.push(response.iRequestId);
+
+    let lineObj = {
+
+        PaymentType: response.data[1].FieldValue,
+        Account: response.data[2].FieldValue,
+        Amount: response.data[3].FieldValue,
+        ReferenceNo: response.data[4].FieldValue
+    };
+    shadowRowList.push(lineObj);
+
+    if (response.iRequestId == validRows) {
+        preSaveData();
+    }
+
+}
+
 async function updateSavedData() {
     
    
@@ -569,6 +655,7 @@ async function updateSavedData() {
 
         AdvanceReceipt: headerDataEdit,
         References: prevSavedReferences
+       
     }
     let response = await fetch(url, {
         method: "POST",
@@ -580,7 +667,7 @@ async function updateSavedData() {
 
     let reponseData = await response.json();
     console.log(reponseData);
-    
+    isProcessing = false;
 
     Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
 }

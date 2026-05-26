@@ -123,7 +123,7 @@ function getDocumentAmount(response) {
 
     for (i = 0; i < postValidRows; i++) {
 
-        Focus8WAPI.getBodyFieldValue("getDocPostData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross", "Discount"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
+        Focus8WAPI.getBodyFieldValue("getDocPostData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross", "Discount", "SchemeItem", "LinkedItem"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
         //After last row
         //problem area
 
@@ -144,7 +144,7 @@ function getDocPostData(response) {
 
     //"Item", "Unit", "RMA", "Quantity", "Rate", "Gross"
     let payload = {
-        "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": validateInt(response.data[4].FieldValue), "Rate": validateDecimal(response.data[5].FieldValue), "Gross": validateDecimal(response.data[6].FieldValue), "Discount": validateDecimal(response.data[7].FieldValue)
+        "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": validateInt(response.data[4].FieldValue), "Rate": validateDecimal(response.data[5].FieldValue), "Gross": validateDecimal(response.data[6].FieldValue), "Discount": validateDecimal(response.data[7].FieldValue), "SchemeItem": response.data[8].FieldValue, LinkedItem: response.data[9].FieldValue
     };
     postShadowItemList.push(payload);
 
@@ -168,7 +168,19 @@ function getDocPostData(response) {
                Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
                 return;
             }
+            //Validate scheme item
+            if (postShadowItemList[i].SchemeItem == "Yes") {
+
+                let linkedItemObj = postShadowItemList.some(x => x.Item == postShadowItemList[i].LinkedItem);
+                if (!linkedItemObj) {
+                    alert(`Scheme item required for item on line ${i + 1} !! `);
+                    isProcessing = false;
+                    Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+                    return;
+                }
+            }
         }
+
         ++postRequestId
         Focus8WAPI.getBodyFieldValue("getGrandTotal", ["", "GRAND TOTAL", "Additional Charges", "Additional Discount", "BUY NOW PAY LATER"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, -1, postRequestId);
         

@@ -524,7 +524,7 @@ async function updateTxnStatus() {
 
     if (docLines.length > 0) {
 
-        let url = `/focussalesmodule/api/salespayments/updatepaymentstatus`;
+        let url = `/focussalesmodule/api/salespayments/advancepaymentafterdelete`;
         let response = await fetch(url, {
             method: "POST",
             headers: {

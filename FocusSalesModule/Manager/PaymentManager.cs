@@ -14,7 +14,7 @@ namespace FocusSalesModule.Manager
 {
     public class PaymentManager
     {
-        public static string PreProcessAdvancePayment(AdvanceReceiptBeforeSave beforeSaveDto)
+        public static string PreProcessAdvancePayment(TxnVoucherData beforeSaveDto)
         {
             Guid id = Guid.NewGuid();
 
@@ -60,7 +60,7 @@ namespace FocusSalesModule.Manager
                     {
                         if(pay.IsSelected)
                         {
-                            int account = item.TypeSelect == (Int32)PaymentTypes.DiscountVoucher ? pay.AccountId : AppValidation.GetAccountId(item);
+                            int account = item.TypeSelect == (Int32)PaymentTypes.DiscountVoucher || item.TypeSelect == (Int32)PaymentTypes.Integration ? pay.AccountId : AppValidation.GetAccountId(item);
                             string insertQry = $"insert into fsm_TemporaryPayments (DocumentTagId , ProbableDocNo , Vtype ,CustomerId , MemberId ,OutletId , CostCenterId ,DocDate, LoginId,IsValidated,Amount, Reference, PaymentMethodId, PaymentType, ShowReference,ShowBank ,SelectedAccount, TxnDate, CreatedOn ) values ('{id}', '{beforeSaveDto.DocNo}', {beforeSaveDto.Vtype},{beforeSaveDto.CustomerId},{beforeSaveDto.MemberId},{beforeSaveDto.OutletId},{beforeSaveDto.CostCenterId},{beforeSaveDto.DocDate},{beforeSaveDto.LoginId}, 0, {pay.Amount}, '{pay.Reference}', {item.iMasterId}, {item.TypeSelect},{BoolToIntConv(item.ShowReference)}, {BoolToIntConv(item.ShowBank)},{account},'{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}','{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}') ";
                             Logger.writeLog(insertQry);
                             DbCtx<int>.ExecuteNonQry(beforeSaveDto.CompId, insertQry);

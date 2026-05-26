@@ -21,7 +21,6 @@ function posSystem() {
                 NONE: 0,MONIEPOINT : 1, EASYBUY : 2, SENTINAL : 3
             },
             allowedBankTableView: [],
-
             outstandingAmt: 0,
             searchVal: "",
             currentPage: 1,
@@ -153,29 +152,7 @@ function posSystem() {
 
                     paymentMode.ManualValidate = true;
                     paymentMode.PayList = [];
-                    //Swal.fire({
-                    //    title: "Admin Verification",
-                    //    input: "password",
-                    //    showCancelButton: true
-                    //}).then(result => {
-                    //    if (result.isConfirmed) {
-                    //        if (result.value == 'admin12') {
-
-                    //            paymentMode.ManualValidate = true;
-                    //            paymentMode.PayList = [];
-                    //        }
-                    //        else {
-                    //            paymentMode.ManualValidate = false;
-                    //            this.showAlertMessage("Invalid Password !!", "warning");
-                    //        }
-
-                    //    }
-                    //    else if (result.isDismissed) {
-                    //        paymentMode.ManualValidate = false;
-                    //    }
-                    //});
-
-
+               
                   
                 }
                 else {
@@ -213,8 +190,8 @@ function posSystem() {
                             Amount: amount,
                             IsSelected: selectrec,
                             Reference: x.TransactionReference,
-                            TransactionTime: x.TransactionTime
-
+                            TransactionTime: x.TransactionTime,
+                            AccountId: x.AccountId
                         }));
 
                         
@@ -254,7 +231,7 @@ function posSystem() {
                         this.showProgress(`Searching ...`)
                         let url = `${posBaseUrl}api/salespayments/onlinepaymentlist?compid=${this.compid}&maxmin=${paymentMode.MaxMinutes}&integrationtype=${paymentMode.IntegrationType}&outletid=${this.outletid}&pageno=${this.currentPage}&pagesize=${this.pagingData.pageSize}&searchval=${this.searchVal}`;
 
-                        console.log(url);
+                        //console.log(url);
                         let response = await fetch(url);
                         let dataObj = await response.json();
                         console.log(dataObj);
@@ -271,6 +248,7 @@ function posSystem() {
                                     OrigAmount: amt,
                                     IsSelected: false,
                                     Reference: dataList[i].TransactionReference,
+                                    AccountId: dataList[i].AccountId,
                                     TransactionTime: dataList[i].TransactionTime
 
                                 });
@@ -650,7 +628,7 @@ function posSystem() {
                         }
 
                     }
-                    console.log(creditNoteObj[0]);
+                    //console.log(creditNoteObj[0]);
 
                 }
             },
@@ -848,7 +826,7 @@ function posSystem() {
                     case 2:
                         return paymentMode.DefaultEasyBuyAccountName;
                     case 3:
-                        return paymentMode.DefaultSentinalAccountName;
+                        return paymentMode.DefaultWemaBankAccountName;
                     default:
                         return paymentMode.DefaultOnlineAccountName;
                     
@@ -872,6 +850,6 @@ function posSystem() {
                         document.body.appendChild(script);
                     }
         
-                }
+           }
    }
 }

@@ -214,17 +214,19 @@
     <Compile Include="Controllers\PaymentValidationController.cs" />
     <Compile Include="Controllers\POSScreenController.cs" />
     <Compile Include="Controllers\POSScreenAPIController.cs" />
+    <Compile Include="Controllers\PosSettingsController.cs" />
     <Compile Include="Controllers\PreOrderSaleAPIController.cs" />
     <Compile Include="Controllers\PreOrderSalesController.cs" />
     <Compile Include="Controllers\PrintDocumentController.cs" />
     <Compile Include="Controllers\RmaItemAPIController.cs" />
     <Compile Include="Controllers\SalesValidationController.cs" />
+    <Compile Include="Controllers\SchemeItemController.cs" />
     <Compile Include="Controllers\StockTransferController.cs" />
     <Compile Include="Controllers\TransactionManagerController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Data\DbCtx.cs" />
     <Compile Include="DTO\AdvanceReceiptAfterSave.cs" />
-    <Compile Include="DTO\AdvanceReceiptBeforeSave.cs" />
+    <Compile Include="DTO\TxnVoucherData.cs" />
     <Compile Include="DTO\AdvanceReceiptDelLine.cs" />
     <Compile Include="DTO\CreditNoteRequestDto.cs" />
     <Compile Include="DTO\DiscountRequestDto.cs" />
@@ -346,8 +348,10 @@
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\loaditemsets.js" />
+    <Content Include="Scripts\posPrintManager.js" />
     <Content Include="Scripts\pos\checkoutapproval.js" />
     <Content Include="Scripts\itemsetspopup.js" />
+    <Content Include="Scripts\qz-tray.js" />
     <Content Include="Scripts\stocktransferin.js" />
     <Content Include="Scripts\brstockout.js" />
     <Content Include="Scripts\FClient.js" />
@@ -407,6 +411,8 @@
     <Content Include="Views\TransactionManager\Index.cshtml" />
     <Content Include="Views\POSScreen\AdvanceReceiptBeforeSave.cshtml" />
     <Content Include="Views\PreOrderSales\ItemSets.cshtml" />
+    <Content Include="Views\PosSettings\Index.cshtml" />
+    <Content Include="Views\SchemeItem\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

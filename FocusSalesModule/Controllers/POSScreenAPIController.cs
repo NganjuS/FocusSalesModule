@@ -90,14 +90,13 @@ namespace FocusSalesModule.Controllers
                 POSInitData posInitData = new POSInitData();
                 string discqry = DiscountVoucherQry.GetDiscountVoucherQuery(
                     "", vtype, PosReceiptScreenMain.GetReceiptVtype(compid));
-                Logger.writeLog("Discount Qry");
-                Logger.writeLog(discqry);
+                //Logger.writeLog("Discount Qry");
+               // Logger.writeLog(discqry);
 
                 posInitData.DiscountVouchers = DbCtx<DiscountModel>.GetObjList(compid, discqry);
                 string txnQry = TxnQueries.GetOutletPaymentTypesQry(outletid);
 
-                Logger.writeLog("Payments Qry");
-                Logger.writeLog(txnQry);
+            
                 posInitData.PaymentTypes = DbCtx<dynamic>.GetObjList(compid, txnQry);
 
                 resp.data = posInitData;
@@ -183,19 +182,40 @@ namespace FocusSalesModule.Controllers
                     return resp;
                 }
                 
-                //Find if payment has been utilised
-                foreach (var settlement in beforeSaveDto.BillSettlement)
+                if (beforeSaveDto.BillSettlement != null)
                 {
-                    
-                    PaymentValidation.ValidateDiscounts(beforeSaveDto.CompId, beforeSaveDto.DocDate, settlement);
+                    foreach(var settlement in beforeSaveDto.BillSettlement)
+                    {
+                     
+                        if (settlement.TypeSelect == (Int32)AppDefaults.PaymentTypes.Integration && settlement.PayList.Count > 0)
+                        {
+                            Logger.writeLog(JsonConvert.SerializeObject(settlement.PayList));
+                            string refFilterList = String.Join(",", settlement.PayList.Select(r => $"'{r.Reference}'"));
+                            //Check if payment reference if used in another transaction
+                            string refCheckQry = $"select count(Id) from vwPaymentTxns where  TransactionReference in ({refFilterList}) and IsAllocatedToSale = 1 and TxnDocNo <> '{beforeSaveDto.DocNo}' and Vtype <> {beforeSaveDto.Vtype}";
 
-                    PaymentValidation.ValidateOnlinePayments(beforeSaveDto.CompId, settlement);
-
-                    PaymentValidation.ValidateCreditNotes(beforeSaveDto.CompId, settlement);
-
-                    PaymentValidation.ValidateAdvancePayments(beforeSaveDto.CompId, settlement);
+                            int count = DbCtx<Int32>.GetScalar(beforeSaveDto.CompId, refCheckQry);
+                            if (count > 0)
+                            {
+                                resp.result = -1;
+                                resp.message = "One or more of the payment references have been used in another transaction. Please check and try again.";
+                                return resp;
+                            }
+                        }
+                       
+                    }
+                  
 
                 }
+
+                //Validate if two transactions are not being processed at the same time for the same document
+                Logger.writeLog("Processing POS transactions ...");
+                
+                //Find if payment has been utilised
+
+                PaymentValidation.ValidateAllPayments(beforeSaveDto);
+                //Set allocated to sale
+                PaymentValidation.SetOnlineTransactionStatusAsUsed(beforeSaveDto);
 
                 int compid = beforeSaveDto.CompId;
                 int vtype = beforeSaveDto.Vtype;
@@ -222,6 +242,10 @@ namespace FocusSalesModule.Controllers
                 Logger.writeLog(ex.StackTrace);
                 resp.result = -1;
                 resp.message = ex.Message;
+            }
+            finally {
+
+                //PaymentValidation.RemoveTxnFromProcessingQueue(beforeSaveDto);
             }
             return resp;
         }
@@ -311,7 +335,7 @@ namespace FocusSalesModule.Controllers
               
                 //Get Cash Customer 
                 Outlet outlet = DbCtx<Outlet>.GetObj(compid, MasterQueries.GetOutlet(posDTO.OutletId));
-                if (outlet.DefaultCustomer == 0 || outlet.DefaultSalesAccount == 0 || outlet.DefaultCostCenter == 0 || outlet.DefaultBankAccount == 0 || outlet.DefaultCashAccount == 0 || outlet.DefaultOnlineAccount == 0 || outlet.DefaultCreditNoteAccount == 0 || outlet.DefaultDiscountAccount == 0 ||  outlet.DefaultAdvanceReceiptAccount == 0 || outlet.DefaultMoniepointAccount == 0 || outlet.DefaultEasyBuyAccount == 0)
+                if (outlet.DefaultCustomer == 0 || outlet.DefaultSalesAccount == 0 || outlet.DefaultCostCenter == 0 || outlet.DefaultBankAccount == 0 || outlet.DefaultCashAccount == 0 || outlet.DefaultOnlineAccount == 0 || outlet.DefaultCreditNoteAccount == 0 || outlet.DefaultDiscountAccount == 0 ||  outlet.DefaultAdvanceReceiptAccount == 0 )
                 {
                     throw new Exception("Set default accounts in outlet to continue !!!");
                 }

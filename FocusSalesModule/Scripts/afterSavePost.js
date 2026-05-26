@@ -489,7 +489,10 @@ async function updateSavedData(compId, sessionId, docNo,vtype ,docIdentifier) {
         if (dataObj.result == 1) {
 
             Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
-            setupPrintJs(compId, sessionId, docNo, vtype)
+            //setupPrintJs(compId, sessionId, docNo, vtype)
+
+            setupQzTrayMain(compId, vtype,sessionId, docNo);
+           // setupSilentPrint(compId, sessionId, docNo, vtype)
             return;
         }
         else {
@@ -509,6 +512,47 @@ async function updateSavedData(compId, sessionId, docNo,vtype ,docIdentifier) {
 
     }
 }
+
+function setupQzTrayMain(compId, vtype, sessionId, docNo) {
+    if (!document.querySelector('script[src$="qz-tray.js"]')) {
+        const script = document.createElement("script");
+        script.src = "/focussalesmodule/scripts/qz-tray.js";
+        script.onload = () => {
+
+            setupSilentPrintMain(compId, vtype, sessionId, docNo);
+
+
+        };
+        document.body.appendChild(script);
+    }
+    else {
+
+        setupSilentPrintMain(compId, vtype, sessionId, docNo)
+    }
+}
+function setupSilentPrintMain(compId, vtype, sessionId, docNo) {
+
+    if (!document.querySelector('script[src$="posPrintManager.js"]')) {
+        const script = document.createElement("script");
+        script.src = "/focussalesmodule/scripts/posPrintManager.js";
+        script.onload = () => {
+
+            initSilentPrint(compId, vtype, sessionId, docNo);
+
+            // Disable auto reconnect before connecting
+
+
+        };
+        document.body.appendChild(script);
+    }
+    else {
+
+        initSilentPrint(compId, vtype, sessionId, docNo);
+        // Disable auto reconnect before connecting
+        qz.websocket.setClosedCallbacks(null);
+    }
+}
+
 function setupPrintJs(compId, sessionId, docNo, vtype) {
 
     if (!document.querySelector('link[href$="print.min.css"]')) {

@@ -52,6 +52,43 @@ namespace FocusSalesModule.Controllers
             }
             return hashData;
         }
+
+        [HttpGet]
+        [Route("schemermaitems")]
+        public HashData<ItemSetLine> GetSchemeRmaItem(int compid, int outletid, int itemid,int txndate,string rmano)
+        {
+            HashData<ItemSetLine> hashData = new HashData<ItemSetLine>();
+            try
+            {
+                hashData.data = DbCtx<ItemSetLine>.GetObj(compid, ProductQueries.GetSchemeRmaData(itemid,outletid, rmano, txndate));
+                if (hashData.data == null)
+                {
+                    hashData.result = -1;
+                    hashData.message = "Rma number is not valid";
+                    return hashData;
+                }
+
+                //Check if consumed
+                if (hashData.data != null)
+                {
+                    if (hashData.data.Qty <= 0)
+                    {
+                        hashData.result = -1;
+                        hashData.message = "Rma has already been utilised !!";
+                        return hashData;
+                    }
+                }
+                hashData.result = 1;
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                hashData.result = -1;
+                hashData.message = ex.Message;
+            }
+            return hashData;
+        }
         [HttpGet]
         [Route("salesreturnrma")]
         public HashData<dynamic> GetSaleReturnRma(int compid, int vtype,int outletid,int memberid, string rmano, string posdocno)

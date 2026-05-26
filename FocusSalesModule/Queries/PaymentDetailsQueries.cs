@@ -26,7 +26,7 @@ namespace FocusSalesModule.Queries
         }
         public static string GetDiscountCodes(string itemList,int txndate)
         {
-            return $"select isnull(disc.sCode,'') Code, isnull(disc.sName,'') Name,dscmst.StartDate, dscmst.EndDate,dscmst.NoofQuantity, dscmst.DiscountValue,dscmst.Item ItemId  ,dscmst.DiscountAccount SelectedAccount,dscmst.DiscountValue FullAmt,0 PostedAmt from mCore_discountmaster disc join muCore_discountmaster dscmst on disc.iMasterId = dscmst.iMasterId where  dscmst.Item in ({itemList}) and disc.iMasterId <> 0   and dscmst.NoofQuantity > (select count(ReferenceNo) from tCore_Data4100_0 where ReferenceNo = disc.sCode) and   dscmst.StartDate <= {txndate} and dscmst.EndDate >= {txndate}";
+            return $"select isnull(disc.sCode,'') Code, isnull(disc.sName,'') Name,dscmst.StartDate, dscmst.EndDate,dscmst.NoofQuantity, dscmst.DiscountValue,dscmst.Item ItemId  ,dscmst.DiscountAccount SelectedAccount,dscmst.DiscountValue FullAmt,0 PostedAmt from mCore_discountmaster disc join muCore_discountmaster dscmst on disc.iMasterId = dscmst.iMasterId where  dscmst.Item in ({itemList}) and disc.iMasterId <> 0 and disc.istatus = 0 and disc.bgroup = 0   and dscmst.NoofQuantity > (select count(ReferenceNo) from tCore_Data4100_0 where ReferenceNo = disc.sCode) and   dscmst.StartDate <= {txndate} and dscmst.EndDate >= {txndate}";
         }
         public static string GetDetails(int outletid)
         {
@@ -34,15 +34,13 @@ namespace FocusSalesModule.Queries
         }
         public static string GetManualSearchPayment(int outletid, int paymentType,string reference)
         {
-            string outletStr = paymentType == (Int32)AppDefaults.PaymentGateway.Moniepoint ? $" TerminalSerial in (select  trm.sCode from mCore_terminalmachines trm join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId where trm1.Outlet = {outletid})  " : " 1=1 ";
-
-            return $"select top 1 mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.AmountInLocalCur Amount from fpl_OnlinePayments mp where {outletStr} and  ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )  and  isnull(mp.IsAllocatedToSale,0) = 0 and mp.InternalTxnCode = '{reference}' and  PaymentType = {paymentType} order by mp.transactiontime desc";
+            return $"select dta.*, trm1.Account AccountId from vwPaymentTxns dta join mCore_terminalmachines trm on trm.sCode = dta.TerminalSerial  join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId  where trm.iStatus = 0 and trm.bgroup =0 and isnull(dta.IsAllocatedToSale,0) = 0 and (trm1.Outlet = {outletid} or dta.PaymentType = 2) and not exists ( select top 1 ReferenceNo from tCore_Data4100_0 dt  where dt.ReferenceNo = dta.TransactionReference) and InternalTxnCode = '{reference}' and PaymentType ={paymentType}";
         }
         public static string GetOutstandingAmtDetails(int outletid, bool manualvalidate, string reference,decimal outstandingamt)
         {
             if (manualvalidate)
             {
-                return $"select top 1 mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.AmountInLocalCur Amount from fpl_OnlinePayments mp where TerminalSerial in (select  trm.sCode from mCore_terminalmachines trm join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId where trm1.Outlet = {outletid}) and  ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )  and  isnull(mp.IsAllocatedToSale,0) = 0 and mp.TransactionReference = '{reference}' order by mp.transactiontime desc ";
+                return $"select top 1 mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.AmountInLocalCur Amount from vwPaymentTxns mp where TerminalSerial in (select  trm.sCode from mCore_terminalmachines trm join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId where trm1.Outlet = {outletid}) and  ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )  and  isnull(mp.IsAllocatedToSale,0) = 0 and mp.TransactionReference = '{reference}' order by mp.transactiontime desc ";
             }
             else
             {
@@ -52,27 +50,31 @@ namespace FocusSalesModule.Queries
         }
         public static string GetOutstandingPaymentList(int outletid)
         {
-            return $"select mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.AmountInLocalCur Amount from fpl_OnlinePayments mp where TerminalSerial in (select  trm.sCode from mCore_terminalmachines trm join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId where trm1.Outlet = {outletid}) and  ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )  and  isnull(mp.IsAllocatedToSale,0) = 0  order by mp.transactiontime desc ";
+            return $"select mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.AmountInLocalCur Amount from vwPaymentTxns mp where TerminalSerial in (select  trm.sCode from mCore_terminalmachines trm join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId where trm1.Outlet = {outletid}) and  ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )  and  isnull(mp.IsAllocatedToSale,0) = 0  order by mp.transactiontime desc ";
         }
         public static string GetPaymentListFullPagedCount( string searchfilter)
         {
-            return $"select count(mp.TransactionReference) id from fpl_OnlinePayments mp left join mCore_terminalmachines trm on trm.sCode = mp.TerminalSerial left join muCore_terminalmachines trmu on trmu.iMasterId= trm.iMasterId left join mPos_Outlet outl on outl.iMasterId = trmu.Outlet where {searchfilter}   ";
+            return $"select count(mp.TransactionReference) id from vwPaymentTxns mp left join mCore_terminalmachines trm on trm.sCode = mp.TerminalSerial left join muCore_terminalmachines trmu on trmu.iMasterId= trm.iMasterId left join mPos_Outlet outl on outl.iMasterId = trmu.Outlet where {searchfilter}   ";
         }
         public static string GetPaymentListFullPaged( string searchfilter)
         {
-            return $"select isnull(outl.imasterid,0) OutletId,isnull(outl.sname,'') OutletName, mp.* from fpl_OnlinePayments mp left join mCore_terminalmachines trm on trm.sCode = mp.TerminalSerial left join muCore_terminalmachines trmu on trmu.iMasterId= trm.iMasterId left join mPos_Outlet outl on outl.iMasterId = trmu.Outlet where  {searchfilter}  ";
+            return $"select isnull(outl.imasterid,0) OutletId,isnull(outl.sname,'') OutletName, mp.* from vwPaymentTxns mp left join mCore_terminalmachines trm on trm.sCode = mp.TerminalSerial left join muCore_terminalmachines trmu on trmu.iMasterId= trm.iMasterId left join mPos_Outlet outl on outl.iMasterId = trmu.Outlet where  {searchfilter}  ";
         }
         public static string GetOutstandingPaymentListPagedByOutletCount(int paymentType,int outletid, string searchfilter)
         {
-            string outletStr = paymentType == (Int32)AppDefaults.PaymentGateway.Moniepoint ? $" TerminalSerial in (select  trm.sCode from mCore_terminalmachines trm join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId where trm1.Outlet = {outletid})   " : " 1=1 ";
+         
 
-            return $"select count(mp.TransactionReference) id from fpl_OnlinePayments mp  where {outletStr} and not exists( select top 1 ReferenceNo from tCore_Data4100_0 dt  where dt.ReferenceNo = mp.TransactionReference) and  ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )  and  isnull(mp.IsAllocatedToSale,0) = 0 {searchfilter}   ";
+            return $"select count(TransactionReference) id from vwPaymentTxns dta join mCore_terminalmachines trm on trm.sCode = dta.TerminalSerial  join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId  where  trm.iStatus = 0 and trm.bgroup = 0 and isnull(dta.IsAllocatedToSale,0) = 0 and (trm1.Outlet = {outletid} or dta.PaymentType = 2) and not exists ( select top 1 ReferenceNo from tCore_Data4100_0 dt  where dt.ReferenceNo = dta.TransactionReference) {searchfilter}  ";
         }
         public static string GetOutstandingPaymentListPaged(int paymentType, int outletid,  string searchfilter)
         {
-            string outletStr = paymentType == (Int32)AppDefaults.PaymentGateway.Moniepoint ? $" TerminalSerial in (select  trm.sCode from mCore_terminalmachines trm join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId where trm1.Outlet = {outletid})  " : " 1=1 ";
-
-            return $"select mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.AmountInLocalCur Amount from fpl_OnlinePayments mp where {outletStr} and not exists( select top 1 ReferenceNo from tCore_Data4100_0 dt  where dt.ReferenceNo = mp.TransactionReference) and  ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )  and  isnull(mp.IsAllocatedToSale,0) = 0 {searchfilter}  ";
+            return $" select dta.*, trm1.Account AccountId from vwPaymentTxns dta join mCore_terminalmachines trm on trm.sCode = dta.TerminalSerial  join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId  where trm.iStatus = 0 and trm.bgroup =0 and isnull(dta.IsAllocatedToSale,0) = 0 and (trm1.Outlet = {outletid} or dta.PaymentType = 2) and not exists ( select top 1 ReferenceNo from tCore_Data4100_0 dt  where dt.ReferenceNo = dta.TransactionReference) {searchfilter}";
         }
+
+        public static string CreateAlltxnsView()
+        {
+            return "create or alter view vwPaymentTxns as select * from (select Id,3 PaymentType,transactionId TransactionReference, '' RetrievalReferenceNumber, terminalserial TerminalSerial, actualtimestamp TransactionTime,internaltxncode InternalTxnCode, IsAllocatedToSale,Account,amount Amount , TxnDocNo, Vtype  from fpl_WemaBankTxns where status = 'Success'  union select Id,mp.PaymentType, mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.InternalTxnCode,IsAllocatedToSale, BusinessId Account,mp.AmountInLocalCur Amount, TxnDocNo, Vtype from fpl_OnlinePayments mp where  ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )    ) dtc ";
+        }
+
     }
 }

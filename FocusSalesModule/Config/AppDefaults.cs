@@ -16,7 +16,7 @@ namespace FocusSalesModule.Config
         public enum PaymentTypes { Cash = 1, Bank = 2, Integration = 3, DiscountVoucher = 4, CreditNote = 5, AdvanceReceipt = 6 }
         public enum IntegrationTypes
         {
-            None = 0, Moniepoint = 1, Easybuy = 2, Sentinal = 3
+            None = 0, Moniepoint = 1, Easybuy = 2, WemaBank = 3
         }
         
         public enum FieldTypes

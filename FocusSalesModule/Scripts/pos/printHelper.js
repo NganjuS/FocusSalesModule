@@ -472,8 +472,50 @@ function getDocumentDetails(response) {
     CompId = response.data[0].CompanyId;
     SessionId = response.data[0].SessionId;
     DocNo = response.data[1].FieldValue;
-    setupPrintJs();
+    //setupPrintJs();
+    setupQzTray();
 }
+function setupQzTray()
+{
+    if (!document.querySelector('script[src$="qz-tray.js"]')) {
+        const script = document.createElement("script");
+        script.src = "/focussalesmodule/scripts/qz-tray.js";
+        script.onload = () => {
+
+            setupSilentPrint();
+
+
+        };
+        document.body.appendChild(script);
+    }
+    else {
+
+        setupSilentPrint()
+    }
+}
+function setupSilentPrint() {
+
+    if (!document.querySelector('script[src$="posPrintManager.js"]')) {
+        const script = document.createElement("script");
+        script.src = "/focussalesmodule/scripts/posPrintManager.js";
+        script.onload = () => {
+
+            initSilentPrint(CompId, Vtype, SessionId, DocNo);
+
+            // Disable auto reconnect before connecting
+            
+
+        };
+        document.body.appendChild(script);
+    }
+    else {
+
+        initSilentPrint(CompId, Vtype, SessionId, DocNo);
+        // Disable auto reconnect before connecting
+        qz.websocket.setClosedCallbacks(null);
+    }
+}
+
 
 function setupPrintJs() {
 
@@ -504,3 +546,4 @@ function initPrintDocument() {
 
     printJS({ printable: printUrl, type: 'pdf', showModal: true })
 }
+

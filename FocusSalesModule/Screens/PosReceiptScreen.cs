@@ -99,7 +99,7 @@ namespace FocusSalesModule.Screens
                 {
                     return outlet.DefaultEasyBuyAccount;
                 }
-                else if (integrationType == (int)IntegrationTypes.Sentinal)
+                else if (integrationType == (int)IntegrationTypes.WemaBank)
                 {
                     return outlet.DefaultSentinalAccount;
                 }

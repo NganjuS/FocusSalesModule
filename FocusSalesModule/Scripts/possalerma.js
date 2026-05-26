@@ -443,14 +443,17 @@ var initialRequestId = 0;
 var requestsProcessed = [];
 var requestId = 0;
 var companyid = 0;
+var outletid = 0;
 var sessionid = "";
 var vtype = 0;
+var docDate = 0;
 var docno = "";
 var totalRows = 0;
 var shadowItemList = [];
 var validRows = 0;
 var lineRequestsProcessed = [];
 var lineRequestId = 0;
+var rowNo = 0;
 function resetDefaults() {
 
     lineRequestsProcessed = [];
@@ -461,7 +464,7 @@ function resetDefaults() {
     vtype = 0;
     docno = "";
     totalRows = 0;
-    shadowItemList = [];
+    freeItemsList = [];
     validRows = 0;
 }
 function isRequestProcessed(iRequestId) {
@@ -544,7 +547,7 @@ function onSearch(response) {
 function initRmaSearchProcess() {
     ++requestId;
    
-    Focus8WAPI.getFieldValue("getRma", ["", "DocNo", "RmaSearch", "Outlet"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    Focus8WAPI.getFieldValue("getRma", ["", "DocNo", "RmaSearch", "Outlet", "Date"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 
 }
 function clearSearchField(clearField)
@@ -603,6 +606,7 @@ function getRma(response) {
     validRows = response.data[0].RowsInfo.iValidRows;
     
     shadowItemList = [];
+    freeItemsList = [];
     lineRequestsProcessed = [];
     
     companyid = response.data[0].CompanyId;
@@ -610,7 +614,8 @@ function getRma(response) {
     vtype = response.data[0].iVoucherType;
     docno = response.data[1].FieldValue;
     let rmano = response.data[2].FieldValue;
-    let outletid = response.data[3].FieldValue;
+    outletid = response.data[3].FieldValue;
+    docDate = response.data[4].FieldValue;
     if (rmano.trim().length == 0) {
 
       
@@ -681,7 +686,7 @@ function getExistingItems(item) {
     
     for (i = 0; i < validRows; i++) {
         
-        Focus8WAPI.getBodyFieldValue("getDocBodyData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross", "Discount"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
+        Focus8WAPI.getBodyFieldValue("getDocBodyData", ["", "Item", "Unit", "RMA", "Quantity", "Rate", "Gross", "Discount", "SchemeItem", "LinkedItem"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
         //After last row
         //problem area
         
@@ -704,7 +709,7 @@ function getDocBodyData(response) {
     //"Item", "Unit", "RMA", "Quantity", "Rate", "Gross"
     let payload = {
 
-        "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docNo, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue, Discount: response.data[7].FieldValue
+        "compid": companyid, "vtype": vtype, "sessid": sessid, "docno": docNo, "Item": response.data[1].FieldValue, "Unit": response.data[2].FieldValue, "RMA": response.data[3].FieldValue, "Qty": response.data[4].FieldValue, "Rate": response.data[5].FieldValue, "Gross": response.data[6].FieldValue, Discount: response.data[7].FieldValue, "SchemeItem": response.data[8].FieldValue, LinkedItem: response.data[9].FieldValue
     };
     shadowItemList.push(payload);
    
@@ -718,7 +723,7 @@ function getDocBodyData(response) {
             if (itemExists) {
                 let rmaExists = itemExists.RMA.find(x => x == loadedItem.RmaNo);
                 console.log(rmaExists);
-                let rowNo = shadowItemList.indexOf(itemExists) + 1;
+                rowNo = shadowItemList.indexOf(itemExists) + 1;
                 if (rmaExists) {
                     
                     showMessageAlert("RMA already exists !!","warning")
@@ -765,7 +770,7 @@ function getDocBodyData(response) {
     }
 
 }
-function setLineItemsToDoc(rowNo, item) {
+async function setLineItemsToDoc(rowNo, item) {
 
     ++requestId;
     let gross = parseInt(item.Qty) * parseFloat(item.Price);
@@ -777,14 +782,188 @@ function setLineItemsToDoc(rowNo, item) {
     
 
     Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "ItemCode", "Unit", "Quantity", "Rate", "Gross", "RMA", "Taxable Value", "Vat"], [item.ItemId, item.ItemCode, item.UnitId, item.Qty, item.Price, gross, item.RmaNo, taxableValue, vatamt], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+
+    if (item.HasScheme) {
+
+        const result = await Swal.fire({
+            title: 'Confirm Scheme Item Selection',
+            text: 'This item has scheme items, do you want to load them?',
+            icon: 'info',
+            showCancelButton: true,
+            allowOutsideClick: false,
+            confirmButtonText: 'Yes, proceed',
+            cancelButtonText: 'Cancel'
+        });
+
+        if (result.isConfirmed) {
+            console.log("Load schemes ...");
+            curRow = 0;
+            
+            addSchemes(item, rowNo);
+        }
+    }
+}
+var curRow = 0;
+var freeItemsList = [];
+function isRmaExistsInDoc(rmaNo) {
+    console.log("Checking if Rma No exists ..." + rmaNo);
+
+    for (let item of freeItemsList) {
+
+        if (item.RmaNoList.includes(rmaNo)) {
+            console.log(item);
+            console.log("Rma in list");
+            return true;
+        }
+    }
+    return false;
+  
+}
+async function addSchemes(origitem, rowNo) {
+    let getRmaItem = true;
+    curRow = rowNo;
+
+    while (getRmaItem)
+    {
+        console.log("Getting rma ...");
+        const result = await  Swal.fire({
+            title: 'Scan Scheme Item Rma No',
+            input: 'text',
+            inputPlaceholder: '',
+            showCancelButton: true,
+            allowOutsideClick: false,
+            inputValidator: (value) => {
+                if (!value) return 'This field is required';
+            }
+        });
+
+        const rmaNo = result.value;
+        if (!result.isConfirmed || rmaNo == undefined || rmaNo.trim().length == 0) {
+            getRmaItem = false;
+            return;
+        }
+        try {
+
+            //Search if rma already added for the scheme item
+            console.log("Checking RMA:", rmaNo.trim());
+            console.table(freeItemsList);
+
+         
+            if (isRmaExistsInDoc(rmaNo.trim())) {
+
+                console.log("RMA already added for the scheme item !!");
+                showMessageAlert("RMA already added for the scheme item !!", "warning");
+                continue;
+
+            }
+            else {
+
+                getSchemeRmaItem(origitem, rmaNo.trim());
+            }
+
+            
+        }
+        catch (err) {
+
+            showMessageAlert(err, "error");
+            //getRmaItem = false;
+        }
+       
+
+    }
+   // setRmaSearchFocus();
+}
+async function getSchemeRmaItem(origitem, rmano) {
+
+    let url = `/focussalesmodule/api/sales/schemermaitems/?compid=${companyid}&outletid=${outletid}&itemid=${origitem.ItemId}&txndate=${docDate}&rmano=${rmano}`;
+    let response = await fetch(url);
+
+    if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+    }
+
+    let dataObj = await response.json();
+
+    if (dataObj.result != 1) {
+
+        showMessageAlert(dataObj.message);
+        console.log("Cannot continue ...");
+    }
+    else {
+
+        console.log("Scheme item found, setting row...", curRow);
+        setSchemeItemsToDoc(origitem, dataObj.data)
+    }
+    //console.log(dataObj);
+    
+    
+}
+function setSchemeItemsToDoc(origitem, item) {
+
+    console.log(item);
+    ++requestId;
+   
+    //Find if free item aleady exists in the document
+    let itemExists = freeItemsList.filter(x => x.FreeItemId == item.ItemId);
+
+    if (itemExists.length > 0) {
+
+        let curItem = itemExists[0];
+        if (curItem.RmaNoList.includes(item.RmaNo)) {
+
+            showMessageAlert("RMA already added for the scheme item !!", "warning")
+            return;
+        }
+
+        
+        curItem.RmaNoList.push(item.RmaNo);
+        let newQty = curItem.RmaNoList.length;
+        let gross = parseInt(newQty) * parseFloat(curItem.Rate);
+
+        let vatrate = parseFloat(curItem.VAT);
+        let vatratecalc = vatrate > 0 ? vatrate / 100 : 0;
+        let taxableValue = gross / (1 + vatratecalc);
+        let vatamt = taxableValue * vatratecalc;
+
+
+        Focus8WAPI.setBodyFieldValue("afterSchemeLineAdded", ["RMA", "Quantity", "Rate", "Discount", "Gross", "Taxable Value", "Vat"], [curItem.RmaNoList, newQty, curItem.Rate, curItem.Discount, gross, taxableValue, vatamt], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, curItem.RowNo, requestId);
+
+    }
+    else {
+
+        curRow += 1;
+        let gross = parseInt(item.Qty) * parseFloat(item.Rate);
+
+        let vatrate = parseFloat(item.VAT);
+        let vatratecalc = vatrate > 0 ? vatrate / 100 : 0;
+        let taxableValue = gross / (1 + vatratecalc);
+        let vatamt = taxableValue * vatratecalc;
+
+
+        freeItemsList.push({ ItemId: origitem.ItemId, FreeItemId: item.ItemId, RmaNoList: [item.RmaNo], RowNo: curRow, Rate: parseFloat(item.Rate), VAT: vatrate });
+
+        Focus8WAPI.setBodyFieldValue("afterSchemeLineAdded", ["Item", "ItemCode", "Quantity", "Rate", "Gross", "RMA", "Taxable Value", "Vat", "SchemeItem", "LinkedItem"], [item.ItemId, item.ItemCode, item.Qty, item.Rate, gross, item.RmaNo, taxableValue, vatamt, "Yes", origitem.ItemId], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, curRow, requestId);
+
+    }
+
+   
 }
 function afterLineAdded(response) {
+
     setRmaSearchFocus();
 
     if (Swal.isVisible()) {
 
         Swal.getConfirmButton().focus();
     }
+}
+function afterSchemeLineAdded(response) {
+
+
+    //if (Swal.isVisible()) {
+
+    //    Swal.getConfirmButton().focus();
+    //}
 }
 //Remove item RMA
 var validRemovalRows = 0;
@@ -821,7 +1000,7 @@ function getRemoveRmaList(response) {
     vtype = response.data[0].iVoucherType;
     docno = response.data[1].FieldValue;
     let rmano = response.data[2].FieldValue;
-    let outletid = response.data[3].FieldValue;
+    outletid = response.data[3].FieldValue;
     if (rmano.trim().length == 0 || validRemovalRows == 0) {
 
         return;

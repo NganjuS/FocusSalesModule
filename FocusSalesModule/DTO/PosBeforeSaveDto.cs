@@ -19,6 +19,14 @@ namespace FocusSalesModule.DTO
         public int CustomerId { get; set; }
         public int MemberId { get; set; }
         public decimal Amount { get; set; }
+        public string UniqueId
+        {
+            get
+            {
+                return $"{Vtype}_{DocNo}";
+            }
+            
+        }
         public List<BillSettlement> BillSettlement { get; set; }
 
 

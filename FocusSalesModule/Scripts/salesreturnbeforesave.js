@@ -442,6 +442,20 @@ window.addEventListener('message', Focus8WAPI.PRIVATE.onReceiveMessage);
 
 var requestId = 0;
 var requestsProcessed = [];
+var linepostRequestsProcessed = [];
+var shadowRowList = [];
+var isProcessing = false;
+var validRows = 0;
+var headerDataEdit = {};
+
+function isPostLineRequestProcessed(iRequestId) {
+
+    for (let i = 0; i < linepostRequestsProcessed.length; i++) {
+        if (linepostRequestsProcessed[i] == iRequestId) {
+            return true;
+        }
+    } return false;
+}
 function isRequestProcessed(iRequestId) {
 
     for (let i = 0; i < requestsProcessed.length; i++) {
@@ -450,8 +464,24 @@ function isRequestProcessed(iRequestId) {
         }
     } return false;
 }
+function resetUI() {
+
+    requestId = 0;
+    requestsProcessed = [];
+    validRows = 0;
+    linepostRequestsProcessed = [];
+    shadowRowList = [];
+
+}
+
 function validateBeforeSave(response) {
+    if (isProcessing) {
+        return;
+    }
+    isProcessing = true
+    resetUI();
     setupSweetAlert();
+    
     ++requestId;
     Focus8WAPI.getFieldValue("getEditDocumentDetails", ["", "DocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
@@ -462,24 +492,70 @@ function getEditDocumentDetails(response) {
     if (isRequestProcessed(response.iRequestId)) {
         return;
     }
+
     requestsProcessed.push(response.iRequestId);
-    checkReturnUsed(response.data[0].CompanyId, response.data[0].iVoucherType, response.data[1].FieldValue)
+    validRows = response.data[0].RowsInfo.iValidRows
+
+    for (i = 0; i < validRows; i++) {
+
+        Focus8WAPI.getBodyFieldValue("getDocumentRows", ["", "Item", "Quantity", "Rate", "Gross", "RMA"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
+    }
+
+    headerDataEdit.CompanyId = response.data[0].CompanyId;
+    headerDataEdit.SessionId = response.data[0].SessionId;
+    headerDataEdit.Vtype = response.data[0].iVoucherType;
+    headerDataEdit.DocNo = response.data[1].FieldValue;
+
+    
+
 }
-async function checkReturnUsed(compid, vtype, docno) {
+function getDocumentRows(response) {
+    if (isPostLineRequestProcessed(response.iRequestId)) {
+        return;
+    }
+    linepostRequestsProcessed.push(response.iRequestId);
 
-    let url = `/focussalesmodule/api/salespayments/checkreturnused?compid=${compid}&vtype=${vtype}&docno=${docno}`;
+    let lineObj = {
 
-    let response = await fetch(url);
+        Item: response.data[1].FieldValue,
+        Quantity: response.data[2].FieldValue,
+        Rate: response.data[3].FieldValue,
+        Gross: response.data[4].FieldValue,
+        RMA: response.data[5].FieldValue
+    };
+    shadowRowList.push(lineObj);
+
+    if (response.iRequestId == validRows) {
+        checkReturnUsed()
+    }
+
+}
+async function checkReturnUsed() {
+
+    let url = `/focussalesmodule/api/salespayments/checkreturnused`;
+    headerDataEdit.DocItemLines = shadowRowList;
+
+    let response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(headerDataEdit)
+    });
+
     let data = await response.json();
     if (data.result == 1) {
 
+        isProcessing = true;            ;
         Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
     }
     else {
 
         showMessageAlert("This sales return has already been used in another transaction. You cannot edit or delete this sales return.", "warning");
+        isProcessing = true; 
         Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
     }
+    isProcessing = false;
 }
 function setupSweetAlert() {
 

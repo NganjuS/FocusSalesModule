@@ -187,7 +187,7 @@ function posSystem() {
                 this.setAdvancePaymentAmt();
 
             },
-            saveTxn() {
+            async saveTxn() {
 
                 this.setAdvancePaymentAmt();
                
@@ -197,9 +197,36 @@ function posSystem() {
                 }
                 else {
 
+                    let postPaymentObject = [...this.paymentModes];
+
+                    for (let i = 0; i < postPaymentObject.length; i++) {
+
+                        postPaymentObject[i].PayList = postPaymentObject[i].PayList.filter(obj => obj.IsSelected == true);
+                    }
+
                     let finalData = Object.assign({}, this.paymentModes);
+                    window.parent.paymentHeaderObj.BillSettlement = postPaymentObject;
                     window.parent.setDocumentDetails(finalData);
-                    
+
+                    //let response = await fetch(`${posBaseUrl}api/salespayments/validateadvancepaymentadd`, {
+                    //    method: "POST",
+                    //    headers: {
+                    //        'Content-Type': 'application/json'
+                    //    },
+                    //    body: JSON.stringify(window.parent.paymentHeaderObj)
+                    //} );
+
+                    //let dataObj = await response.json();
+                    //if (dataObj.result == 1) {
+
+                      
+                    //}
+                    //else {
+
+                    //    alert("Validation failed: " + dataObj.message, "warning");
+                    //}
+
+                    //Validate before adding                    
                 }
 
                
@@ -572,7 +599,7 @@ function posSystem() {
                     case 1:
                         return paymentMode.DefaultCashAccountName;
                     case 2:
-                        return paymentMode.DefaultBankAccountName;
+                        return paymentMode.DefaultOnlineAccountName;
                     case 3:
                         return this.getOnlineAccountsName(paymentMode);
                     case 4:

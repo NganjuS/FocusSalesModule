@@ -1,0 +1,121 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/waitMe.min.css" rel="stylesheet" />
+    <link href="~/Content/select2.min.css" rel="stylesheet" />
+    <title>Schemes Select</title>
+</head>
+<body>
+
+    <div x-data="itemSetScr" style="font-size: 14px;" id="full-container">
+        <div class="card">
+            <div class="card-header bg-light">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h3 class="panel-title" style="color: #0073AA;">Item Set Search</h3>
+                        <input type="hidden" value="@ViewBag.compid" x-ref="compid" />
+                        @*<label>Search Set Item </label>*@
+                        @*<select id="itemsearch">
+                            </select>*@
+                        <div class="position-relative">
+                            <input type="text" class="form-control pe-5" id="searchInput" placeholder="Search..." x-model="searchVal" @@input="debouncedInput">
+                            <button type="button" class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-secondary"
+                                    @@click="resetFilters()">
+
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                                    <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z" />
+                                </svg>
+                            </button>
+                        </div>
+
+                    </div>
+                    <div class="col-md-5"></div>
+                    <div class="col-md-3">
+                        <div class="hstack gap-1" style="float: right;">
+                            <button class="btn" x-on:click="addItems()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2" />
+                                </svg>
+                                <br />Add
+                            </button>
+                            @*<button class="btn" x-on:click="refreshItems()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
+                                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
+                                    </svg>
+                                    <br />Refresh
+                                </button>*@
+
+                            <button class="btn" x-on:click="closeWin()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                                    <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z" />
+                                </svg>
+                                <br />
+                                Close
+                            </button>
+                        </div>
+
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+
+                    </div>
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4"></div>
+                </div>
+            </div>
+            <div class="card-body" style="padding:10px;">
+
+                <table class="table table-bordered table-sm" id="invoicelist" style="margin-top: 5px;">
+                    <thead style="color: white; background-color: #0073AA;">
+                        <tr>
+                            <th style="color: white; background-color: #0073AA; width: 25px;">#</th>
+                            <th style="color: white; background-color: #0073AA; text-align: center; width: 35px;"> ##@*<input type="checkbox" @@click="selectAll($event.target.checked)">*@</th>
+                            <th style="color: white; background-color: #0073AA;">Item</th>
+                            @*<th style="color: white; background-color: #0073AA; text-align: center; width: 100px !important;">Qty</th>
+                                <th style="color: white; background-color: #0073AA; text-align: center; width: 100px !important;">Rate</th>
+                                <th style="color: white; background-color: #0073AA; text-align: center; width: 100px !important;">Gross</th>*@
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="(row,index) in itemList" :key="index">
+                            <tr>
+                                <th scope="row" style="color: #0073AA; text-align: left; width: 20px !important; height: 28px; " x-text="(((currentPage-1)*pagingData.pageSize)+index+1)+'.'"></th>
+                                <td style="text-align: center; vertical-align: middle;"><input type="checkbox" x-model="row.Status" @@change="updateStatus(row)" /></td>
+                                <td style="text-align: left; vertical-align: middle; height: 28px;" x-text="row.Name"></td>
+                                @*<td style="text-align: center; vertical-align: middle; height: 28px;" x-text="row.Qty"> </td>
+                                    <td x-text="row.Rate"></td>
+                                    <td style="text-align: center; vertical-align: middle; height: 28px;" x-text="row.Gross"></td*@>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+
+               
+
+
+
+
+
+            </div>
+        </div>
+    </div>
+    <script src="~/Scripts/FClient.js"></script>
+    <script src="~/Scripts/jquery-3.7.0.min.js"></script>
+    <script src="~/Scripts/bootstrap.bundle.min.js"></script>
+    <script src="~/Scripts/select2.min.js"></script>
+    <script src="~/Scripts/waitMe.min.js"></script>
+    <script src="~/Scripts/loaditemsets.js?v=399sss8844"></script>
+    <script src="~/Scripts/addtoorder.js?v=366sddssd55994"></script>
+    <script src="~/Scripts/alpine.min.js" defer></script>
+</body>
+</html>

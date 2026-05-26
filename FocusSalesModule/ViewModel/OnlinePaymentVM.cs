@@ -27,22 +27,16 @@ namespace FocusSalesModule.ViewModel
 
             pagingData.data = new List<MoniepointTxnDto>();
             searchval = AppUtilities.SanitizeStr(searchval);
-            string filterparam = $" 1=1  ";
+            string filterparam = $"  ";
 
-            string orderbyextra = " mp.TransactionTime desc ";
+            string orderbyextra = " TransactionTime desc ";
             string extraparams = GeneralUtils.BuildQueryParams(orderbyextra, pageno, pagesize);
-            if (!String.IsNullOrEmpty(searchval))
-            {
-                filterparam += $" and  mp.TransactionReference ='{searchval}' ";
-                pagingData.recordsTotal = DbCtx<Int32>.GetScalar(compid, PaymentDetailsQueries.GetPaymentListFullPagedCount(filterparam));
 
-                pagingData.data = DbCtx<MoniepointTxnDto>.GetObjList(compid, PaymentDetailsQueries.GetPaymentListFullPaged( $"{filterparam} {extraparams}"));
-            }
-            else
-            {
-                pagingData.recordsTotal = DbCtx<Int32>.GetScalar(compid, PaymentDetailsQueries.GetPaymentListFullPagedCount( filterparam));
-                pagingData.data = DbCtx<MoniepointTxnDto>.GetObjList(compid, PaymentDetailsQueries.GetPaymentListFullPaged($"{filterparam} {extraparams}"));
-            }
+            filterparam = String.IsNullOrEmpty(searchval) ? " " : $" and  TransactionReference ='{searchval}' ";
+            pagingData.recordsTotal = DbCtx<Int32>.GetScalar(compid, PaymentDetailsQueries.GetPaymentListFullPagedCount(filterparam));
+
+            pagingData.data = DbCtx<MoniepointTxnDto>.GetObjList(compid, PaymentDetailsQueries.GetPaymentListFullPaged($"{filterparam} {extraparams}"));
+          
             pagingData.totalPages = pagingData.recordsTotal % pagesize != 0 ? (pagingData.recordsTotal / pagesize) + 1 : pagingData.recordsTotal / pagesize;
 
             return pagingData;
@@ -56,22 +50,17 @@ namespace FocusSalesModule.ViewModel
             pagingData.data = new List<OnlinePaymentDTO>();
             searchval = AppUtilities.SanitizeStr(searchval);
             DateTime filterdate = DateTime.Now.AddMinutes(-1*maxmin);
-            string filterparam = $" and mp.PaymentType= {paymenttype} and mp.TransactionTime >= '{filterdate.ToString("yyyy-MM-dd HH:mm:ss.fff")}' ";
+            string filterparam = $" and trm1.PaymentType  = {paymenttype} and TransactionTime >= '{filterdate.ToString("yyyy-MM-dd HH:mm:ss.fff")}' ";
 
-            string orderbyextra = " mp.TransactionTime desc ";
+            string orderbyextra = " TransactionTime desc ";
             string extraparams = GeneralUtils.BuildQueryParams(orderbyextra, pageno, pagesize);
-            if (!String.IsNullOrEmpty(searchval))
-            {
-               filterparam += $" and mp.TransactionReference ='{searchval}' ";
-                pagingData.recordsTotal = DbCtx<Int32>.GetScalar(compid , PaymentDetailsQueries.GetOutstandingPaymentListPagedByOutletCount(paymenttype, outletid, filterparam));
 
-                pagingData.data = DbCtx<OnlinePaymentDTO>.GetObjList(compid, PaymentDetailsQueries.GetOutstandingPaymentListPaged(paymenttype, outletid, $"{filterparam} {extraparams}"));
-            }
-            else
-            {
-                pagingData.recordsTotal = DbCtx<Int32>.GetScalar(compid, PaymentDetailsQueries.GetOutstandingPaymentListPagedByOutletCount(paymenttype,outletid, filterparam));
-                pagingData.data = DbCtx<OnlinePaymentDTO>.GetObjList(compid, PaymentDetailsQueries.GetOutstandingPaymentListPaged(paymenttype,outletid, $"{filterparam} {extraparams}"));
-            }
+            filterparam += String.IsNullOrEmpty(searchval) ? " " : $" and  TransactionReference ='{searchval}' ";
+
+            pagingData.recordsTotal = DbCtx<Int32>.GetScalar(compid, PaymentDetailsQueries.GetOutstandingPaymentListPagedByOutletCount(paymenttype, outletid, filterparam));
+
+            pagingData.data = DbCtx<OnlinePaymentDTO>.GetObjList(compid, PaymentDetailsQueries.GetOutstandingPaymentListPaged(paymenttype, outletid, $"{filterparam} {extraparams}"));
+
             pagingData.totalPages = pagingData.recordsTotal % pagesize != 0 ? (pagingData.recordsTotal / pagesize) + 1 : pagingData.recordsTotal / pagesize;
 
             return pagingData;
