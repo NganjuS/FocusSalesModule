@@ -95,7 +95,7 @@ function posSystem() {
                     this.hideProgress();
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.log(errorText);
+                //        console.log(errorText);
                         throw new Error(errorText);
                     }
                     return response.json();
@@ -124,6 +124,7 @@ function posSystem() {
 
                        
                         this.showAlertMessage(dataObj.message, "warning");
+
                         //setTimeout(() => {
 
                         //    //window.parent.onPosClosePopupStop();
@@ -172,10 +173,10 @@ function posSystem() {
                     this.showProgress(`Searching ...`)
                     let url = `${posBaseUrl}api/salespayments/manualonlinepayment?compid=${this.compid}&&integrationtype=${paymentMode.IntegrationType}&outletid=${this.outletid}&reference=${paymentMode.Reference.trim()}`;
 
-                    console.log(url);
+                    //console.log(url);
                     let response = await fetch(url);
                     let dataObj = await response.json();
-                    console.log(dataObj);
+                    //console.log(dataObj);
                     this.hideProgress();
                     paymentMode.Reference = "";
 
@@ -191,7 +192,8 @@ function posSystem() {
                             IsSelected: selectrec,
                             Reference: x.TransactionReference,
                             TransactionTime: x.TransactionTime,
-                            AccountId: x.AccountId
+                            AccountId: x.AccountId,
+                            Narration: x.Narration
                         }));
 
                         
@@ -249,8 +251,8 @@ function posSystem() {
                                     IsSelected: false,
                                     Reference: dataList[i].TransactionReference,
                                     AccountId: dataList[i].AccountId,
-                                    TransactionTime: dataList[i].TransactionTime
-
+                                    TransactionTime: dataList[i].TransactionTime,
+                                    Narration: dataList[i].Narration
                                 });
                             }
 
@@ -437,7 +439,7 @@ function posSystem() {
                     let payObj = {
 
                         IsSelected: true,
-                        Amount: amount, Reference: actualObj.Reference, TransactionTime: actualObj.TransactionTime
+                        Amount: amount, Reference: actualObj.Reference, TransactionTime: actualObj.TransactionTime, Narration : ""
                     }
                     paymentMode.Amount = "";
                     paymentMode.Reference = "";
@@ -499,6 +501,7 @@ function posSystem() {
                         for (let i = 0; i < this.paymentModes.length; i++) {
                             this.paymentModes[i].Amount = '';
                             this.paymentModes[i].Reference = "";
+                            this.paymentModes[i].Narration = "";
                             this.paymentModes[i].PayList = [];
                             this.paymentModes[i].ManualValidate = false;
                         }
@@ -564,7 +567,8 @@ function posSystem() {
                                 OrigAmount: this.getAmount(dataObj.datalist[i].DiscountValue),
                                 PostedAmt: this.getAmount(dataObj.datalist[i].PostedAmt),
                                 FullAmt: this.getAmount(dataObj.datalist[i].FullAmt),
-                                AccountId: dataObj.datalist[i].SelectedAccount
+                                AccountId: dataObj.datalist[i].SelectedAccount,
+                                Narration: ""
                             }
 
                             discountObj[0].PayList.push(nwOBj);
@@ -621,7 +625,8 @@ function posSystem() {
                                 Amount: this.getAmount(dataObj.datalist[i].Amount),
                                 OrigAmount: this.getAmount(dataObj.datalist[i].Amount),
                                 PostedAmt: this.getAmount(dataObj.datalist[i].PostedAmt),
-                                FullAmt: this.getAmount(dataObj.datalist[i].FullAmt)
+                                FullAmt: this.getAmount(dataObj.datalist[i].FullAmt),
+                                Narration: ""
                             }
 
                             creditNoteObj[0].PayList.push(nwOBj);
@@ -641,9 +646,9 @@ function posSystem() {
                     TxnDate: window.parent.paymentHeaderObj.DocDate,
                     RmaNoList: itemList
                 };
-                console.log(postObj);
+                //console.log(postObj);
                 let url = `${posBaseUrl}api/salespayments/availableadvancereceipts/?compid=${this.compid}&vtype=${this.vtype}&outletid=${this.outletid}&memberid=${this.memberid}`;
-                console.log(url);
+                //console.log(url);
                 let response = await fetch(url, {
                     method: "POST",
                     headers: {
@@ -678,7 +683,8 @@ function posSystem() {
                                 Amount: this.getAmount(dataObj.datalist[i].Amount),
                                 OrigAmount: this.getAmount(dataObj.datalist[i].Amount),
                                 PostedAmt: this.getAmount(dataObj.datalist[i].PostedAmt),
-                                FullAmt: this.getAmount(dataObj.datalist[i].FullAmt)
+                                FullAmt: this.getAmount(dataObj.datalist[i].FullAmt),
+                                Narration: ""
                             }
 
                             advanceReceiptObj[0].PayList.push(nwOBj);

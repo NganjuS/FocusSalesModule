@@ -189,7 +189,7 @@ namespace FocusSalesModule.Controllers
                      
                         if (settlement.TypeSelect == (Int32)AppDefaults.PaymentTypes.Integration && settlement.PayList.Count > 0)
                         {
-                            Logger.writeLog(JsonConvert.SerializeObject(settlement.PayList));
+                           // Logger.writeLog(JsonConvert.SerializeObject(settlement.PayList));
                             string refFilterList = String.Join(",", settlement.PayList.Select(r => $"'{r.Reference}'"));
                             //Check if payment reference if used in another transaction
                             string refCheckQry = $"select count(Id) from vwPaymentTxns where  TransactionReference in ({refFilterList}) and IsAllocatedToSale = 1 and TxnDocNo <> '{beforeSaveDto.DocNo}' and Vtype <> {beforeSaveDto.Vtype}";

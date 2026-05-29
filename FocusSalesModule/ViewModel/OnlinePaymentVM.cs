@@ -50,7 +50,7 @@ namespace FocusSalesModule.ViewModel
             pagingData.data = new List<OnlinePaymentDTO>();
             searchval = AppUtilities.SanitizeStr(searchval);
             DateTime filterdate = DateTime.Now.AddMinutes(-1*maxmin);
-            string filterparam = $" and trm1.PaymentType  = {paymenttype} and TransactionTime >= '{filterdate.ToString("yyyy-MM-dd HH:mm:ss.fff")}' ";
+            string filterparam = $" and  TransactionTime >= '{filterdate.ToString("yyyy-MM-dd HH:mm:ss.fff")}' ";
 
             string orderbyextra = " TransactionTime desc ";
             string extraparams = GeneralUtils.BuildQueryParams(orderbyextra, pageno, pagesize);

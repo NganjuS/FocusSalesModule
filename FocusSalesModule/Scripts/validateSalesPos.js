@@ -162,14 +162,14 @@ function getDocPostData(response) {
         }
         for (let i = 0; i < postShadowItemList.length; i++) {
 
-            if (validateDecimal(postShadowItemList[i].Rate) <= 0) {
+            if (postShadowItemList[i].SchemeItem != "Yes" && validateDecimal(postShadowItemList[i].Rate) <= 0) {
                 alert(`Rate required for item on line ${i + 1} !! `);
                 isProcessing = false;
                Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
                 return;
             }
             //Validate scheme item
-            if (postShadowItemList[i].SchemeItem == "Yes") {
+            if (postShadowItemList[i].SchemeItem == "Yes" && postShadowItemList[i].LinkedItem != 0) {
 
                 let linkedItemObj = postShadowItemList.some(x => x.Item == postShadowItemList[i].LinkedItem);
                 if (!linkedItemObj) {

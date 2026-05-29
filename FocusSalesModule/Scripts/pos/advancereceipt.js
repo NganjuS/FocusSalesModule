@@ -97,6 +97,7 @@ function posSystem() {
                             for (let i = 0; i < this.paymentModes.length; i++) {
                                 this.paymentModes[i].Amount = '';
                                 this.paymentModes[i].Reference = "";
+                                this.paymentModes[i].Narration = "";
                                 this.paymentModes[i].PayList = [];
                                 this.paymentModes[i].ManualValidate = false;
                             }
@@ -157,10 +158,11 @@ function posSystem() {
                 let payObj = {
 
                     IsSelected: true,
-                    Amount: amount, Reference: actualObj.Reference, TransactionTime: actualObj.TransactionTime
+                    Amount: amount, Reference: actualObj.Reference, TransactionTime: actualObj.TransactionTime, Narration: actualObj.Narration
                 }
                 paymentMode.Amount = "";
                 paymentMode.Reference = "";
+                paymentMode.Narration = "";
 
                 paymentMode.PayList.push(payObj);
 
@@ -277,7 +279,8 @@ function posSystem() {
                             Amount: amount,
                             IsSelected: true,
                             Reference: x.TransactionReference,
-                            TransactionTime: x.TransactionTime
+                            TransactionTime: x.TransactionTime,
+                            Narration: x.Narration
 
                         }));
 
@@ -335,8 +338,8 @@ function posSystem() {
                                     OrigAmount: amt,
                                     IsSelected: false,
                                     Reference: dataList[i].TransactionReference,
-                                    TransactionTime: dataList[i].TransactionTime
-
+                                    TransactionTime: dataList[i].TransactionTime,
+                                    Narration: dataList[i].Narration
                                 });
                             }
 
@@ -413,7 +416,8 @@ function posSystem() {
                                 OrigAmount: this.getAmount(dataObj.datalist[i].DiscountValue),
                                 PostedAmt: this.getAmount(dataObj.datalist[i].PostedAmt),
                                 FullAmt: this.getAmount(dataObj.datalist[i].FullAmt),
-                                AccountId: dataObj.datalist[i].SelectedAccount
+                                AccountId: dataObj.datalist[i].SelectedAccount,
+                                Narration : ''
                             }
 
                             discountObj[0].PayList.push(nwOBj);
@@ -433,9 +437,9 @@ function posSystem() {
                     TxnDate: window.parent.paymentHeaderObj.DocDate,
                     RmaNoList: itemList
                 };
-                console.log(postObj);
+                //console.log(postObj);
                 let url = `${posBaseUrl}api/salespayments/availablecreditnotes/?compid=${this.compid}&vtype=${this.vtype}&outletid=${this.outletid}&memberid=${this.memberid}`;
-                console.log(url);
+                //console.log(url);
                 let response = await fetch(url, {
                     method: "POST",
                     headers: {
@@ -449,7 +453,7 @@ function posSystem() {
                 }
 
                 let dataObj = await response.json();
-                console.log(dataObj);
+                //console.log(dataObj);
                 if (dataObj.result == 1) {
                     
                     if (dataObj.datalist.length == 0) {
@@ -470,7 +474,8 @@ function posSystem() {
                                 Amount: this.getAmount(dataObj.datalist[i].Amount),
                                 OrigAmount: this.getAmount(dataObj.datalist[i].Amount),
                                 PostedAmt: this.getAmount(dataObj.datalist[i].PostedAmt),
-                                FullAmt: this.getAmount(dataObj.datalist[i].FullAmt)
+                                FullAmt: this.getAmount(dataObj.datalist[i].FullAmt),
+                                Narration: ''
                             }
 
                             creditNoteObj[0].PayList.push(nwOBj);

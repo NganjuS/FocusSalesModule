@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using static FocusSalesModule.Config.AppDefaults;
 
 namespace FocusSalesModule.Queries
 {
@@ -34,7 +35,7 @@ namespace FocusSalesModule.Queries
         }
         public static string GetManualSearchPayment(int outletid, int paymentType,string reference)
         {
-            return $"select dta.*, trm1.Account AccountId from vwPaymentTxns dta join mCore_terminalmachines trm on trm.sCode = dta.TerminalSerial  join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId  where trm.iStatus = 0 and trm.bgroup =0 and isnull(dta.IsAllocatedToSale,0) = 0 and (trm1.Outlet = {outletid} or dta.PaymentType = 2) and not exists ( select top 1 ReferenceNo from tCore_Data4100_0 dt  where dt.ReferenceNo = dta.TransactionReference) and InternalTxnCode = '{reference}' and PaymentType ={paymentType}";
+            return $"select dta.*, trm1.Account  AccountId from vwPaymentTxns dta join mCore_terminalmachines trm on trm.sCode = dta.TerminalSerial  join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId cross apply (select distinct ad.PaymentType, ad.AccountNo from  muCore_terminalmachines_AdditionalDetails_Details ad where ad.imasterid = trm.iMasterId and ad.AccountNo = dta.Account  and  ad.PaymentType = {paymentType}) addt where trm.iStatus = 0 and trm.bgroup =0 and isnull(dta.IsAllocatedToSale,0) = 0  and trm1.Outlet = {outletid}  and not exists ( select top 1 ReferenceNo from tCore_Data4100_0 dt  where dt.ReferenceNo = dta.TransactionReference) and InternalTxnCode = '{reference}' ";
         }
         public static string GetOutstandingAmtDetails(int outletid, bool manualvalidate, string reference,decimal outstandingamt)
         {
@@ -64,16 +65,17 @@ namespace FocusSalesModule.Queries
         {
          
 
-            return $"select count(TransactionReference) id from vwPaymentTxns dta join mCore_terminalmachines trm on trm.sCode = dta.TerminalSerial  join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId  where  trm.iStatus = 0 and trm.bgroup = 0 and isnull(dta.IsAllocatedToSale,0) = 0 and (trm1.Outlet = {outletid} or dta.PaymentType = 2) and not exists ( select top 1 ReferenceNo from tCore_Data4100_0 dt  where dt.ReferenceNo = dta.TransactionReference) {searchfilter}  ";
+            return $"select count(TransactionReference) id from vwPaymentTxns dta join mCore_terminalmachines trm on trm.sCode = dta.TerminalSerial  join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId cross apply (select distinct ad.PaymentType, ad.AccountNo from  muCore_terminalmachines_AdditionalDetails_Details ad where ad.imasterid = trm.iMasterId and ad.AccountNo = dta.Account  and  ad.PaymentType = {paymentType}) addt where  trm.iStatus = 0 and trm.bgroup = 0 and isnull(dta.IsAllocatedToSale,0) = 0 and trm1.Outlet = {outletid} and not exists ( select top 1 ReferenceNo from tCore_Data4100_0 dt  where dt.ReferenceNo = dta.TransactionReference) {searchfilter}  ";
+            //and(trm1.Outlet = { outletid} or dta.PaymentType = 2)
         }
         public static string GetOutstandingPaymentListPaged(int paymentType, int outletid,  string searchfilter)
         {
-            return $" select dta.*, trm1.Account AccountId from vwPaymentTxns dta join mCore_terminalmachines trm on trm.sCode = dta.TerminalSerial  join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId  where trm.iStatus = 0 and trm.bgroup =0 and isnull(dta.IsAllocatedToSale,0) = 0 and (trm1.Outlet = {outletid} or dta.PaymentType = 2) and not exists ( select top 1 ReferenceNo from tCore_Data4100_0 dt  where dt.ReferenceNo = dta.TransactionReference) {searchfilter}";
+            return $" select dta.*, trm1.Account  AccountId from vwPaymentTxns dta join mCore_terminalmachines trm on trm.sCode = dta.TerminalSerial  join muCore_terminalmachines trm1 on trm.iMasterId = trm1.iMasterId cross apply (select distinct ad.PaymentType, ad.AccountNo from  muCore_terminalmachines_AdditionalDetails_Details ad where ad.imasterid = trm.iMasterId and ad.AccountNo = dta.Account  and  ad.PaymentType = {paymentType}) addt where trm.iStatus = 0 and trm.bgroup =0 and isnull(dta.IsAllocatedToSale,0) = 0  and trm1.Outlet = {outletid}  and not exists ( select top 1 ReferenceNo from tCore_Data4100_0 dt  where dt.ReferenceNo = dta.TransactionReference) {searchfilter}";
         }
 
         public static string CreateAlltxnsView()
         {
-            return "create or alter view vwPaymentTxns as select * from (select Id,3 PaymentType,transactionId TransactionReference, '' RetrievalReferenceNumber, terminalserial TerminalSerial, actualtimestamp TransactionTime,internaltxncode InternalTxnCode, IsAllocatedToSale,Account,amount Amount , TxnDocNo, Vtype  from fpl_WemaBankTxns where status = 'Success'  union select Id,mp.PaymentType, mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.InternalTxnCode,IsAllocatedToSale, BusinessId Account,mp.AmountInLocalCur Amount, TxnDocNo, Vtype from fpl_OnlinePayments mp where  ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )    ) dtc ";
+            return "create or alter view vwPaymentTxns as select * from (select Id,3 PaymentType,transactionId TransactionReference, '' RetrievalReferenceNumber, terminalserial TerminalSerial, actualtimestamp TransactionTime,internaltxncode InternalTxnCode, IsAllocatedToSale,Account,amount Amount , TxnDocNo, Vtype ,narration Narration from fpl_WemaBankTxns where status = 'Success'  union select Id,mp.PaymentType, mp.TransactionReference,mp.RetrievalReferenceNumber, mp.TerminalSerial, mp.TransactionTime,mp.InternalTxnCode,IsAllocatedToSale, BusinessId Account,mp.AmountInLocalCur Amount, TxnDocNo, Vtype,mp.Narration from fpl_OnlinePayments mp where  ((TransactionType = 'PURCHASE' and TransactionStatus = 'SUCCESSFUL' ) or (TransactionType ='POS_TRANSFER' and  TransactionStatus = 'APPROVED') )    ) dtc ";
         }
 
     }

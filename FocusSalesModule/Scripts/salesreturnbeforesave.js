@@ -526,9 +526,36 @@ function getDocumentRows(response) {
     shadowRowList.push(lineObj);
 
     if (response.iRequestId == validRows) {
+        validateSchemeItems();
         checkReturnUsed()
+
     }
 
+}
+function validateSchemeItems() {
+
+    //Check if orginal item or free item is missing
+    for (let i = 0; i < freeItemsList.length; i++) {
+
+        let freeItemExists = shadowRowList.some(row => row.Item == freeItemsList[i].ItemId);
+        let itemExists = shadowRowList.some(row => row.Item == freeItemsList[i].LinkedItem);
+        if (!freeItemExists && itemExists) {
+
+            showMessageAlert("Missing free item.", "warning");
+            isProcessing = true;
+            Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+        }
+
+        if (!itemExists && freeItemExists) {
+
+            showMessageAlert("Missing Item associated to a free item.", "warning");
+            isProcessing = true;
+            Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+        }
+    }
+    
+
+    
 }
 async function checkReturnUsed() {
 

@@ -272,7 +272,8 @@
                                                             <tr>
                                                                 <th style="width: 20px; color: white; background-color: #0073AA;">#</th>
                                                                 <th style="width: 20px; color: white; background-color: #0073AA;">##</th>
-                                                                <th style="color: white; background-color: #0073AA; min-width: 300px;">Reference</th>
+                                                                <th style="color: white; background-color: #0073AA; min-width: 200px;">Reference</th>
+                                                                <th style="color: white; background-color: #0073AA; min-width: 200px;">Narration</th>
                                                                 <th style="width: 150px;color: white; background-color: #0073AA;">Time</th>
                                                                 <th style="width: 150px; color: white; background-color: #0073AA;">Amount</th>
 
@@ -285,7 +286,8 @@
                                                                     <td>
                                                                         <input type="checkbox" x-model="onlinePay.IsSelected" @@change="updateOtherPayments(paymentMode,onlinePay)" />
                                                                     </td>
-                                                                    <td style="min-width: 300px;" scope="row" x-text="onlinePay.Reference" class="wrap"></td>
+                                                                    <td style="min-width: 200px;" scope="row" x-text="onlinePay.Reference" class="wrap"></td>
+                                                                    <td style="min-width: 200px;" scope="row" x-text="onlinePay.Narration" class="wrap"></td>
                                                                     <td style="width: 150px;" scope="row" x-text="new Date(onlinePay.TransactionTime).toLocaleString()"></td>
                                                                     <td style="width: 150px;" scope="row" x-text="formatNum(onlinePay.Amount)"></td>
                                                                     <td x-show="paymentMode.ManualValidate">
@@ -324,7 +326,7 @@
     <script src="~/Scripts/sweetalert2.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script defer src="~/Scripts/alpine.min.js"></script>
-    <script src="~/Scripts/pos/focusposscreenb4save.js?v=78997448839934uis8j"></script>
+    <script src="~/Scripts/pos/focusposscreenb4save.js?v=789779743is8j"></script>
 
 </body>
 </html>

@@ -25,6 +25,8 @@ namespace FocusSalesModule.Controllers
     [RoutePrefix("api/salespayments")]
     public class SalesValidationController : ApiController
     {
+
+      
         [HttpGet]
         [Route("validatesale")]
         public HashData<dynamic> GetValidateSale(int compid, int outletid, bool manualvalidate,string reference,decimal outstandingamt)

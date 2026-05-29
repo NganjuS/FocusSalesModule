@@ -961,7 +961,7 @@ async function loadData(compid, vttype) {
     else {
 
         if (dataObj.datalist.length > 0) {
-
+            setFreeItems(dataObj.datalist);
             let item = dataObj.datalist[0];
             setHeaderDetails(item)
             for (let rowNo = 1; rowNo <= dataObj.datalist.length; rowNo++) {
@@ -974,7 +974,12 @@ async function loadData(compid, vttype) {
 
     }
 }
+var freeItemsList = [];
+function setFreeItems(itemList) {
 
+    freeItemsList = itemList.filter(x => x.SchemeItem == 'Yes');
+
+}
 
 function ClearDocNoSearchField() {
 

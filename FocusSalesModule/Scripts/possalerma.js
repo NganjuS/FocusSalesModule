@@ -655,8 +655,13 @@ async function searchRma(rmano, outletid)
            
            
             if (validRows == 0) {
-                
-                
+
+                curItemName = '';
+                shadowItemList = [];
+                freeItem = '';
+                loopMssg = '';
+                curRow = 0;
+                loadedItem = null;
                 setLineItemsToDoc(1, dataObj.data)
                 
             }
@@ -679,7 +684,10 @@ async function searchRma(rmano, outletid)
 
 }
 var loadedItem = null;
-
+var curItemName = "";
+var curRow = 0;
+var freeItemsList = [];
+var loopMssg = '';
 function getExistingItems(item) {
     loadedItem = item;
     lineRequestsProcessed = [];
@@ -715,18 +723,32 @@ function getDocBodyData(response) {
    
     if (response.iRequestId == validRows) {
 
+
+        //Check if a scheme item exists in the list
+        let schemeInSystem = shadowItemList.some(x => x.SchemeItem == 'Yes');
+        console.log("Scheme item in system: " + schemeInSystem);
+        console.log(shadowItemList);
+        console.log(loadedItem);
+        if (schemeInSystem) {
+            //Filter out scheme items and prepare list of original items
+            showMessageAlert("Only one scheme item allowed per document  !!", "warning");
+            return;
+
+
+        }
+        //
        
             //check if rma exists
             // let rmaExists = false;
             //Find Item in shadow list
-            let itemExists = shadowItemList.find(x => x.Item == loadedItem.ItemId);
+        let itemExists = shadowItemList.find(x => x.Item == loadedItem.ItemId);
             if (itemExists) {
                 let rmaExists = itemExists.RMA.find(x => x == loadedItem.RmaNo);
                 console.log(rmaExists);
                 rowNo = shadowItemList.indexOf(itemExists) + 1;
                 if (rmaExists) {
                     
-                    showMessageAlert("RMA already exists !!","warning")
+                    showMessageAlert("RMA already exists !!", "warning");
                    
                     let newQty = itemExists.RMA.length;
                     let gross = parseInt(newQty) * parseFloat(itemExists.Rate);
@@ -770,19 +792,10 @@ function getDocBodyData(response) {
     }
 
 }
+
 async function setLineItemsToDoc(rowNo, item) {
-
-    ++requestId;
-    let gross = parseInt(item.Qty) * parseFloat(item.Price);
-
-    let vatrate = parseFloat(item.VAT);
-    let vatratecalc = vatrate > 0 ? vatrate / 100 : 0;
-    let taxableValue = gross / (1 + vatratecalc);
-    let vatamt = taxableValue * vatratecalc;
-    
-
-    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "ItemCode", "Unit", "Quantity", "Rate", "Gross", "RMA", "Taxable Value", "Vat"], [item.ItemId, item.ItemCode, item.UnitId, item.Qty, item.Price, gross, item.RmaNo, taxableValue, vatamt], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
-
+    curItemName = item.ItemName;
+ 
     if (item.HasScheme) {
 
         const result = await Swal.fire({
@@ -792,23 +805,51 @@ async function setLineItemsToDoc(rowNo, item) {
             showCancelButton: true,
             allowOutsideClick: false,
             confirmButtonText: 'Yes, proceed',
-            cancelButtonText: 'Cancel'
+            cancelButtonText: 'Ignore'
         });
 
         if (result.isConfirmed) {
+
+            if (item.HasScheme && shadowItemList.length > 0) {
+                showMessageAlert("Cannot mixmatch scheme and normal item  !!", "warning");
+                return;
+            }
+
+            setDataToUI(rowNo, item,'Yes');
             console.log("Load schemes ...");
             curRow = 0;
-            
-            addSchemes(item, rowNo);
+            setSwalStyling();
+            await addSchemes(item, rowNo);
+        }
+        else {
+
+            setDataToUI(rowNo, item, 'No');
         }
     }
+    else {
+        setDataToUI(rowNo, item, 'No');
+       
+
+    }
 }
-var curRow = 0;
-var freeItemsList = [];
+function setDataToUI(rowNo, item, hasScheme) {
+
+    ++requestId;
+    let gross = parseInt(item.Qty) * parseFloat(item.Price);
+
+    let vatrate = parseFloat(item.VAT);
+    let vatratecalc = vatrate > 0 ? vatrate / 100 : 0;
+    let taxableValue = gross / (1 + vatratecalc);
+    let vatamt = taxableValue * vatratecalc;
+
+    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "ItemCode", "Unit", "Quantity", "Rate", "Gross", "RMA", "Taxable Value", "Vat", "SchemeItem", "LinkedItem"], [item.ItemId, item.ItemCode, item.UnitId, item.Qty, item.Price, gross, item.RmaNo, taxableValue, vatamt, hasScheme, 0],
+        Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+}
+
 function isRmaExistsInDoc(rmaNo) {
     console.log("Checking if Rma No exists ..." + rmaNo);
 
-    for (let item of freeItemsList) {
+    for (const item of freeItemsList) {
 
         if (item.RmaNoList.includes(rmaNo)) {
             console.log(item);
@@ -819,6 +860,17 @@ function isRmaExistsInDoc(rmaNo) {
     return false;
   
 }
+function isFreeItemAssigned(orig, freeItem) {
+    for (const item of freeItemsList) {
+
+        if (item.FreeItemId == freeItem.ItemId && item.RmaNoList.length >= item.Qty) {
+
+            return true;
+        }
+    }
+    return false;
+}
+
 async function addSchemes(origitem, rowNo) {
     let getRmaItem = true;
     curRow = rowNo;
@@ -828,44 +880,55 @@ async function addSchemes(origitem, rowNo) {
         console.log("Getting rma ...");
         const result = await  Swal.fire({
             title: 'Scan Scheme Item Rma No',
+            html: `<div id="swal-msg" style="color:#d33;font-size:0.9em;min-height:1.2em;">${loopMssg}</div>`,
             input: 'text',
             inputPlaceholder: '',
             showCancelButton: true,
             allowOutsideClick: false,
+            position: 'top', 
+            confirmButtonText: 'Add',
+            cancelButtonText: 'Done',
+            customClass: {
+                popup: 'swal-compact'
+            },
+            didRender: () => {
+
+                document.querySelector('.swal2-actions').style.gap = '100px';
+            },
             inputValidator: (value) => {
                 if (!value) return 'This field is required';
             }
         });
 
         const rmaNo = result.value;
-        if (!result.isConfirmed || rmaNo == undefined || rmaNo.trim().length == 0) {
+        if (!result.isConfirmed ) {
             getRmaItem = false;
             return;
         }
         try {
 
             //Search if rma already added for the scheme item
-            console.log("Checking RMA:", rmaNo.trim());
-            console.table(freeItemsList);
+            //console.log("Checking RMA:", rmaNo.trim());
+            //console.table(freeItemsList);
 
          
             if (isRmaExistsInDoc(rmaNo.trim())) {
 
                 console.log("RMA already added for the scheme item !!");
-                showMessageAlert("RMA already added for the scheme item !!", "warning");
+                showSchemeAlert("RMA already added for the scheme item !!", "warning");
                 continue;
 
             }
             else {
 
-                getSchemeRmaItem(origitem, rmaNo.trim());
+                await getSchemeRmaItem(origitem, rmaNo.trim());
             }
 
             
         }
         catch (err) {
 
-            showMessageAlert(err, "error");
+            showSchemeAlert(err, "error");
             //getRmaItem = false;
         }
        
@@ -886,21 +949,27 @@ async function getSchemeRmaItem(origitem, rmano) {
 
     if (dataObj.result != 1) {
 
-        showMessageAlert(dataObj.message);
+        showSchemeAlert(dataObj.message);
         console.log("Cannot continue ...");
     }
     else {
 
+        //Check maximum rma assigned for the scheme item
+        //if (isFreeItemAssigned(origitem, dataObj.data)) {
+        //    showSchemeAlert("Only one unique item allowed per scheme item", "warning");
+        //    return;
+        //}
+
         console.log("Scheme item found, setting row...", curRow);
-        setSchemeItemsToDoc(origitem, dataObj.data)
+        await setSchemeItemsToDoc(origitem, dataObj.data)
     }
     //console.log(dataObj);
     
     
 }
-function setSchemeItemsToDoc(origitem, item) {
+async function setSchemeItemsToDoc(origitem, item) {
 
-    console.log(item);
+    //console.log(item);
     ++requestId;
    
     //Find if free item aleady exists in the document
@@ -911,10 +980,14 @@ function setSchemeItemsToDoc(origitem, item) {
         let curItem = itemExists[0];
         if (curItem.RmaNoList.includes(item.RmaNo)) {
 
-            showMessageAlert("RMA already added for the scheme item !!", "warning")
+            showSchemeAlert("RMA already added for the scheme item !!", "warning")
             return;
         }
+        if (curItem.RmaNoList.length >= item.Qty) {
 
+            showSchemeAlert("Maximum scheme items reached  !!", "warning")
+            return;
+        }
         
         curItem.RmaNoList.push(item.RmaNo);
         let newQty = curItem.RmaNoList.length;
@@ -925,24 +998,26 @@ function setSchemeItemsToDoc(origitem, item) {
         let taxableValue = gross / (1 + vatratecalc);
         let vatamt = taxableValue * vatratecalc;
 
-
+        loopMssg = '';
         Focus8WAPI.setBodyFieldValue("afterSchemeLineAdded", ["RMA", "Quantity", "Rate", "Discount", "Gross", "Taxable Value", "Vat"], [curItem.RmaNoList, newQty, curItem.Rate, curItem.Discount, gross, taxableValue, vatamt], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, curItem.RowNo, requestId);
 
     }
     else {
 
         curRow += 1;
-        let gross = parseInt(item.Qty) * parseFloat(item.Rate);
+        let qty = 1;
+        let gross = parseInt(qty) * parseFloat(item.Rate);
 
         let vatrate = parseFloat(item.VAT);
         let vatratecalc = vatrate > 0 ? vatrate / 100 : 0;
         let taxableValue = gross / (1 + vatratecalc);
         let vatamt = taxableValue * vatratecalc;
+        
 
 
         freeItemsList.push({ ItemId: origitem.ItemId, FreeItemId: item.ItemId, RmaNoList: [item.RmaNo], RowNo: curRow, Rate: parseFloat(item.Rate), VAT: vatrate });
 
-        Focus8WAPI.setBodyFieldValue("afterSchemeLineAdded", ["Item", "ItemCode", "Quantity", "Rate", "Gross", "RMA", "Taxable Value", "Vat", "SchemeItem", "LinkedItem"], [item.ItemId, item.ItemCode, item.Qty, item.Rate, gross, item.RmaNo, taxableValue, vatamt, "Yes", origitem.ItemId], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, curRow, requestId);
+        Focus8WAPI.setBodyFieldValue("afterSchemeLineAdded", ["Item", "ItemCode", "Quantity", "Rate", "Gross", "RMA", "Taxable Value", "Vat", "SchemeItem", "LinkedItem"], [item.ItemId, item.ItemCode, qty, item.Rate, gross, item.RmaNo, taxableValue, vatamt, "Yes", origitem.ItemId], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, curRow, requestId);
 
     }
 
@@ -1078,4 +1153,29 @@ function showMessageAlert(mssg, status) {
                     setRmaSearchFocus();
                 }
             });
+}
+function showSchemeAlert(mssg, status) {
+    //Status 'success', 'error', 'warning', 'info', 'question'
+    loopMssg = curItemName +': '+ mssg;
+    //if (isAlertActive)
+    //    Swal.fire(
+    //        {
+    //            title: 'Message',
+    //            text: mssg,
+    //            icon: status, 
+    //        });
+    
+}
+function setSwalStyling() {
+
+    if (!document.getElementById('swal-compact-styles')) {
+        const style = document.createElement('style');
+        style.id = 'swal-compact-styles';
+        style.textContent = `
+    .swal-compact { width: 280px !important; padding: 1rem !important; font-size: 13px !important; }
+    .swal-compact .swal2-title { font-size: 1rem !important; }
+    .swal-compact .swal2-icon { width: 3em !important; height: 3em !important; }
+  `;
+        document.head.appendChild(style);
+    }
 }
