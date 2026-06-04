@@ -7,6 +7,10 @@ namespace FocusSalesModule.Queries
 {
     public class SalesReturnQueries
     {
+        public static string GetSchemeItems(string docno, int itemId)
+        {
+            return $"select pr.iMasterId as ItemId, pr.sName Item,de.SchemeItem, de.LinkedItem,de.SchemeDocNo from tCore_Header_0 h join tCore_Data_0  d on d.iHeaderId = h.iHeaderId join tCore_Data3334_0  de on de.iBodyId = d.iBodyId join tCore_Indta_0 stk on stk.iBodyId = d.iBodyId join mCore_Product pr on pr.iMasterId = stk.iProduct where h.svoucherno ='{docno}' and de.LinkedItem = {itemId}";
+        }
         public static string CheckIfSalesReturnUsed(string docno)
         {
             return $"select count(dt.iBodyId) from tCore_Data4100_0 dt join tCore_Data_0 d on d.iBodyId = dt.iBodyId left join  tCore_Data_Tags_0 tg on tg.iBodyId = d.iBodyId left join mCore_paymenttype ptyp on ptyp.iMasterId = tg.itag3012 left join muCore_paymenttype putyp on putyp.iMasterId = ptyp.iMasterId  where dt.ReferenceNo = '{docno}'  and putyp.TypeSelect = 5";

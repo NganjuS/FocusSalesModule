@@ -98,7 +98,7 @@ namespace FocusSalesModule.Controllers
             {
                 
 
-                hashData.data = DbCtx<dynamic>.GetObj(compid, ProductQueries.GetSalesReturnRmaData(rmano));
+                hashData.data = DbCtx<dynamic>.GetObj(compid, ProductQueries.GetSalesReturnRmaData(rmano, ""));
 
                 if (hashData.data == null)
                 {

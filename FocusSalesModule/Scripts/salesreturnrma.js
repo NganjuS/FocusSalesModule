@@ -799,8 +799,8 @@ function setLineItemsToDoc(rowNo, item) {
     let vatratecalc = vatrate > 0 ? vatrate / 100 : 0;
     let taxableValue = gross / (1 + vatratecalc);
     let vatamt = taxableValue * vatratecalc;
-
-    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "Rate", "Gross", "RMA", "Discount", "VoucherCode", "Voucher Discount", "Taxable Value", "Vat"], [item.ItemId, item.UnitId, item.Qty, item.Price, gross, item.RmaNo, item.Discount, item.VoucherCode, item.VoucherDiscount, taxableValue, vatamt], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
+    console.log(item);
+    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "Unit", "Quantity", "Rate", "Gross", "RMA", "Discount", "VoucherCode", "Voucher Discount", "Taxable Value", "Vat", "SchemeItem", "LinkedItem", "SchemeDocNo"], [item.ItemId, item.UnitId, item.Qty, item.Price, gross, item.RmaNo, item.Discount, item.VoucherCode, item.VoucherDiscount, taxableValue, vatamt, item.SchemeItem, item.LinkedItem, item.SchemeDocNo], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
 }
 function afterHeaderAdded(response) {
     setRmaSearchFocus();
@@ -961,7 +961,7 @@ async function loadData(compid, vttype) {
     else {
 
         if (dataObj.datalist.length > 0) {
-            setFreeItems(dataObj.datalist);
+           // setFreeItems(dataObj.datalist);
             let item = dataObj.datalist[0];
             setHeaderDetails(item)
             for (let rowNo = 1; rowNo <= dataObj.datalist.length; rowNo++) {

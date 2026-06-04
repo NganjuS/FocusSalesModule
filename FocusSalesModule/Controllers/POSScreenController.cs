@@ -43,7 +43,7 @@ namespace FocusSalesModule.Controllers
         {
             //ExecuteCreateTable.RunQueries(compid);
             //Check if credit note has been done against the invoice
-            DbCtx<Int32>.ExecuteNonQry(compid, PaymentDetailsQueries.CreateAlltxnsView());
+            //DbCtx<Int32>.ExecuteNonQry(compid, PaymentDetailsQueries.CreateAlltxnsView());
             ViewBag.compid = compid;
             ViewBag.sessionid = sessionid;
             ViewBag.outletid = outletid;

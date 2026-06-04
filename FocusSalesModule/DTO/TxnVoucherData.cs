@@ -20,6 +20,19 @@ namespace FocusSalesModule.DTO
         public decimal Rate { get; set; }
         public decimal Gross { get; set; }
         public List<string> RMA { get; set; }
+        public string SchemeItem { get; set; }
+        public int LinkedItem { get; set; }
+        public string SchemeDocNo { get; set; }
+
+    }
+    public class SchemeItemLine
+    {
+        public int ItemId { get; set; }
+        public string Item { get; set; }
+
+        public string SchemeItem { get; set; }
+        public int LinkedItem { get; set; }
+        public string SchemeDocNo { get; set; }
 
     }
     public class TxnVoucherData
@@ -28,6 +41,7 @@ namespace FocusSalesModule.DTO
         public string SessionId { get; set; }
         public int Vtype { get; set; }
         public string DocNo { get; set; }
+        public string POSDocNo { get; set; }
         public string DocumentTagId { get; set; } = String.Empty;
         public List<string> ReferenceList { get; set; } 
         public List<PaymentLine> DocLines { get; set; } 

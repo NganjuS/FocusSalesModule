@@ -842,7 +842,7 @@ function setDataToUI(rowNo, item, hasScheme) {
     let taxableValue = gross / (1 + vatratecalc);
     let vatamt = taxableValue * vatratecalc;
 
-    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "ItemCode", "Unit", "Quantity", "Rate", "Gross", "RMA", "Taxable Value", "Vat", "SchemeItem", "LinkedItem"], [item.ItemId, item.ItemCode, item.UnitId, item.Qty, item.Price, gross, item.RmaNo, taxableValue, vatamt, hasScheme, 0],
+    Focus8WAPI.setBodyFieldValue("afterLineAdded", ["Item", "ItemCode", "Unit", "Quantity", "Rate", "Gross", "RMA", "Taxable Value", "Vat", "SchemeItem", "LinkedItem", "SchemeDocNo"], [item.ItemId, item.ItemCode, item.UnitId, item.Qty, item.Price, gross, item.RmaNo, taxableValue, vatamt, hasScheme, 0, item.SchemeDocNo],
         Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, requestId);
 }
 
@@ -1017,7 +1017,7 @@ async function setSchemeItemsToDoc(origitem, item) {
 
         freeItemsList.push({ ItemId: origitem.ItemId, FreeItemId: item.ItemId, RmaNoList: [item.RmaNo], RowNo: curRow, Rate: parseFloat(item.Rate), VAT: vatrate });
 
-        Focus8WAPI.setBodyFieldValue("afterSchemeLineAdded", ["Item", "ItemCode", "Quantity", "Rate", "Gross", "RMA", "Taxable Value", "Vat", "SchemeItem", "LinkedItem"], [item.ItemId, item.ItemCode, qty, item.Rate, gross, item.RmaNo, taxableValue, vatamt, "Yes", origitem.ItemId], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, curRow, requestId);
+        Focus8WAPI.setBodyFieldValue("afterSchemeLineAdded", ["Item", "ItemCode", "Quantity", "Rate", "Gross", "RMA", "Taxable Value", "Vat", "SchemeItem", "LinkedItem", "SchemeDocNo"], [item.ItemId, item.ItemCode, qty, item.Rate, gross, item.RmaNo, taxableValue, vatamt, "Yes", origitem.ItemId, ""], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, curRow, requestId);
 
     }
 

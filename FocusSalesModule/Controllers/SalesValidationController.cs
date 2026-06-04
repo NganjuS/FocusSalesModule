@@ -244,7 +244,7 @@ namespace FocusSalesModule.Controllers
                    
 
 
-                    string qry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 0 , TxnDocNo='', Vtype=0 where TransactionReference in ({refFilterList})";
+                    string qry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 0 , TxnDocNo='', Vtype=0 where IsAllocatedToSale = 1 and TransactionReference in ({refFilterList})";
                     DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, qry);                    
 
                 }
@@ -307,9 +307,33 @@ namespace FocusSalesModule.Controllers
 
                 foreach(var line in salesrtndata.DocItemLines)
                 {
-                    foreach(var rma in line.RMA)
+                    //Find if all schemes items exist
+                    if(line.LinkedItem == 0 && !String.IsNullOrEmpty(line.SchemeDocNo))
                     {
-                        var hashData = DbCtx<dynamic>.GetObj(salesrtndata.CompanyId, ProductQueries.GetSalesReturnRmaData(rma));
+                        List<Int32> freeItems = salesrtndata.DocItemLines.Where(x => x.LinkedItem == line.Item).Select(x => x.Item).ToList();
+
+                        List<SchemeItemLine> schemeItems = DbCtx<SchemeItemLine>.GetObjList(salesrtndata.CompanyId, SalesReturnQueries.GetSchemeItems(salesrtndata.POSDocNo, line.Item));
+
+                        foreach(var sch in schemeItems)
+                        {
+                            if(!freeItems.Contains(sch.ItemId))
+                            {
+                                throw new Exception($"Free Item '{sch.Item}' is missing in the sales return lines !!!");
+                            }
+                        }
+                    }
+
+                    if (line.LinkedItem != 0)
+                    {
+                        if(!salesrtndata.DocItemLines.Any(x => x.Item == line.LinkedItem))
+                        {
+                            throw new Exception($"Free item is missing its main item cannot continue !!!");
+                        }
+                    }
+                    //Validate that that the POS / Set Checkout has been done and RMA is not returned in another sales return
+                    foreach (var rma in line.RMA)
+                    {
+                        var hashData = DbCtx<dynamic>.GetObj(salesrtndata.CompanyId, ProductQueries.GetSalesReturnRmaData(rma, $" and hh.svoucherno <> '{salesrtndata.DocNo}' "));
 
                         if (hashData == null)
                         {

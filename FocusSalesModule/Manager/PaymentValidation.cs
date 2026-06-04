@@ -41,11 +41,11 @@ namespace FocusSalesModule.Manager
                             string updateQry = "";
                             if (settlement.IntegrationType == (Int32)AppDefaults.IntegrationTypes.Moniepoint)
                             {
-                                updateQry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 1,TxnDocNo='{beforeSaveDto.DocNo}', Vtype={beforeSaveDto.Vtype} where TransactionReference  = '{pay.Reference}'";
+                                updateQry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 1,TxnDocNo='{beforeSaveDto.DocNo}', Vtype={beforeSaveDto.Vtype} where IsAllocatedToSale = 0 and  TransactionReference  = '{pay.Reference}'";
                             }
                             else
                             {
-                                updateQry = $"update  fpl_WemaBankTxns set IsAllocatedToSale = 1,TxnDocNo='{beforeSaveDto.DocNo}', Vtype={beforeSaveDto.Vtype} where transactionId  = '{pay.Reference}'";
+                                updateQry = $"update  fpl_WemaBankTxns set IsAllocatedToSale = 1,TxnDocNo='{beforeSaveDto.DocNo}', Vtype={beforeSaveDto.Vtype} where IsAllocatedToSale = 0 and  transactionId  = '{pay.Reference}'";
                             }
                            
                             DbCtx<Int32>.ExecuteNonQry(beforeSaveDto.CompId, updateQry);

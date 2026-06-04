@@ -483,7 +483,7 @@ function validateBeforeSave(response) {
     setupSweetAlert();
     
     ++requestId;
-    Focus8WAPI.getFieldValue("getEditDocumentDetails", ["", "DocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
+    Focus8WAPI.getFieldValue("getEditDocumentDetails", ["", "DocNo", "POSDocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
 
 function getEditDocumentDetails(response) {
@@ -498,13 +498,14 @@ function getEditDocumentDetails(response) {
 
     for (i = 0; i < validRows; i++) {
 
-        Focus8WAPI.getBodyFieldValue("getDocumentRows", ["", "Item", "Quantity", "Rate", "Gross", "RMA"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
+        Focus8WAPI.getBodyFieldValue("getDocumentRows", ["", "Item", "Quantity", "Rate", "Gross", "RMA", "SchemeItem", "LinkedItem","SchemeDocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i + 1);
     }
 
     headerDataEdit.CompanyId = response.data[0].CompanyId;
     headerDataEdit.SessionId = response.data[0].SessionId;
     headerDataEdit.Vtype = response.data[0].iVoucherType;
     headerDataEdit.DocNo = response.data[1].FieldValue;
+    headerDataEdit.POSDocNo = response.data[2].FieldValue;
 
     
 
@@ -521,42 +522,23 @@ function getDocumentRows(response) {
         Quantity: response.data[2].FieldValue,
         Rate: response.data[3].FieldValue,
         Gross: response.data[4].FieldValue,
-        RMA: response.data[5].FieldValue
+        RMA: response.data[5].FieldValue,
+        SchemeItem: response.data[6].FieldValue,
+        LinkedItem: response.data[7].FieldValue,
+        SchemeDocNo: response.data[8].FieldValue
+
     };
     shadowRowList.push(lineObj);
 
     if (response.iRequestId == validRows) {
-        validateSchemeItems();
+        
         checkReturnUsed()
 
     }
 
 }
-function validateSchemeItems() {
 
-    //Check if orginal item or free item is missing
-    for (let i = 0; i < freeItemsList.length; i++) {
 
-        let freeItemExists = shadowRowList.some(row => row.Item == freeItemsList[i].ItemId);
-        let itemExists = shadowRowList.some(row => row.Item == freeItemsList[i].LinkedItem);
-        if (!freeItemExists && itemExists) {
-
-            showMessageAlert("Missing free item.", "warning");
-            isProcessing = true;
-            Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
-        }
-
-        if (!itemExists && freeItemExists) {
-
-            showMessageAlert("Missing Item associated to a free item.", "warning");
-            isProcessing = true;
-            Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
-        }
-    }
-    
-
-    
-}
 async function checkReturnUsed() {
 
     let url = `/focussalesmodule/api/salespayments/checkreturnused`;
@@ -578,7 +560,7 @@ async function checkReturnUsed() {
     }
     else {
 
-        showMessageAlert("This sales return has already been used in another transaction. You cannot edit or delete this sales return.", "warning");
+        showMessageAlert(data.message, "warning");
         isProcessing = true; 
         Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
     }

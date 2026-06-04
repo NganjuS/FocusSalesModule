@@ -41,5 +41,6 @@ namespace FocusSalesModule.Models
         public string VoucherCode { get; set; } = String.Empty;
         public decimal VoucherDiscount { get; set; }
         public bool HasScheme { get; set; }
+        public string SchemeDocNo { get; set; } = String.Empty;
     }
 }
