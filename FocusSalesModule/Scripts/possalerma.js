@@ -822,11 +822,12 @@ async function setLineItemsToDoc(rowNo, item) {
             await addSchemes(item, rowNo);
         }
         else {
-
+            item.SchemeDocNo = "";
             setDataToUI(rowNo, item, 'No');
         }
     }
     else {
+        item.SchemeDocNo = "";
         setDataToUI(rowNo, item, 'No');
        
 
