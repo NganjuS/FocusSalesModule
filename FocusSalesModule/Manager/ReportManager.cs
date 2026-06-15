@@ -19,7 +19,7 @@ namespace FocusSalesModule.Manager
             string reportpath = $@"C:\Reports\{reportname}";
             myReportDocument.Load(reportpath);
             string execqry = $"select * from vwPOSSales where headerid = {headerid}";
-            DataTable reportData = DbCtx<Int32>.GetData(compid, execqry);
+            DataTable reportData = new DataTable();//DbCtx<Int32>.GetData(compid, execqry);
             myReportDocument.SetDataSource(reportData);
 
 

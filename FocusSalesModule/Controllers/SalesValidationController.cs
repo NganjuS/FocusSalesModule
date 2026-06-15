@@ -407,9 +407,19 @@ namespace FocusSalesModule.Controllers
                     //}
                     if(delResp.result > 0 && txnRefList.Count > 0)
                     {
-                        string filterParam = String.Join(",",txnRefList.Select(x => $"'{x}'").ToArray());
+                       
+                        foreach(string reftxn in txnRefList)
+                        {
+                            string entityname = DbCtx<string>.GetScalar(compid,  $"select EntityName from vwPaymentTxns  where TransactionReference = '{reftxn}'");
 
-                        DbCtx<Int32>.ExecuteNonQry(compid, $"update  fpl_OnlinePayments set IsAllocatedToSale = 0 where TransactionReference  in ({filterParam})");
+                            if(!String.IsNullOrEmpty(entityname))
+                            {
+                                DbCtx<Int32>.ExecuteNonQry(compid, $"update  {entityname} set IsAllocatedToSale = 0, TxnDocNo='', Vtype=0 where TransactionReference  =  '{reftxn}'");
+                            }
+                           
+                        }
+
+                      
                     }
 
                     resp.result= delResp.result;                  
@@ -547,6 +557,34 @@ namespace FocusSalesModule.Controllers
                 resp.result = 1;
 
 
+
+            }
+            catch (Exception ex)
+            {
+                Logger.writeLog(ex.Message);
+                Logger.writeLog(ex.StackTrace);
+                resp.result = -1;
+                resp.message = ex.Message;
+            }
+            return resp;
+        }
+        [HttpPost]
+        [Route("advancepaymentbeforedelete")]
+        public HashData<string> AdvancedPaymentBeforeDel(List<AdvanceReceiptDelLine> receiptDelLine)
+        {
+            HashData<string> resp = new HashData<string>();
+            try
+            {
+                var headerObj = receiptDelLine.FirstOrDefault();
+                bool isAdvancedUsed = DbCtx<Int32>.GetScalar(headerObj.CompanyId, AdvanceReceiptQueries.CheckIfAdvancedReceiptUsed(headerObj.DocNo)) > 1;
+
+                resp.result = 1;
+                resp.message = "";
+                if(isAdvancedUsed)
+                {
+                    resp.result = -1;
+                    resp.message = "Advance receipt used in a receipt !!!";
+                }
 
             }
             catch (Exception ex)

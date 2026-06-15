@@ -41,9 +41,7 @@ namespace FocusSalesModule.Controllers
         }
         public ActionResult OpenPOSBeforeSave(int compid, int vtype, int outletid, int memberid, string sessionid, string docno, decimal amount)
         {
-            //ExecuteCreateTable.RunQueries(compid);
-            //Check if credit note has been done against the invoice
-            //DbCtx<Int32>.ExecuteNonQry(compid, PaymentDetailsQueries.CreateAlltxnsView());
+
             ViewBag.compid = compid;
             ViewBag.sessionid = sessionid;
             ViewBag.outletid = outletid;

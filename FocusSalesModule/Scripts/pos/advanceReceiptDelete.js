@@ -468,12 +468,14 @@ function updateBeforeDelete(response) {
     ++requestId;
     Focus8WAPI.getFieldValue("getDocumentDetails", ["", "DocNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, requestId);
 }
-function updateAfterDelete(response) {
-    //++requestId;
+async function updateAfterDelete(response) {
+    ++requestId;
     console.log(docLines);
-    updateTxnStatus()
+    let url = `/focussalesmodule/api/salespayments/advancepaymentafterdelete`;
+    await updateTxnStatus(url)
 }
 function getDocumentDetails(response) {
+
     if (isRequestProcessed(response.iRequestId)) {
         return;
     }
@@ -485,7 +487,7 @@ function getDocumentDetails(response) {
     validRows = response.data[0].RowsInfo.iValidRows
 
     console.log("Logging update to server...")
-    /* updateSavedData(compId, sessionId, docNo, vtype)*/
+    //updateSavedData(compId, sessionId, docNo, vtype)
     for (i = 0; i < validRows; i++) {
 
         Focus8WAPI.getBodyFieldValue("getDocumentLines", ["", "Payment Type", "Account", "Amount", "ReferenceNo"], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, i + 1, i+1);
@@ -493,11 +495,12 @@ function getDocumentDetails(response) {
       
     }
 }
-function getDocumentLines(response) {
+async function getDocumentLines(response) {
 
     if (isLineRequestProcessed(response.iRequestId)) {
         return;
     }
+
     lineRequestsProcessed.push(response.iRequestId);
 
 
@@ -516,15 +519,18 @@ function getDocumentLines(response) {
     docLines.push(dtObj);
     if (response.iRequestId == validRows) {
 
-        console.log("All lines fetched");
-        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
+        let url = `/focussalesmodule/api/salespayments/advancepaymentbeforedelete`;
+        await updateTxnStatus(url)
+
+       
     }
 }
-async function updateTxnStatus() {
+
+async function updateTxnStatus(url) {
 
     if (docLines.length > 0) {
 
-        let url = `/focussalesmodule/api/salespayments/advancepaymentafterdelete`;
+
         let response = await fetch(url, {
             method: "POST",
             headers: {
@@ -533,9 +539,23 @@ async function updateTxnStatus() {
             body: JSON.stringify(docLines)
         });
 
-        let reponseData = await response.json();
-        console.log(reponseData);
+        let responseData = await response.json();
+
+        if (responseData.result == 1) {
+
+            Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
+        }
+        else {
+
+            alert(responseData.message);
+            Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
+        }
+
+    }
+    else {
+
+        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
     }
   
-    Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
+  
 }

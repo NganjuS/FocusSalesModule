@@ -26,7 +26,7 @@ namespace FocusSalesModule.Queries
         }
         public static string CreateTemporaryPaymentListQry()
         {
-            return "IF OBJECT_ID(N'fsm_TemporaryPaymentsList', N'U') IS NULL create table fsm_TemporaryPaymentsList (  Id int IDENTITY PRIMARY KEY, TempPaymentId int,  Code varchar(50), Reference varchar(50), Amount decimal(20,4), TxnDate Datetime";
+            return "IF OBJECT_ID(N'fsm_TemporaryPaymentsList', N'U') IS NULL create table fsm_TemporaryPaymentsList (  Id int IDENTITY PRIMARY KEY, TempPaymentId int,  Code varchar(50), Reference varchar(50), Amount decimal(20,4), TxnDate Datetime)";
         }
         public static Guid CreateGuidFromStrings(string str1, string str2)
         {
