@@ -32,21 +32,25 @@ namespace FocusSalesModule.Queries
         {
             return $"select dd.ReferenceNo from tCore_Header_0 h join tCore_Data_0 d on d.iHeaderId = h.iHeaderId left join tCore_Data{vtype}_0 dd on dd.iBodyId = d.iBodyId left join  tCore_Data_Tags_0 tg on tg.iBodyId = d.iBodyId left join mCore_paymenttype py on py.iMasterId = tg.iTag3012 left join muCore_paymenttype pyu on pyu.imasterid = py.imasterid where  pyu.TypeSelect = 3 and h.iVoucherType = {vtype} and h.sVoucherNo = '{docno}' ";
         }
-        public static string UpdateOnlinePaymentsStatus(int vtype, string docno, int status)
+        public static string UpdateOnlinePaymentsStatus(string tableName,string filterCol,int vtype, string docno, int status)
         {
-            return $"update  fpl_OnlinePayments set IsAllocatedToSale = {status} , TxnDocNo='{docno}', Vtype={vtype} where IsAllocatedToSale <> {status} and TransactionReference in (select dta.ReferenceNo from tCore_Header_0 h join tCore_Data_0 d on d.iHeaderId = h.iHeaderId join tCore_Data_Tags_0 tg on tg.iBodyId = d.iBodyId  left join mCore_paymenttype py on py.iMasterId = tg.itag3012 left join tCore_Data{vtype}_0 dta on dta.iBodyId = d.iBodyId left join muCore_paymenttype pye on pye.iMasterId = py.iMasterId where h.iVoucherType = {vtype} and h.svoucherno = '{docno}' and pye.TypeSelect = 3  and dta.ReferenceNo is not null) ";
+            return $"update  {tableName} set IsAllocatedToSale = {status} , TxnDocNo='{docno}', Vtype={vtype} where IsAllocatedToSale <> {status} and {filterCol} in (select dta.ReferenceNo from tCore_Header_0 h join tCore_Data_0 d on d.iHeaderId = h.iHeaderId join tCore_Data_Tags_0 tg on tg.iBodyId = d.iBodyId  left join mCore_paymenttype py on py.iMasterId = tg.itag3012 left join tCore_Data{vtype}_0 dta on dta.iBodyId = d.iBodyId left join muCore_paymenttype pye on pye.iMasterId = py.iMasterId where h.iVoucherType = {vtype} and h.svoucherno = '{docno}' and pye.TypeSelect = 3  and dta.ReferenceNo is not null) ";
         }
-        public static string UpdatePaymentsStatus(int status, string txnref)
+        public static string UpdatePaymentsStatus(string tableName, string colName, int status, string txnref)
         {
-            return $"update  fpl_OnlinePayments set IsAllocatedToSale = {status} where TransactionReference  = '{txnref}' and IsAllocatedToSale <> {status}";
+            return $"update  {tableName} set IsAllocatedToSale = {status} where {colName}  = '{txnref}' and IsAllocatedToSale <> {status}";
         }
-        public static string AdvancedUpdatePaymentsStatus(string txnref)
+        public static string AdvancedUpdatePaymentsStatus(string tableName, string colName,string txnref)
         {
-            return $"update  fpl_OnlinePayments set IsAllocatedToSale = 0 ,TxnDocNo = '' , Vtype = 0  where TransactionReference  = '{txnref}' and IsAllocatedToSale = 1";
+            return $"update  {tableName} set IsAllocatedToSale = 0 ,TxnDocNo = '' , Vtype = 0  where {colName} = '{txnref}' and IsAllocatedToSale = 1";
         }
-        public static string ClearPaymentsStatusAfterDel( string docno, int vtype)
+        public static string UpdateAdvancedPaymentsStatus(string tableName, string colName,string docNo, int Vtype, string txnref)
         {
-            return $"update  fpl_OnlinePayments set IsAllocatedToSale = 0, TxnDocNo = '' , Vtype = 0 where  TxnDocNo = '{docno}' and Vtype = {vtype} and IsAllocatedToSale = 1";
+            return $"update  {tableName} set IsAllocatedToSale = 1 ,TxnDocNo = '{docNo}' , Vtype = {Vtype}  where {colName} = '{txnref}' ";
+        }
+        public static string ClearPaymentsStatusAfterDel(string tableName, string docno, int vtype)
+        {
+            return $"update  {tableName} set IsAllocatedToSale = 0, TxnDocNo = '' , Vtype = 0 where  TxnDocNo = '{docno}' and Vtype = {vtype} and IsAllocatedToSale = 1";
         }
     }
 }

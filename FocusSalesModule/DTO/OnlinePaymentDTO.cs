@@ -15,7 +15,9 @@ namespace FocusSalesModule.DTO
         public DateTime TransactionTime { get; set; }
         public string InternalTxnCode { get; set; }
         public string Narration { get; set; }
+        
         public decimal Amount { get; set; }
         public bool IsAllocatedToSale { get; set; }
+        public string EntityName { get; set; }
     }
 }

@@ -554,7 +554,7 @@ async function updateTxnStatus(url) {
     }
     else {
 
-        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
+        Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false);
     }
   
   

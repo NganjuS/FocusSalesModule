@@ -26,7 +26,7 @@ namespace FocusSalesModule.Controllers
     public class SalesValidationController : ApiController
     {
 
-      
+        Dictionary<string, string> PaymentTbleDef = new Dictionary<string, string> { { "fpl_OnlinePayments", "TransactionReference" }, { "fpl_WemaBankTxns", "transactionId" } };
         [HttpGet]
         [Route("validatesale")]
         public HashData<dynamic> GetValidateSale(int compid, int outletid, bool manualvalidate,string reference,decimal outstandingamt)
@@ -240,12 +240,20 @@ namespace FocusSalesModule.Controllers
                 //Clear references for previous transaction
                 if (aftersaveadvance.AdvanceReceipt.DocLines.Count > 0)
                 {
-                    string refFilterList = String.Join(",", aftersaveadvance.AdvanceReceipt.DocLines.Select(r => $"'{r}'"));
-                   
+                    //string refFilterList = String.Join(",", aftersaveadvance.AdvanceReceipt.DocLines.Select(r => $"'{r.}'"));
 
+                    foreach (var txn in aftersaveadvance.AdvanceReceipt.DocLines)
+                    {
+                        foreach(var tableObj in PaymentTbleDef)
+                        {
+                           
 
-                    string qry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 0 , TxnDocNo='', Vtype=0 where IsAllocatedToSale = 1 and TransactionReference in ({refFilterList})";
-                    DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, qry);                    
+                            string qry = $"update  {tableObj.Key} set IsAllocatedToSale = 0 , TxnDocNo='', Vtype=0 where IsAllocatedToSale = 1 and {tableObj.Value} =  '{txn.ReferenceNo}'";
+                            DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, qry);
+                        }
+                       
+                    }
+                               
 
                 }
 
@@ -265,15 +273,28 @@ namespace FocusSalesModule.Controllers
                 Logger.writeLog($"Document is deleted : {docCount}");
                 if(docCount > 0)
                 {
-                    string onlineqry = AdvanceReceiptQueries.UpdateOnlinePaymentsStatus(advance.Vtype, advance.DocNo, 1);
-                  
-                    DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, onlineqry);
+                    foreach (var txn in aftersaveadvance.AdvanceReceipt.DocLines)
+                    {
+                      
+                            string onlineqry = AdvanceReceiptQueries.UpdateAdvancedPaymentsStatus("fpl_OnlinePayments", "TransactionReference",  advance.DocNo, advance.Vtype, txn.ReferenceNo);
+                            string wematxnquery = AdvanceReceiptQueries.UpdateAdvancedPaymentsStatus("fpl_WemaBankTxns", "transactionId", advance.DocNo, advance.Vtype, txn.ReferenceNo);
+
+                            DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, onlineqry);
+                            DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, wematxnquery);
+                        
+                        
+                    }
+                       
                 }
                 else
                 {
-                    string onlineqry = AdvanceReceiptQueries.ClearPaymentsStatusAfterDel( advance.DocNo, advance.Vtype);
-                 
-                    DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, onlineqry);
+                    foreach(var tableName in new string[2] { "fpl_OnlinePayments", "fpl_WemaBankTxns" })
+                    {
+                        string onlineqry = AdvanceReceiptQueries.ClearPaymentsStatusAfterDel(tableName, advance.DocNo, advance.Vtype);
+
+                        DbCtx<Int32>.ExecuteNonQry(advance.CompanyId, onlineqry);
+                    }
+                   
                 }
                 resp.result = 1;
 
@@ -410,12 +431,14 @@ namespace FocusSalesModule.Controllers
                        
                         foreach(string reftxn in txnRefList)
                         {
-                            string entityname = DbCtx<string>.GetScalar(compid,  $"select EntityName from vwPaymentTxns  where TransactionReference = '{reftxn}'");
-
-                            if(!String.IsNullOrEmpty(entityname))
+                            foreach(var tableObj in PaymentTbleDef)
                             {
-                                DbCtx<Int32>.ExecuteNonQry(compid, $"update  {entityname} set IsAllocatedToSale = 0, TxnDocNo='', Vtype=0 where TransactionReference  =  '{reftxn}'");
+
+                                DbCtx<Int32>.ExecuteNonQry(compid, $"update  {tableObj.Key}  set IsAllocatedToSale = 0 , TxnDocNo='', Vtype= 0 where IsAllocatedToSale = 1 and  {tableObj.Value}  =  '{reftxn}'");
+
                             }
+                               
+                            
                            
                         }
 
@@ -546,7 +569,12 @@ namespace FocusSalesModule.Controllers
 
                     if(paymentPaymentDto.TypeSelect == (Int32)AppDefaults.PaymentTypes.Integration)
                     {
-                       DbCtx<Int32>.ExecuteNonQry(headerObj.CompanyId, AdvanceReceiptQueries.UpdatePaymentsStatus(0, dataObj.ReferenceNo));
+
+                        foreach(var tableObj in PaymentTbleDef)
+                        {
+                            DbCtx<Int32>.ExecuteNonQry(headerObj.CompanyId, AdvanceReceiptQueries.UpdatePaymentsStatus(tableObj.Key,tableObj.Value,0, dataObj.ReferenceNo));
+                        }
+                       
                     }
 
 
@@ -576,7 +604,7 @@ namespace FocusSalesModule.Controllers
             try
             {
                 var headerObj = receiptDelLine.FirstOrDefault();
-                bool isAdvancedUsed = DbCtx<Int32>.GetScalar(headerObj.CompanyId, AdvanceReceiptQueries.CheckIfAdvancedReceiptUsed(headerObj.DocNo)) > 1;
+                bool isAdvancedUsed = DbCtx<Int32>.GetScalar(headerObj.CompanyId, AdvanceReceiptQueries.CheckIfAdvancedReceiptUsed(headerObj.DocNo)) > 0;
 
                 resp.result = 1;
                 resp.message = "";
@@ -613,7 +641,12 @@ namespace FocusSalesModule.Controllers
 
                     if (paymentPaymentDto.TypeSelect == (Int32)AppDefaults.PaymentTypes.Integration)
                     {
-                        DbCtx<Int32>.ExecuteNonQry(headerObj.CompanyId, AdvanceReceiptQueries.AdvancedUpdatePaymentsStatus(dataObj.ReferenceNo));
+                        //ransactionReference
+                        foreach (var tableObj in PaymentTbleDef)
+                        {
+                            DbCtx<Int32>.ExecuteNonQry(headerObj.CompanyId, AdvanceReceiptQueries.AdvancedUpdatePaymentsStatus(tableObj.Key, tableObj.Value, dataObj.ReferenceNo));
+                        }
+                            
                     }
 
 
@@ -765,10 +798,10 @@ namespace FocusSalesModule.Controllers
                     string listOfRefs  = $"select de.ReferenceNo from tcore_header_0 h join tCore_Data_0 d on d.iHeaderId = h.iHeaderId left join  tCore_Data4100_0 de on de.iBodyId = d.iBodyId  where h.iVoucherType = 4100 and h.svoucherno = '{deldocno}'";
                     List<string> refList = DbCtx<string>.GetObjList(compid, listOfRefs);
                     string refs = String.Join(",", refList.Select(r => $"'{r}'"));
+                    
+                 
 
-                    string qry = $"update  fpl_OnlinePayments set IsAllocatedToSale = 0, TxnDocNo='', Vtype=0 where TransactionReference in  ({refs})";
-
-                    string wemaqry = $"update  fpl_WemaBankTxns set IsAllocatedToSale = 0, TxnDocNo='', Vtype=0 where transactionId in  ({refs})";
+                    //string wemaqry = $"update  fpl_WemaBankTxns set IsAllocatedToSale = 0, TxnDocNo='', Vtype=0 where transactionId in  ({refs})";
 
                     //Delete existing receipt to update with new payment details
                     string delUrl = $"{baseUrl}/Transactions/{PosReceiptScreenMain.screenName}/{deldocno.Replace("/", "~~")}";
@@ -782,8 +815,13 @@ namespace FocusSalesModule.Controllers
                     }
                     else
                     {
-                        DbCtx<Int32>.ExecuteNonQry(compid, qry);
-                        DbCtx<Int32>.ExecuteNonQry(compid, wemaqry);
+                        foreach (var tableObj in PaymentTbleDef)
+                        {
+                            string qry = $"update  {tableObj.Key} set IsAllocatedToSale = 0, TxnDocNo='', Vtype=0 where {tableObj.Value} in  ({refs})";
+                            DbCtx<Int32>.ExecuteNonQry(compid, qry);
+                        }
+                        //DbCtx<Int32>.ExecuteNonQry(compid, qry);
+                        //DbCtx<Int32>.ExecuteNonQry(compid, wemaqry);
                     }
 
                     
@@ -821,14 +859,19 @@ namespace FocusSalesModule.Controllers
 
                     string setpaymentisdone = $"update fsm_TemporaryPayments set IsValidated = 1  where DocumentTagId = '{docIdentifier}' ";
 
-                    string updateMoniePointQry = $"update fpl_OnlinePayments set IsAllocatedToSale = 1, TxnDocNo='{docno}', Vtype={vtype} where TransactionReference in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
+                   
 
-                    string updateWemaBankQry = $"update fpl_WemaBankTxns set IsAllocatedToSale = 1, TxnDocNo='{docno}', Vtype={vtype} where transactionId in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
+                    //string updateWemaBankQry = $"update fpl_WemaBankTxns set IsAllocatedToSale = 1, TxnDocNo='{docno}', Vtype={vtype} where transactionId in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
 
 
                     DbCtx<Int32>.ExecuteNonQry(compid, setpaymentisdone);
-                    DbCtx<Int32>.ExecuteNonQry(compid, updateMoniePointQry);
-                    DbCtx<Int32>.ExecuteNonQry(compid, updateWemaBankQry);
+                    foreach (var tableObj in PaymentTbleDef)
+                    {
+                        string updatePayments = $"update {tableObj.Key} set IsAllocatedToSale = 1, TxnDocNo='{docno}', Vtype={vtype} where {tableObj.Value} in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
+                        DbCtx<Int32>.ExecuteNonQry(compid, updatePayments);
+                    }
+                       
+                  
 
                     if (updateQry.Trim().Length > 0)
                     {

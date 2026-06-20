@@ -1,4 +1,5 @@
 ﻿using Focus.Common.DataStructs;
+using FocusSalesModule.Data;
 using FocusSalesModule.Models;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,10 @@ namespace FocusSalesModule.Config
 {
     public class AppValidation
     {
+        public static string GetPaymentTableName(int compid, string refno)
+        {
+            return DbCtx<string>.GetScalar(compid, $"select EntityName from vwPaymentTxns where TransactionReference = '{refno}'");
+        }
         public static bool IsDefaultAccountsNotSet(List<BillSettlement> billSettlement)
         {
             foreach (var bill in billSettlement)
