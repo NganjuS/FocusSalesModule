@@ -137,7 +137,7 @@ namespace FocusSalesModule.Controllers
                 string baseUrl = WebConfigurationManager.AppSettings["Server_API_IP"];
                 string printurl = $"{baseUrl}/Transactions/PrintLayout";
                resp = APIManager.postData(req, sessionid, printurl);
-                byte[] pdfBytes = Array.Empty<byte>();
+                //byte[] pdfBytes = Array.Empty<byte>();
                 if (resp.result == 1)
                 {
 

@@ -171,12 +171,11 @@ function setDocumentDetails(paymentList) {
 
                 ++postRequestId
                 ++rowNo;
-                Focus8WAPI.setBodyFieldValue("afterAdvanceLineAdded", ["Payment Type", "Account", "Amount", "ReferenceNo"], [paymentList[i].iMasterId, getAccountId(paymentList[i]), paymentList[i].Amount, paymentList[i].Reference], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, postRequestId);
+                Focus8WAPI.setBodyFieldValue("afterAdvanceLineAdded", ["Payment Type", "Account", "Amount", "ReferenceNo"], [paymentList[i].iMasterId, paymentList[i].AccountId , paymentList[i].Amount, paymentList[i].Reference], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, postRequestId);
             }
         }
-        else {
+        else if (paymentList[i].TypeSelect == paymentTypes.Integration) {
 
-            console.log("Other payment types !!", paymentList[i].TypeSelect)
             let curPayObjList = paymentList[i].PayList;
             for (let j = 0; j < curPayObjList.length; j++) {
 
@@ -186,9 +185,29 @@ function setDocumentDetails(paymentList) {
                     ++rowNo;
                     console.log("Setting row value !!!")
                     console.log(curPayObjList[j]);
-                    Focus8WAPI.setBodyFieldValue("afterAdvanceLineAdded", ["Payment Type", "Account", "Amount", "ReferenceNo"], [paymentList[i].iMasterId, getAccountId(paymentList[i]), curPayObjList[j].Amount, curPayObjList[j].Reference], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, postRequestId);
+                    Focus8WAPI.setBodyFieldValue("afterAdvanceLineAdded", ["Payment Type", "Account", "Amount", "ReferenceNo"], [paymentList[i].iMasterId, curPayObjList[j].AccountId, curPayObjList[j].Amount, curPayObjList[j].Reference], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, postRequestId);
                 }
             }
+        }
+        else {
+
+            console.log("Other payment types !!", paymentList[i].TypeSelect)
+
+                let curPayObjList = paymentList[i].PayList;
+                for (let j = 0; j < curPayObjList.length; j++) {
+
+                    if (curPayObjList[j].IsSelected) {
+
+                        ++postRequestId
+                        ++rowNo;
+                        console.log("Setting row value !!!")
+                        console.log(curPayObjList[j]);
+                        Focus8WAPI.setBodyFieldValue("afterAdvanceLineAdded", ["Payment Type", "Account", "Amount", "ReferenceNo"], [paymentList[i].iMasterId, getAccountId(paymentList[i]), curPayObjList[j].Amount, curPayObjList[j].Reference], Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, false, rowNo, postRequestId);
+                    }
+                }
+            
+            
+            
         }
     }
     Focus8WAPI.closePopup();

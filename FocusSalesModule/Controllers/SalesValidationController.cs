@@ -117,7 +117,7 @@ namespace FocusSalesModule.Controllers
                
                 //Find if payment has been utilised
 
-                PaymentValidation.ValidateAllPayments(beforeSaveDto);
+                PaymentValidation.ValidateAllPayments(beforeSaveDto, beforeSaveDto.DocNo);
                 PaymentValidation.SetOnlineTransactionStatusAsUsed(beforeSaveDto);
 
                 resp.result = 1;
@@ -131,7 +131,7 @@ namespace FocusSalesModule.Controllers
             }
             finally
             {
-                PaymentValidation.RemoveTxnFromProcessingQueue(beforeSaveDto);
+                //PaymentValidation.RemoveTxnFromProcessingQueue(beforeSaveDto);
             }
             return resp;
         }
@@ -496,9 +496,14 @@ namespace FocusSalesModule.Controllers
                 {
                     string refFilterList = String.Join(",", advanceBeforeSave.DocLines.Select(r => $"'{r.ReferenceNo}'"));
                     //Check if payment reference if used in another transaction
-                    string rt = $"select count(Id) from fpl_OnlinePayments where  TransactionReference in ({refFilterList}) and IsAllocatedToSale = 1 and TxnDocNo <> '{advanceBeforeSave.DocNo}' ";
-                    int count = DbCtx<Int32>.GetScalar(advanceBeforeSave.CompanyId, rt);
-                    if (count > 0)
+                    //string rt = $"select count(Id) from vwPaymentTxns where  TransactionReference in ({refFilterList}) and TxnDocNo is not null and  TxnDocNo <> ''  and TxnDocNo <> '{advanceBeforeSave.DocNo}' ";
+                    ///int count = DbCtx<Int32>.GetScalar(advanceBeforeSave.CompanyId, rt);
+                    int count  = PaymentValidation.UpdatePaymentStatus(advanceBeforeSave.CompanyId, advanceBeforeSave.Vtype, advanceBeforeSave.DocNo, refFilterList); 
+
+                    Logger.writeLog($"In Pos Validation, Checking if transaction is consumed, Result: {count}");
+       
+
+                    if (count == 0)
                     {
                         resp.result = -1;
                         resp.message = "One or more of the payment references have been used in another transaction. Please check and try again.";
@@ -817,9 +822,10 @@ namespace FocusSalesModule.Controllers
                     {
                         foreach (var tableObj in PaymentTbleDef)
                         {
-                            string qry = $"update  {tableObj.Key} set IsAllocatedToSale = 0, TxnDocNo='', Vtype=0 where {tableObj.Value} in  ({refs})";
+                            string qry = $"update  {tableObj.Key} set IsAllocatedToSale = 0,IsConfirmed = 0, TxnDocNo='', Vtype=0 where {tableObj.Value} in  ({refs})";
                             DbCtx<Int32>.ExecuteNonQry(compid, qry);
                         }
+                   
                         //DbCtx<Int32>.ExecuteNonQry(compid, qry);
                         //DbCtx<Int32>.ExecuteNonQry(compid, wemaqry);
                     }
@@ -859,15 +865,20 @@ namespace FocusSalesModule.Controllers
 
                     string setpaymentisdone = $"update fsm_TemporaryPayments set IsValidated = 1  where DocumentTagId = '{docIdentifier}' ";
 
-                   
+                    foreach(var linePay in paymentList)
+                    {
+                        if(linePay.PaymentType == (Int32)AppDefaults.PaymentTypes.AdvanceReceipt || linePay.PaymentType ==  (Int32)AppDefaults.PaymentTypes.CreditNote)
+                        DbCtx<Int32>.ExecuteNonQry(compid, "UPDATE fsm_PaymentsReservations SET IsConfirmed = 1\r\nWHERE Reference = @Reference AND DocNo = @DocNo;", new { linePay.Reference, DocNo= docIdentifier  });
+
+                    }
 
                     //string updateWemaBankQry = $"update fpl_WemaBankTxns set IsAllocatedToSale = 1, TxnDocNo='{docno}', Vtype={vtype} where transactionId in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
-
+                    //Update  DbCtx<Int32>.ExecuteNonQry(compid, setpaymentisdone);
 
                     DbCtx<Int32>.ExecuteNonQry(compid, setpaymentisdone);
                     foreach (var tableObj in PaymentTbleDef)
                     {
-                        string updatePayments = $"update {tableObj.Key} set IsAllocatedToSale = 1, TxnDocNo='{docno}', Vtype={vtype} where {tableObj.Value} in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
+                        string updatePayments = $"update {tableObj.Key} set IsAllocatedToSale = 1,IsConfirmed = 1, TxnDocNo='{docno}', Vtype={vtype} where {tableObj.Value} in (select  Reference from fsm_TemporaryPayments where PaymentType = 3 and DocumentTagId = '{docIdentifier}')";
                         DbCtx<Int32>.ExecuteNonQry(compid, updatePayments);
                     }
                        

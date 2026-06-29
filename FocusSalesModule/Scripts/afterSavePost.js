@@ -489,7 +489,7 @@ async function updateSavedData(compId, sessionId, docNo,vtype ,docIdentifier) {
         if (dataObj.result == 1) {
 
             Focus8WAPI.continueModule(Focus8WAPI.ENUMS.MODULE_TYPE.TRANSACTION, true);
-            //setupPrintJs(compId, sessionId, docNo, vtype)
+            setupPrintJs(compId, sessionId, docNo, vtype)
 
            // setupQzTrayMain(compId, vtype,sessionId, docNo);
            // setupSilentPrint(compId, sessionId, docNo, vtype)

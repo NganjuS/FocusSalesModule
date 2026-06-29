@@ -189,13 +189,14 @@ namespace FocusSalesModule.Controllers
                      
                         if (settlement.TypeSelect == (Int32)AppDefaults.PaymentTypes.Integration && settlement.PayList.Count > 0)
                         {
-                           // Logger.writeLog(JsonConvert.SerializeObject(settlement.PayList));
+                            // Logger.writeLog(JsonConvert.SerializeObject(settlement.PayList));
                             string refFilterList = String.Join(",", settlement.PayList.Select(r => $"'{r.Reference}'"));
-                            //Check if payment reference if used in another transaction
-                            string refCheckQry = $"select count(Id) from vwPaymentTxns where  TransactionReference in ({refFilterList}) and IsAllocatedToSale = 1 and TxnDocNo <> '{beforeSaveDto.DocNo}' and Vtype <> {beforeSaveDto.Vtype}";
 
-                            int count = DbCtx<Int32>.GetScalar(beforeSaveDto.CompId, refCheckQry);
-                            if (count > 0)
+                            int count  = PaymentValidation.UpdatePaymentStatus(beforeSaveDto.CompId, beforeSaveDto.Vtype, beforeSaveDto.DocNo, refFilterList);  
+
+                            Logger.writeLog($"In Pos Validation, Checking if transaction is consumed, Result: {count}");
+                           // Logger.writeLog(refCheckQry);
+                            if (count == 0)
                             {
                                 resp.result = -1;
                                 resp.message = "One or more of the payment references have been used in another transaction. Please check and try again.";
@@ -210,17 +211,17 @@ namespace FocusSalesModule.Controllers
 
                 //Validate if two transactions are not being processed at the same time for the same document
                 Logger.writeLog("Processing POS transactions ...");
-                
-                //Find if payment has been utilised
 
-                PaymentValidation.ValidateAllPayments(beforeSaveDto);
+                //Find if payment has been utilised
+                string docIdentifier = PaymentManager.PreProcessPayment(beforeSaveDto);
+                PaymentValidation.ValidateAllPayments(beforeSaveDto, docIdentifier);
                 //Set allocated to sale
-                PaymentValidation.SetOnlineTransactionStatusAsUsed(beforeSaveDto);
+                //PaymentValidation.SetOnlineTransactionStatusAsUsed(beforeSaveDto);
 
                 int compid = beforeSaveDto.CompId;
                 int vtype = beforeSaveDto.Vtype;
 
-                string docIdentifier  =  PaymentManager.PreProcessPayment(beforeSaveDto);
+               
 
 
                 List<TemporaryPaymentDataDto> paymentList = DbCtx<TemporaryPaymentDataDto>.GetObjList(compid, $"select * from fsm_TemporaryPayments where DocumentTagId = '{docIdentifier}'");

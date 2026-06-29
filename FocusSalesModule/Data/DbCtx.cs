@@ -71,5 +71,13 @@ namespace FocusSalesModule.Data
                 return ctx.ExecuteScalar<T>(query);
             }
         }
+        public static T GetScalar(int compid, string query, Object obj)
+        {
+
+            using (var ctx = new SqlConnection(GetConnectionStr(compid)))
+            {
+                return ctx.ExecuteScalar<T>(query, obj);
+            }
+        }
     }
 }

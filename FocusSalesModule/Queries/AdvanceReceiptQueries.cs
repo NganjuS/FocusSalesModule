@@ -46,11 +46,11 @@ namespace FocusSalesModule.Queries
         }
         public static string UpdateAdvancedPaymentsStatus(string tableName, string colName,string docNo, int Vtype, string txnref)
         {
-            return $"update  {tableName} set IsAllocatedToSale = 1 ,TxnDocNo = '{docNo}' , Vtype = {Vtype}  where {colName} = '{txnref}' ";
+            return $"update  {tableName} set IsAllocatedToSale = 1,  IsConfirmed = 1,TxnDocNo = '{docNo}' , Vtype = {Vtype}  where {colName} = '{txnref}' ";
         }
         public static string ClearPaymentsStatusAfterDel(string tableName, string docno, int vtype)
         {
-            return $"update  {tableName} set IsAllocatedToSale = 0, TxnDocNo = '' , Vtype = 0 where  TxnDocNo = '{docno}' and Vtype = {vtype} and IsAllocatedToSale = 1";
+            return $"update  {tableName} set IsAllocatedToSale = 0,IsConfirmed = 0, TxnDocNo = '' , Vtype = 0 where  TxnDocNo = '{docno}' and Vtype = {vtype} and IsAllocatedToSale = 1";
         }
     }
 }

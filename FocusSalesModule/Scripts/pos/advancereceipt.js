@@ -98,6 +98,7 @@ function posSystem() {
                                 this.paymentModes[i].Amount = '';
                                 this.paymentModes[i].Reference = "";
                                 this.paymentModes[i].Narration = "";
+                                this.paymentModes[i].AccountId = "";
                                 this.paymentModes[i].PayList = [];
                                 this.paymentModes[i].ManualValidate = false;
                             }
@@ -280,7 +281,8 @@ function posSystem() {
                             IsSelected: true,
                             Reference: x.TransactionReference,
                             TransactionTime: x.TransactionTime,
-                            Narration: x.Narration
+                            Narration: x.Narration,
+                            AccountId: x.AccountId,
 
                         }));
 
@@ -336,6 +338,7 @@ function posSystem() {
 
                                     Amount: amt,
                                     OrigAmount: amt,
+                                    AccountId: dataList[i].AccountId,
                                     IsSelected: false,
                                     Reference: dataList[i].TransactionReference,
                                     TransactionTime: dataList[i].TransactionTime,

@@ -520,6 +520,8 @@
     <Content Include="Scripts\validateSalesPos.js" />
     <Content Include="Scripts\waitMe.min.js" />
     <EmbeddedResource Include="SqlScripts\Script001_AddDefaultTables.sql" />
+    <EmbeddedResource Include="SqlScripts\Script003_AlterPaymentsView.sql" />
+    <EmbeddedResource Include="SqlScripts\Script004_TemporaryPaymentReserved.sql" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
